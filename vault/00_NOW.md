@@ -5,16 +5,16 @@ updated: 2026-11-13
 # 지금 상태
 
 - 자동화 단계: **L4 자동화** (2026-11-13 사용자 선언. Claude가 코드 작성·실행, 단계마다 "왜" 설명. 커밋·src 함수 시그니처 변경·새 라이브러리는 승인 후)
-- 진행 중: 베이스라인 구축 — 계획 `C:\Users\dongh\.claude\plans\sharded-puzzling-crown.md`
+- 완료: 베이스라인 구축 (계획 `C:\Users\dongh\.claude\plans\sharded-puzzling-crown.md` 1–7단계)
 - 보류: 하네스 스킬 5개 — 계획 `C:\Users\dongh\.claude\plans\2026-pdf-goal-twinkly-cerf.md`
 - 최신 인수인계: [[50_세션/2026-11-10_1]]
-- 최고 CV F2: 아직 없음 (참고: PDF의 RMS 관리도 기준선 train F2 0.08)
+- 최고 CV F2: **0.608 ± 0.055** (중첩 CV, [[30_실험/EXP-001]] 로지스틱 회귀). 바닥: 전부 고장 0.556, RMS 관리도 0.080
 
 ## 다음 할 일
-1. 새 세션 첫 확인: startup 훅으로 이 파일이 주입됐는지, `/` 목록에 `handoff`가 뜨는지
-2. 스킬 5개: `/stuck` → `/learn` → `/decide` → `/paper` → `/publish` (하나씩 초안 보고 승인)
-3. git 첫 실습: 사용자가 직접 `git init` → `git status`로 `data/`·PDF 미추적 확인 → 첫 커밋
-4. 노션 허브 페이지, 자동 메모리 기록, `vault/00_사용법.md`
+1. 피처 개선 실험 (EXP-002~): 국소 충격 후보(W03, P02, B04) 추가 → 상관 묶음 정리. 한 번에 하나씩, 범위는 사용자 승인 후
+2. 11/19 val 공개 전에 val 예측·제출 CSV 생성 계획
+3. 스킬 5개: `/stuck` → `/learn` → `/decide` → `/paper` → `/publish`
+4. 노션 허브 페이지, `vault/00_사용법.md`
 5. Obsidian: `vault/`를 "폴더를 볼트로 열기", 템플릿 폴더를 `_templates`로 지정 (사용자)
 
 ## 미해결 (조교 질문)
