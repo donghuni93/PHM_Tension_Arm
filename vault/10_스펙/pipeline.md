@@ -10,9 +10,9 @@ updated: 2026-11-13
 피처 목록은 [[features]], 미결정은 [[decisions]].
 
 ## 전처리
-- 순서: 평균값 제거 → 이동평균(MA) → 대역 분할 / Bandpass → 특징 추출
+- 순서: 평균값 제거 → 대역 분할 / Bandpass → 특징 추출
 - 평균값 제거: $x_1(t)=x(t)-\mu$ (필수)
-- MA: $x_2[n]=\mathrm{MA}\{x_1[n]\}$, 적용 여부·윈도우 M은 [[decisions]] D3
+- MA 미적용 ([[decisions]] D3 결정)
 - 대역 분할: 균등 분할로 베이스라인, Bandpass는 정상 vs 고장 FFT 비교(EDA) 이후
 - 대역·필터 피처는 원본 피처를 대체하지 않고 열로 추가
 - 결과 형태: 파일당 1행 → train 150행 × N열
