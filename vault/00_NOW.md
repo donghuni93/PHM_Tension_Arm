@@ -1,12 +1,12 @@
 ---
 type: now
-updated: 2026-11-10
+updated: 2026-11-13
 ---
 # 지금 상태
 
-- 자동화 단계: **L1 가이드** (사용자 주도, Claude는 `/stuck` 요청 시 가이드)
-- 진행 중: 하네스 구축 (승인된 계획의 8절 5단계: 스킬 5개 남음)
-- 승인된 계획: `C:\Users\dongh\.claude\plans\2026-pdf-goal-twinkly-cerf.md`
+- 자동화 단계: **L4 자동화** (2026-11-13 사용자 선언. Claude가 코드 작성·실행, 단계마다 "왜" 설명. 커밋·src 함수 시그니처 변경·새 라이브러리는 승인 후)
+- 진행 중: 베이스라인 구축 — 계획 `C:\Users\dongh\.claude\plans\sharded-puzzling-crown.md`
+- 보류: 하네스 스킬 5개 — 계획 `C:\Users\dongh\.claude\plans\2026-pdf-goal-twinkly-cerf.md`
 - 최신 인수인계: [[50_세션/2026-11-10_1]]
 - 최고 CV F2: 아직 없음 (참고: PDF의 RMS 관리도 기준선 train F2 0.08)
 
