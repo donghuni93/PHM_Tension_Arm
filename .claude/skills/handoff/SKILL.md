@@ -5,7 +5,7 @@ description: 세션을 끝내거나 전환할 때 notes/00_NOW.md와 notes/실�
 # /handoff — 인수인계
 
 1. 사실 모으기: 이번 대화에서 한 실험·결정과 이유, 막힌 점, 승인 대기 항목. `git status --short`, `git log --oneline -5`. 확인 못한 것은 "미확인".
-2. `notes/실험로그.md`: 기록 안 된 실험을 표에 한 줄씩 추가 (가설 id, F2 ± sd, 재현율, 정밀도, 자주 놓친 고장, 결론).
+2. `notes/실험로그.md`: 기록 안 된 실험을 표에 한 줄씩 추가 (가설 id, F2 ± sd, 재현율, 정밀도, 자주 놓친 고장, 결론). 수치는 `experiments/EXP-nnn_*/result.json`에서 가져오고, 해당 실험 README의 `## 메모`에 결론을 쓴다.
 3. `notes/물리가설.md`: 검증된 가설의 `검증`·`상태` 열 갱신.
 4. `notes/결정.md`: 새 결정과 이유 추가.
 5. `notes/00_NOW.md`: 최고 F2, 다음 할 일, 마감. 60줄 이내. 끝난 할 일은 지운다.
