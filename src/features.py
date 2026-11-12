@@ -196,3 +196,76 @@ def extract_features_ext(x, fs=25000):
 def feature_table_ext(X, fs=25000):
     """신호 배열 (파일 수, 샘플 수) → 확장 피처 표. 행 순서는 X와 같다"""
     return pd.DataFrame([extract_features_ext(x, fs) for x in X])
+
+
+# ---------------------------------------------------------------------------
+# 물리 가설 피처 (EXP-006). 가설 id는 notes/물리가설.md
+# 대역·격자는 데이터를 보기 전에 정한 고정값만 쓴다 (라벨 보고 고르지 않음)
+# ---------------------------------------------------------------------------
+from scipy.signal import welch
+
+WELCH_NPERSEG = 4096            # Δf ≈ 6.1 Hz
+SHAPE_GRID_HZ = 250             # H3 스펙트럼 모양 격자
+PEAKY_BAND_HZ = 1250            # H2 공진 날카로움 대역 (P02와 같은 10칸)
+SWAY_LP_HZ = 20                 # H4 저주파 흔들림 상한
+REV_LP_HZ = 5                   # H4 반전점 검출용 저역통과
+IMPACT_HP_HZ = 1000             # H4 충격 포락선용 고역통과
+REV_WIN_S = 0.03                # H4 반전점 ±30 ms
+
+
+def extract_features_phys(x, fs=25000):
+    """신호 1개 → 물리 가설 피처 dict (H2 공진 날카로움, H3 스펙트럼 모양, H4 반전 충격)"""
+    x = np.asarray(x, dtype=float)
+    x = x - x.mean()
+    feats = {}
+
+    # --- H2·H3: Welch 로그 PSD ---
+    f, P = welch(x, fs=fs, nperseg=WELCH_NPERSEG)
+    logP = np.log10(P + 1e-30)
+    # H3 모양: 격자별 평균 파워의 로그 − 파일 전체 평균 (게인 제거)
+    edges = np.arange(0, fs / 2 + 1e-9, SHAPE_GRID_HZ)
+    shape = np.array([np.log10(P[(f >= a) & (f < b)].mean()) for a, b in zip(edges[:-1], edges[1:])])
+    shape -= shape.mean()
+    for a, v in zip(edges[:-1], shape):
+        feats[f"H3_shape_{int(a):05d}"] = v
+    # H2 공진 날카로움: 대역 안 최대 로그 PSD − 대역 중앙값 (좁은 공진 피크가 클수록 큼, 게인 무관)
+    for a in np.arange(0, fs / 2, PEAKY_BAND_HZ):
+        m = (f >= max(a, FILTER_LOW_HZ)) & (f < a + PEAKY_BAND_HZ)
+        feats[f"H2_peaky_{int(a / 100):03d}"] = logP[m].max() - np.median(logP[m])
+
+    # --- H4: 하중 반전점의 충격 ---
+    sway = sosfiltfilt(butter(4, SWAY_LP_HZ, btype="lowpass", fs=fs, output="sos"), x)
+    rev = sosfiltfilt(butter(2, REV_LP_HZ, btype="lowpass", fs=fs, output="sos"), x)
+    xh = sosfiltfilt(butter(4, IMPACT_HP_HZ, btype="highpass", fs=fs, output="sos"), x)
+    env = np.abs(hilbert(xh))
+    k = int(0.0025 * fs)                                  # 2.5 ms 이동평균으로 포락선 평활
+    env = np.convolve(env, np.ones(k) / k, mode="same")
+    rms = np.sqrt(np.mean(x ** 2))
+    feats["H4_sway_rms_ratio"] = np.sqrt(np.mean(sway ** 2)) / rms
+    feats["H4_sway_p2p"] = (rev.max() - rev.min()) / rms
+    prom = 0.5 * rev.std()
+    pk, _ = find_peaks(rev, prominence=prom, distance=int(0.1 * fs))
+    tr, _ = find_peaks(-rev, prominence=prom, distance=int(0.1 * fs))
+    ext = np.sort(np.concatenate([pk, tr]))
+    w = int(REV_WIN_S * fs)
+    env_mean = env.mean()
+    if len(ext):
+        near = np.array([env[max(e - w, 0):e + w].max() for e in ext]) / env_mean
+        feats["H4_rev_count"] = len(ext)
+        feats["H4_rev_impact_mean"] = near.mean()          # 반전점 근처 충격 / 평균 포락선
+        feats["H4_rev_impact_max"] = near.max()
+    else:
+        feats["H4_rev_count"] = 0
+        feats["H4_rev_impact_mean"] = 1.0
+        feats["H4_rev_impact_max"] = 1.0
+    # 반전점 집중도: 반전점 근처 포락선 최댓값 / 신호 전체 포락선 최댓값 (1이면 가장 큰 충격이 반전점에서)
+    feats["H4_rev_impact_share"] = (feats["H4_rev_impact_max"] * env_mean) / env.max()
+    # H1 보조: 충격 횟수 (포락선이 중앙값의 8배를 넘는 봉우리, 10 ms 간격)
+    imp, _ = find_peaks(env, height=8 * np.median(env), distance=int(0.01 * fs))
+    feats["H1_impact_rate"] = len(imp) / (len(x) / fs)
+    return feats
+
+
+def feature_table_phys(X, fs=25000):
+    """신호 배열 → 물리 가설 피처 표. 행 순서는 X와 같다"""
+    return pd.DataFrame([extract_features_phys(x, fs) for x in X])
