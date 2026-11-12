@@ -18,3 +18,10 @@ vault/.obsidian/workspace*.json
 
 # OMC 도구 상태 파일
 .omc/
+
+# 루트 README·노션 export: 개인 참고용
+/README.md
+노션/
+
+# Claude Code 개인 설정
+.claude/settings.local.json
