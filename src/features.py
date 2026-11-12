@@ -1,4 +1,4 @@
-"""피처 추출. 정의는 vault/10_스펙/features.md 의 core 피처와 같다.
+"""피처 추출. 피처의 물리 의미는 단계/4_피처/README.md, 가설 연결은 notes/물리가설.md.
 
 키 이름 앞의 id(T01, F07 …)가 스펙 표의 id다.
 train·val·test 모두 이 함수로 계산해야 같은 피처가 된다.

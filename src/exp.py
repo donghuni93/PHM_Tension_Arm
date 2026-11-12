@@ -1,10 +1,12 @@
 """실험 공용: 데이터·피처 캐시, 모델, 실험 기록(Experiment)
 
-실험 폴더(experiments/EXP-nnn_이름/run.py)에서:
+실험 폴더(단계/N_이름/EXP-nnn_이름/run.py)에서:
     from src.exp import *
-    ex = Experiment(__file__, "EXP-007", "제목", ["H2", "H3"])
-    ex.save_fig(fig, "psd_missed")          # → figs/psd_missed.png + README 그림 목록
-    ex.record("구성 이름", nested_cv(...))   # → result.json + README 결과 표
+    ex = Experiment(__file__, "EXP-007", "제목", ["H2", "H3"],
+                    member="이동훈", model="ExtraTrees", changes="이전 대비 바꾼 것 한 줄")
+    ex.save_fig(fig, "psd_missed")                          # → figs/psd_missed.png + README 그림 목록
+    ex.record("구성 이름", nested_cv(...), names, main=True)  # → result.json + README 결과 표
+README 맨 위 '노션 카드' 표는 노션 실험 DB 속성(팀원·모델·F2 점수·변경 사항·메모)과 같다.
 """
 import os, sys, json, subprocess, datetime
 import numpy as np, pandas as pd
@@ -90,15 +92,19 @@ def _git_hash():
 class Experiment:
     """실험 폴더 하나 = 코드(run.py) + figs/ + result.json + README.md
 
-    README의 '## 메모' 아래는 손으로 쓰는 곳이라 다시 실행해도 보존한다."""
+    README 맨 위 '노션 카드' = 노션 실험 DB 속성 (팀원·모델·F2 점수·변경 사항·메모).
+    F2 점수는 record(..., main=True)로 지정한 대표 구성(없으면 처음 기록한 구성).
+    README의 '## 메모' 아래는 손으로 쓰는 곳이라 다시 실행해도 보존한다. 카드의 메모 칸은 그 첫 줄."""
 
-    def __init__(self, run_file, exp_id, title, hypotheses=(), focus=("abn_002", "abn_022", "abn_029")):
+    def __init__(self, run_file, exp_id, title, hypotheses=(), member="", model="", changes="",
+                 focus=("abn_002", "abn_022", "abn_029")):
         self.dir = os.path.dirname(os.path.abspath(run_file))
         self.figs = os.path.join(self.dir, "figs"); os.makedirs(self.figs, exist_ok=True)
         self.id, self.title, self.hyp, self.focus = exp_id, title, list(hypotheses), list(focus)
         self.json = os.path.join(self.dir, "result.json")
         self.res = json.load(open(self.json, encoding="utf-8")) if os.path.exists(self.json) else {}
-        self.res.update(id=exp_id, title=title, hypotheses=self.hyp, git=_git_hash(),
+        self.res.update(id=exp_id, title=title, hypotheses=self.hyp, member=member, model=model,
+                        changes=changes, git=_git_hash(),
                         date=datetime.date.today().isoformat())
         self.res.setdefault("configs", {}); self.res.setdefault("figs", {})
         self._write()
@@ -118,8 +124,8 @@ class Experiment:
         self.res.setdefault("notes", {})[key] = text
         self._write()
 
-    def record(self, name, r, names):
-        """nested_cv 결과 한 구성을 기록하고 한 줄 출력"""
+    def record(self, name, r, names, main=False):
+        """nested_cv 결과 한 구성을 기록하고 한 줄 출력. main=True면 노션 카드의 F2 점수로 쓴다"""
         miss = [names[i] for i in np.flatnonzero(r["miss_counts"] >= 3)]
         row = dict(f2=round(float(r["f2"].mean()), 3), f2_sd=round(float(r["f2"].std()), 3),
                    recall=round(float(r["recall"].mean()), 3), precision=round(float(r["precision"].mean()), 3),
@@ -127,6 +133,8 @@ class Experiment:
                    miss_counts={names[i]: int(c) for i, c in enumerate(r["miss_counts"]) if c},
                    fp_counts={names[i]: int(c) for i, c in enumerate(r["fp_counts"]) if c})
         self.res["configs"][name] = row
+        if main or "main" not in self.res:
+            self.res["main"] = name
         self._write()
         print(f"{name:40s} F2 {row['f2']:.3f} ± {row['f2_sd']:.3f} | R {row['recall']:.3f} P {row['precision']:.3f}"
               f" | 자주 놓침 {' '.join(row['missed'])} | 오경보(3회+) {row['fp3']}", flush=True)
@@ -142,7 +150,14 @@ class Experiment:
                 memo = txt.split("## 메모", 1)[1]
         r = self.res
         notes = os.path.relpath(os.path.join(ROOT, "notes", "물리가설.md"), self.dir).replace("\\", "/")
+        first = next((l.strip() for l in memo.splitlines() if l.strip() and not l.startswith("(")), "")
+        m = r["configs"].get(r.get("main"), {})
+        f2 = f"{m['f2']:.3f} ± {m['f2_sd']:.3f}" if m else ""
+        hyp = f" ({', '.join(r['hypotheses'])})" if r["hypotheses"] else ""
         s = [f"# {r['id']} {r['title']}\n",
+             "노션 카드 (실험 DB에 그대로 옮긴다)\n",
+             "| 팀원 | 모델 | F2 점수 | 변경 사항 | 메모 |", "|---|---|---|---|---|",
+             f"| {r.get('member', '')} | {r.get('model', '')} | {f2} | {r.get('changes', '')}{hyp} | {first} |\n",
              f"- 가설: {', '.join(r['hypotheses']) or '—'} ([물리가설]({notes}))",
              f"- 실행: {r['date']} · git `{r['git']}` · 코드 [run.py](run.py)"]
         if r["configs"]:

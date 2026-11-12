@@ -2,29 +2,21 @@
 data/
 *.zip
 
-# 과제 PDF·논문: 배포 자료, 용량
-2026_품질공학_프로젝트_데이터소개.pdf
-papers/
+# 참고자료: 과제 PDF, 팀원 보고서, 25년 자료, 노션 export (배포 자료·용량)
+참고자료/
 
 # Python·Jupyter가 자동으로 만드는 파일
 __pycache__/
 .ipynb_checkpoints/
 
-# Obsidian 창 배치 (사람마다 다름)
-vault/.obsidian/workspace*.json
-
-# 팀원 공유 자료: 참고용, 저장소에 넣지 않음
-팀원 공유 정보/
-
 # OMC 도구 상태 파일
 .omc/
 
-# 루트 README·노션 export: 개인 참고용
+# 루트 README: 개인 참고용
 /README.md
-노션/
 
 # Claude Code 개인 설정
 .claude/settings.local.json
 
-# 실험 산출물 (피처 캐시, 그림, 로그)
+# 캐시 (데이터·피처)
 outputs/
