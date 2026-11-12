@@ -8,6 +8,7 @@ updated: 2026-11-13
 - 진행 중: 천장 넘기 (목표 train 중첩 CV F2 ≥ 0.90). 계획 `C:\Users\dongh\.claude\plans\pasted-content-id-7c45-00-now-kind-hanrahan.md`
 - 보류: 하네스 스킬 5개 — 계획 `C:\Users\dongh\.claude\plans\2026-pdf-goal-twinkly-cerf.md`
 - 최신 인수인계: [[50_세션/2026-11-13_0]]
+- 도메인·파이프라인 지식: [[10_개념/00_지도]] (노션 원문을 단계별 노트 8개로 분할, 2026-11-13). 논문 목록 [[20_논문/00_논문DB]]
 - 최고 CV F2: **0.819 ± 0.030** (중첩 CV, [[30_실험/EXP-002]] 확장 150개 × ExtraTrees). core13 기준 0.608 ([[30_실험/EXP-001]]). 바닥: 전부 고장 0.556, RMS 관리도 0.080
 
 ## 다음 할 일
