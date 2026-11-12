@@ -25,3 +25,6 @@ vault/.obsidian/workspace*.json
 
 # Claude Code 개인 설정
 .claude/settings.local.json
+
+# 실험 산출물 (피처 캐시, 그림, 로그)
+outputs/
