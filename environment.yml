@@ -1,0 +1,11 @@
+name: qe-phm
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy        # 신호 배열 계산
+  - scipy        # FFT, 필터, 첨도·왜도 같은 통계량
+  - pandas       # 특징 표, 제출 CSV
+  - scikit-learn # IF, OC-SVM, RF, LR, 교차검증, F2 점수
+  - matplotlib   # 파형·스펙트럼·관리도 그림
+  - ipykernel    # VS Code Jupyter에서 이 환경을 커널로 선택하기 위해 필요

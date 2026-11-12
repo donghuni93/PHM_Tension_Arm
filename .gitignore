@@ -1,0 +1,17 @@
+# 데이터: 용량이 크고 원본은 과제 배포처에 있음
+data/
+*.zip
+
+# 과제 PDF·논문: 배포 자료, 용량
+2026_품질공학_프로젝트_데이터소개.pdf
+papers/
+
+# Python·Jupyter가 자동으로 만드는 파일
+__pycache__/
+.ipynb_checkpoints/
+
+# Obsidian 창 배치 (사람마다 다름)
+vault/.obsidian/workspace*.json
+
+# 팀원 공유 자료: 참고용, 저장소에 넣지 않음
+팀원 공유 정보/
