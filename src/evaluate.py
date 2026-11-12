@@ -68,3 +68,59 @@ def nested_cv(F, y, groups, make_model, n_outer=5, n_inner=4, seeds=range(5)):
     out = {k: np.array(v) for k, v in out.items()}
     out["miss_counts"], out["fp_counts"] = miss, fp
     return out
+
+
+# ---------------------------------------------------------------------------
+# 슬라이싱 버전 (EXP-003): 조각으로 학습, 파일 단위로 집계해 평가
+# ---------------------------------------------------------------------------
+def _rows(file_idx, files):
+    """files에 속한 조각의 행 번호"""
+    return np.flatnonzero(np.isin(file_idx, files))
+
+
+def nested_cv_sliced(F, file_idx, y, make_model, agg=np.max,
+                     n_outer=5, n_inner=4, seeds=range(5)):
+    """조각 피처로 학습하고 파일 단위로 평가하는 중첩 CV
+
+    - F: (조각 수, 피처 수), file_idx: 조각 → 파일 번호, y: (파일 수,) 파일 라벨
+    - 폴드는 파일 단위로 나눈다. nested_cv와 같은 y·groups·seed로 split하므로 파일 분할이 같다
+    - 조각 라벨 = 소속 파일 라벨. 파일 점수 = 그 파일 조각 점수의 agg
+    - 임계값·F₂는 파일 단위. 반환 dict 형태는 nested_cv와 같다
+    """
+    F, file_idx, y = np.asarray(F, dtype=float), np.asarray(file_idx), np.asarray(y)
+    files = np.arange(len(y))
+    groups = files                                    # 파일 하나 = 그룹 하나 (nested_cv와 같음)
+    out = {"f2": [], "recall": [], "precision": [], "thresholds": []}
+    miss = np.zeros(len(y), dtype=int)
+    fp = np.zeros(len(y), dtype=int)
+
+    def fit_on(train_files):
+        r = _rows(file_idx, train_files)
+        return make_model().fit(F[r], y[file_idx[r]])
+
+    def score_files(model, test_files):
+        r = _rows(file_idx, test_files)
+        s, fi = _scores(model, F[r]), file_idx[r]
+        return np.array([agg(s[fi == f]) for f in test_files])
+
+    for seed in seeds:
+        pred = np.empty(len(y), dtype=int)
+        outer = StratifiedGroupKFold(n_splits=n_outer, shuffle=True, random_state=seed)
+        for tr, te in outer.split(files, y, groups):
+            inner = StratifiedGroupKFold(n_splits=n_inner, shuffle=True, random_state=seed)
+            oof = np.empty(len(tr))
+            for itr, ite in inner.split(files[tr], y[tr], groups[tr]):
+                oof[ite] = score_files(fit_on(files[tr][itr]), files[tr][ite])
+            t = best_f2_threshold(y[tr], oof)             # 안쪽 OOF(파일 단위)로만 임계값 선택
+            model = fit_on(files[tr])                     # 바깥 학습 파일의 모든 조각으로 다시 학습
+            pred[te] = (score_files(model, files[te]) >= t).astype(int)
+            out["thresholds"].append(t)
+        out["f2"].append(fbeta_score(y, pred, beta=2))
+        out["recall"].append(recall_score(y, pred))
+        out["precision"].append(precision_score(y, pred, zero_division=0))
+        miss += (y == 1) & (pred == 0)
+        fp += (y == 0) & (pred == 1)
+
+    out = {k: np.array(v) for k, v in out.items()}
+    out["miss_counts"], out["fp_counts"] = miss, fp
+    return out

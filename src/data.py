@@ -30,3 +30,17 @@ def load_dataset(data_dir):
     X = np.stack(signals)
     y = np.array(labels)
     return X, y, names
+
+
+def slice_signals(X, win=12500, step=6250):
+    """신호마다 길이 win의 조각을 step 간격으로 자른다 (기본 0.5초, 50% 겹침, decisions D10)
+
+    반환
+    - S: (조각 수, win) 조각 배열. 파일 0의 조각들, 파일 1의 조각들 … 순서
+    - file_idx: (조각 수,) 각 조각이 X의 몇 번째 파일에서 왔는지
+    """
+    X = np.asarray(X)
+    starts = np.arange(0, X.shape[1] - win + 1, step)   # 50,000점이면 0, 6250, …, 37500 → 7개
+    S = np.stack([x[s:s + win] for x in X for s in starts])
+    file_idx = np.repeat(np.arange(len(X)), len(starts))
+    return S, file_idx
