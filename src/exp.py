@@ -27,7 +27,7 @@ os.makedirs(CACHE, exist_ok=True)
 
 __all__ = ["ROOT", "CACHE", "np", "pd", "viz", "nested_cv", "load_train", "cached_table",
            "feature_table", "feature_table_ext", "feature_table_phys",
-           "make_et", "ColModel", "RankAvg", "Experiment"]
+           "make_et", "ColModel", "RankAvg", "CollinearityFilter", "vif", "Experiment"]
 
 
 # ---------- 데이터 ----------
@@ -71,6 +71,37 @@ class ColModel(BaseEstimator):
     def __init__(self, cols, make): self.cols, self.make = cols, make
     def fit(self, X, y): self.m_ = self.make().fit(X[:, self.cols], y); return self
     def predict_proba(self, X): return self.m_.predict_proba(X[:, self.cols])
+
+
+def vif(F):
+    """열별 VIF = 상관행렬 역행렬의 대각. 특이행렬 대비 아주 작은 릿지(1e-8)"""
+    R = np.corrcoef(np.asarray(F, dtype=float), rowvar=False)
+    return np.diag(np.linalg.inv(R + 1e-8 * np.eye(len(R))))
+
+
+class CollinearityFilter(BaseEstimator):
+    """다중공선성 제거 (라벨 안 씀, fit한 데이터의 피처만 봄 → 폴드 안에서 fit).
+    1) 상수 열 제거 2) |r| > r_max 인 쌍에서 뒤쪽 열 제거 (열 순서 = 피처 id 순, core 13이 앞이라 먼저 남음)
+    3) vif_max가 있으면 VIF가 가장 큰 열을 하나씩 빼서 모두 vif_max 이하가 될 때까지"""
+    def __init__(self, r_max=0.9, vif_max=None): self.r_max, self.vif_max = r_max, vif_max
+    def fit(self, X, y=None):
+        X = np.asarray(X, dtype=float)
+        keep = [j for j in range(X.shape[1]) if X[:, j].std() > 0]
+        R = np.abs(np.corrcoef(X[:, keep], rowvar=False))
+        sel = []
+        for a in range(len(keep)):
+            if all(R[a, b] <= self.r_max for b in sel):
+                sel.append(a)
+        cols = [keep[a] for a in sel]
+        if self.vif_max is not None:
+            while len(cols) > 2:
+                v = vif(X[:, cols])
+                if v.max() <= self.vif_max:
+                    break
+                cols.pop(int(np.argmax(v)))
+        self.cols_ = np.array(cols)
+        return self
+    def transform(self, X): return np.asarray(X, dtype=float)[:, self.cols_]
 
 
 class RankAvg(BaseEstimator):
@@ -173,7 +204,7 @@ class Experiment:
             s += ["- 평가: 중첩 CV (바깥 5 × 안쪽 4, seed 5개). 자주 놓침 = seed 5번 중 3번 이상\n",
                   "## 결과\n", "| 구성 | F2 | 재현율 | 오경보율 | 정밀도 | F2 (고장 10%·40%) | 자주 놓침 | 오경보 3회+ |", "|---|---|---|---|---|---|---|---|"]
         for k, v in r["configs"].items():
-            s.append(f"| {k} | {v['f2']:.3f} ± {v['f2_sd']:.3f} | {v['recall']:.3f} | {v.get('fpr', float('nan')):.3f} | {v['precision']:.3f} "
+            s.append(f"| {k.replace('|', chr(92) + '|')} | {v['f2']:.3f} ± {v['f2_sd']:.3f} | {v['recall']:.3f} | {v.get('fpr', float('nan')):.3f} | {v['precision']:.3f} "
                      f"| {v.get('f2_p10', float('nan')):.3f} · {v.get('f2_p40', float('nan')):.3f} "
                      f"| {' '.join(v['missed']) or '—'} | {v['fp3']} |")
         s.append("\n## 그림\n")

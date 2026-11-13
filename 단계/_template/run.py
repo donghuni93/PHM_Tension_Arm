@@ -8,7 +8,7 @@
 
 # %% 설정
 import os, sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__) if "__file__" in dir() else ".", "..", "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__) if "__file__" in dir() else ".", "..", "..", "..")))
 from src.exp import *
 
 # member·model·changes = 노션 카드 속성 (팀원·모델·변경 사항). F2 점수는 main=True 구성에서 자동
