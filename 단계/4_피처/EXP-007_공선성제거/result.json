@@ -1,0 +1,204 @@
+{
+ "id": "EXP-007",
+ "title": "확장 150 피처 다중공선성 제거",
+ "hypotheses": [],
+ "member": "이동훈",
+ "model": "ExtraTrees",
+ "changes": "ext150 앞에 폴드 안 공선성 필터(|r|>0.9 + VIF≤10)",
+ "git": "ec033c6+수정중",
+ "date": "2026-11-13",
+ "configs": {
+  "기준 ext150": {
+   "f2": 0.827,
+   "f2_sd": 0.031,
+   "recall": 0.867,
+   "precision": 0.7,
+   "fpr": 0.093,
+   "fpr_sd": 0.012,
+   "f2_p10": 0.759,
+   "f2_p40": 0.866,
+   "missed": [
+    "002",
+    "022",
+    "029"
+   ],
+   "fp3": 10,
+   "miss_counts": {
+    "abn_002": 5,
+    "abn_015": 2,
+    "abn_017": 2,
+    "abn_021": 1,
+    "abn_022": 5,
+    "abn_029": 5
+   },
+   "fp_counts": {
+    "nor_003": 1,
+    "nor_006": 1,
+    "nor_008": 5,
+    "nor_025": 5,
+    "nor_027": 5,
+    "nor_032": 1,
+    "nor_040": 1,
+    "nor_050": 4,
+    "nor_054": 5,
+    "nor_055": 5,
+    "nor_060": 1,
+    "nor_065": 1,
+    "nor_073": 5,
+    "nor_086": 4,
+    "nor_088": 1,
+    "nor_095": 5,
+    "nor_106": 2,
+    "nor_116": 4
+   }
+  },
+  "|r|>0.95": {
+   "f2": 0.819,
+   "f2_sd": 0.025,
+   "recall": 0.86,
+   "precision": 0.687,
+   "fpr": 0.098,
+   "fpr_sd": 0.012,
+   "f2_p10": 0.748,
+   "f2_p40": 0.859,
+   "missed": [
+    "002",
+    "015",
+    "021",
+    "022",
+    "029"
+   ],
+   "fp3": 11,
+   "miss_counts": {
+    "abn_002": 5,
+    "abn_015": 3,
+    "abn_021": 3,
+    "abn_022": 5,
+    "abn_029": 5
+   },
+   "fp_counts": {
+    "nor_003": 1,
+    "nor_006": 1,
+    "nor_008": 5,
+    "nor_025": 5,
+    "nor_027": 5,
+    "nor_032": 2,
+    "nor_037": 1,
+    "nor_040": 3,
+    "nor_050": 4,
+    "nor_054": 5,
+    "nor_055": 5,
+    "nor_065": 2,
+    "nor_073": 5,
+    "nor_086": 4,
+    "nor_094": 1,
+    "nor_095": 5,
+    "nor_116": 5
+   }
+  },
+  "|r|>0.9": {
+   "f2": 0.827,
+   "f2_sd": 0.013,
+   "recall": 0.86,
+   "precision": 0.718,
+   "fpr": 0.085,
+   "fpr_sd": 0.013,
+   "f2_p10": 0.764,
+   "f2_p40": 0.862,
+   "missed": [
+    "002",
+    "021",
+    "022",
+    "029"
+   ],
+   "fp3": 10,
+   "miss_counts": {
+    "abn_002": 5,
+    "abn_015": 2,
+    "abn_021": 4,
+    "abn_022": 5,
+    "abn_029": 5
+   },
+   "fp_counts": {
+    "nor_003": 1,
+    "nor_006": 1,
+    "nor_008": 3,
+    "nor_025": 5,
+    "nor_027": 5,
+    "nor_032": 1,
+    "nor_040": 2,
+    "nor_050": 5,
+    "nor_054": 5,
+    "nor_055": 4,
+    "nor_073": 5,
+    "nor_086": 4,
+    "nor_095": 5,
+    "nor_116": 5
+   }
+  },
+  "|r|>0.9 + VIF≤10": {
+   "f2": 0.784,
+   "f2_sd": 0.016,
+   "recall": 0.82,
+   "precision": 0.675,
+   "fpr": 0.102,
+   "fpr_sd": 0.03,
+   "f2_p10": 0.715,
+   "f2_p40": 0.825,
+   "missed": [
+    "002",
+    "015",
+    "021",
+    "022",
+    "029"
+   ],
+   "fp3": 10,
+   "miss_counts": {
+    "abn_002": 5,
+    "abn_005": 1,
+    "abn_009": 1,
+    "abn_014": 1,
+    "abn_015": 4,
+    "abn_016": 1,
+    "abn_021": 3,
+    "abn_022": 4,
+    "abn_025": 2,
+    "abn_029": 5
+   },
+   "fp_counts": {
+    "nor_002": 1,
+    "nor_003": 1,
+    "nor_008": 3,
+    "nor_009": 1,
+    "nor_015": 2,
+    "nor_022": 1,
+    "nor_025": 4,
+    "nor_027": 5,
+    "nor_032": 1,
+    "nor_037": 1,
+    "nor_040": 2,
+    "nor_048": 1,
+    "nor_050": 4,
+    "nor_054": 5,
+    "nor_055": 5,
+    "nor_060": 2,
+    "nor_066": 2,
+    "nor_073": 5,
+    "nor_092": 1,
+    "nor_095": 4,
+    "nor_098": 1,
+    "nor_106": 3,
+    "nor_116": 5,
+    "nor_119": 1
+   }
+  }
+ },
+ "figs": {
+  "psd_focus": "놓친 고장의 PSD가 정상 범위(파란 띠) 밖으로 나가는 주파수가 있는가",
+  "corr_before_after": "피처 간 |상관계수|. 밝은 덩어리 = 같은 정보를 반복하는 피처 묶음"
+ },
+ "notes": {
+  "전체 데이터 기준 필터 결과": "원본 150 (상수 열 0개): rank 140, VIF 중앙값 5572, |r|>0.9 쌍 93\n|r|>0.95: 113개 남음, VIF 중앙값 419.4, 최대 76979987.5\n|r|>0.9: 100개 남음, VIF 중앙값 173.3, 최대 73830829.9\n|r|>0.9 + VIF≤10: 49개 남음, VIF 중앙값 6.1, 최대 9.9\nVIF≤10 후 남은 피처: T08_skewness T15_hjorth_complexity W01_win_rms_max_to_mean F07_peak1_freq F08_peak1_amp T18_tkeo_kurtosis W04_win_zcr_std F02_spectral_bandwidth F04_rolloff95 F09_peak2_freq F09_peak3_freq B04_ratio_00625 B04_ratio_01250 B04_ratio_01875 B04_ratio_02500 B04_ratio_03125 B04_ratio_03750 B04_ratio_04375 B04_ratio_05000 B04_ratio_05625 B04_ratio_06250 B04_ratio_06875 B04_ratio_07500 B04_ratio_08125 B04_ratio_09375 B04_ratio_10000 B04_ratio_10625 B04_ratio_11875 P02_kurtosis_000 P02_rms_012 P02_kurtosis_012 P02_kurtosis_025 P02_peak_037 P02_crest_050 P02_rms_062 P02_kurtosis_062 P02_crest_075 P02_peak_112 P02_kurtosis_112 S01_kurtosis_000 S01_kurtosis_012 S01_kurtosis_025 S01_max_to_mean_037 S01_kurtosis_037 S01_kurtosis_050 S01_kurtosis_062 S01_kurtosis_087 S01_kurtosis_100 S01_kurtosis_112"
+ },
+ "main": "|r|>0.9 + VIF≤10"
+}
