@@ -41,11 +41,12 @@ def nested_cv(F, y, groups, make_model, n_outer=5, n_inner=4, seeds=range(5)):
 
     반환 dict
     - f2, recall, precision: seed별 값 배열 (바깥 fold 예측을 모아 계산)
+    - fpr: seed별 오경보율 = FP / 정상 수 (고장 비율과 무관. 1-2 조각 4)
     - miss_counts, fp_counts: 파일별로 seed 중 몇 번 놓쳤는지 / 오경보였는지
     - thresholds: 바깥 fold마다 고른 임계값
     """
     F, y, groups = np.asarray(F, dtype=float), np.asarray(y), np.asarray(groups)
-    out = {"f2": [], "recall": [], "precision": [], "thresholds": []}
+    out = {"f2": [], "recall": [], "precision": [], "fpr": [], "thresholds": []}
     miss = np.zeros(len(y), dtype=int)
     fp = np.zeros(len(y), dtype=int)
 
@@ -62,6 +63,7 @@ def nested_cv(F, y, groups, make_model, n_outer=5, n_inner=4, seeds=range(5)):
         out["f2"].append(fbeta_score(y, pred, beta=2))
         out["recall"].append(recall_score(y, pred))
         out["precision"].append(precision_score(y, pred, zero_division=0))
+        out["fpr"].append(float(pred[y == 0].mean()))
         miss += (y == 1) & (pred == 0)
         fp += (y == 0) & (pred == 1)
 
@@ -90,7 +92,7 @@ def nested_cv_sliced(F, file_idx, y, make_model, agg=np.max,
     F, file_idx, y = np.asarray(F, dtype=float), np.asarray(file_idx), np.asarray(y)
     files = np.arange(len(y))
     groups = files                                    # 파일 하나 = 그룹 하나 (nested_cv와 같음)
-    out = {"f2": [], "recall": [], "precision": [], "thresholds": []}
+    out = {"f2": [], "recall": [], "precision": [], "fpr": [], "thresholds": []}
     miss = np.zeros(len(y), dtype=int)
     fp = np.zeros(len(y), dtype=int)
 
@@ -118,6 +120,7 @@ def nested_cv_sliced(F, file_idx, y, make_model, agg=np.max,
         out["f2"].append(fbeta_score(y, pred, beta=2))
         out["recall"].append(recall_score(y, pred))
         out["precision"].append(precision_score(y, pred, zero_division=0))
+        out["fpr"].append(float(pred[y == 0].mean()))
         miss += (y == 1) & (pred == 0)
         fp += (y == 0) & (pred == 1)
 

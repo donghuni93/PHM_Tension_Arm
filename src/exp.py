@@ -54,6 +54,12 @@ def cached_table(name, fn, X):
     return T.replace([np.inf, -np.inf], np.nan).fillna(0)
 
 
+def _f2_at(recall, fpr, p):
+    """재현율·오경보율이 그대로일 때 고장 비율 p에서의 F2 (1-2 조각 4 공식 환산)"""
+    tp, fp, fn = p * recall, (1 - p) * fpr, p * (1 - recall)
+    return float(5 * tp / (5 * tp + 4 * fn + fp))
+
+
 # ---------- 모델 ----------
 def make_et(n=300, seed=0):
     return lambda: ExtraTreesClassifier(n, class_weight="balanced_subsample", min_samples_leaf=2,
@@ -129,6 +135,9 @@ class Experiment:
         miss = [names[i] for i in np.flatnonzero(r["miss_counts"] >= 3)]
         row = dict(f2=round(float(r["f2"].mean()), 3), f2_sd=round(float(r["f2"].std()), 3),
                    recall=round(float(r["recall"].mean()), 3), precision=round(float(r["precision"].mean()), 3),
+                   fpr=round(float(r["fpr"].mean()), 3), fpr_sd=round(float(r["fpr"].std()), 3),
+                   f2_p10=round(_f2_at(r["recall"].mean(), r["fpr"].mean(), 0.1), 3),
+                   f2_p40=round(_f2_at(r["recall"].mean(), r["fpr"].mean(), 0.4), 3),
                    missed=[m.replace("abn_", "") for m in miss], fp3=int((r["fp_counts"] >= 3).sum()),
                    miss_counts={names[i]: int(c) for i, c in enumerate(r["miss_counts"]) if c},
                    fp_counts={names[i]: int(c) for i, c in enumerate(r["fp_counts"]) if c})
@@ -136,7 +145,7 @@ class Experiment:
         if main or "main" not in self.res:
             self.res["main"] = name
         self._write()
-        print(f"{name:40s} F2 {row['f2']:.3f} ± {row['f2_sd']:.3f} | R {row['recall']:.3f} P {row['precision']:.3f}"
+        print(f"{name:40s} F2 {row['f2']:.3f} ± {row['f2_sd']:.3f} | R {row['recall']:.3f} FPR {row['fpr']:.3f} P {row['precision']:.3f}"
               f" | 자주 놓침 {' '.join(row['missed'])} | 오경보(3회+) {row['fp3']}", flush=True)
         return row
 
@@ -162,9 +171,10 @@ class Experiment:
              f"- 실행: {r['date']} · git `{r['git']}` · 코드 [run.py](run.py)"]
         if r["configs"]:
             s += ["- 평가: 중첩 CV (바깥 5 × 안쪽 4, seed 5개). 자주 놓침 = seed 5번 중 3번 이상\n",
-                  "## 결과\n", "| 구성 | F2 | 재현율 | 정밀도 | 자주 놓침 | 오경보 3회+ |", "|---|---|---|---|---|---|"]
+                  "## 결과\n", "| 구성 | F2 | 재현율 | 오경보율 | 정밀도 | F2 (고장 10%·40%) | 자주 놓침 | 오경보 3회+ |", "|---|---|---|---|---|---|---|---|"]
         for k, v in r["configs"].items():
-            s.append(f"| {k} | {v['f2']:.3f} ± {v['f2_sd']:.3f} | {v['recall']:.3f} | {v['precision']:.3f} "
+            s.append(f"| {k} | {v['f2']:.3f} ± {v['f2_sd']:.3f} | {v['recall']:.3f} | {v.get('fpr', float('nan')):.3f} | {v['precision']:.3f} "
+                     f"| {v.get('f2_p10', float('nan')):.3f} · {v.get('f2_p40', float('nan')):.3f} "
                      f"| {' '.join(v['missed']) or '—'} | {v['fp3']} |")
         s.append("\n## 그림\n")
         for k, cap in r["figs"].items():
