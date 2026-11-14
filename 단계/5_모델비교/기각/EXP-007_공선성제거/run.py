@@ -10,7 +10,7 @@
 
 # %% 설정
 import os, sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__) if "__file__" in dir() else ".", "..", "..", "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__) if "__file__" in dir() else ".", "..", "..", "..", "..")))
 from src.exp import *
 from sklearn.pipeline import make_pipeline
 import matplotlib.pyplot as plt
