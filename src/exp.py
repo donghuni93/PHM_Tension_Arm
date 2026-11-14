@@ -61,9 +61,11 @@ def _f2_at(recall, fpr, p):
 
 
 # ---------- 모델 ----------
-def make_et(n=300, seed=0):
+def make_et(n=300, seed=0, n_jobs=1):
+    """n_jobs=1이 기본: 파일 ~120개에서는 나무 단위 병렬이 오히려 느리다 (-1이 약 40% 느림).
+    병렬은 nested_cv(n_jobs=...)에서 (seed, 바깥 fold) 단위로 한다"""
     return lambda: ExtraTreesClassifier(n, class_weight="balanced_subsample", min_samples_leaf=2,
-                                        max_features="sqrt", random_state=seed, n_jobs=-1)
+                                        max_features="sqrt", random_state=seed, n_jobs=n_jobs)
 
 
 class ColModel(BaseEstimator):
@@ -131,7 +133,7 @@ class Experiment:
 
     README 맨 위 '노션 카드' = 노션 실험 DB 속성 (팀원·모델·F2 점수·변경 사항·메모).
     F2 점수는 record(..., main=True)로 지정한 대표 구성(없으면 처음 기록한 구성).
-    README의 '## 메모' 아래는 손으로 쓰는 곳이라 다시 실행해도 보존한다. 카드의 메모 칸은 그 첫 줄."""
+    README의 '## 해석'(결과 표 아래)은 손으로 쓰는 곳이라 다시 실행해도 보존한다. 카드의 메모 칸은 그 첫 문장. 수치 메모는 result.json에만."""
 
     def __init__(self, run_file, exp_id, title, hypotheses=(), member="", model="", changes="",
                  focus=("abn_002", "abn_022", "abn_029")):
@@ -157,7 +159,7 @@ class Experiment:
         return fig
 
     def note(self, key, text):
-        """result.json·README에 남길 짧은 수치 메모 (예: 피처 AUC 표)"""
+        """result.json에 남길 짧은 수치 메모 (예: 피처 AUC 표). README에는 쓰지 않는다 — 필요한 수치는 해석에 옮겨 쓴다"""
         self.res.setdefault("notes", {})[key] = text
         self._write()
 
@@ -180,17 +182,28 @@ class Experiment:
               f" | 자주 놓침 {' '.join(row['missed'])} | 오경보(3회+) {row['fp3']}", flush=True)
         return row
 
+    @staticmethod
+    def _read_interp(txt):
+        """README에서 손으로 쓴 해석 본문을 꺼낸다. 새 형식 = '## 해석' ~ '## 그림' 사이,
+        옛 형식 = '## 메모' 뒤 전부 (안내문 '(결론·해석을 …)'은 버림)"""
+        if "\n## 해석\n" in txt:
+            body = txt.split("\n## 해석\n", 1)[1].split("\n## 그림", 1)[0]
+        elif "## 메모" in txt:
+            body = txt.split("## 메모", 1)[1]
+        else:
+            return ""
+        lines = [l for l in body.splitlines() if not l.startswith("(결론·해석을")]
+        return "\n".join(lines).strip("\n")
+
     def _write(self):
+        """README = 노션 카드 → 결과 표 → 해석(손으로 씀, 다시 실행해도 유지) → 그림(psd_missed가 맨 끝).
+        note()로 남긴 수치 메모는 result.json에만 두고 README에는 쓰지 않는다 (11-14 사용자 결정)"""
         json.dump(self.res, open(self.json, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
         readme = os.path.join(self.dir, "README.md")
-        memo = "\n(결론·해석을 여기에 손으로 쓴다. 다시 실행해도 유지됨)\n"
-        if os.path.exists(readme):
-            txt = open(readme, encoding="utf-8").read()
-            if "## 메모" in txt:
-                memo = txt.split("## 메모", 1)[1]
+        interp = self._read_interp(open(readme, encoding="utf-8").read()) if os.path.exists(readme) else ""
         r = self.res
         notes = os.path.relpath(os.path.join(ROOT, "notes", "물리가설.md"), self.dir).replace("\\", "/")
-        first = next((l.strip() for l in memo.splitlines() if l.strip() and not l.startswith("(")), "")
+        first = next((l.strip() for l in interp.splitlines() if l.strip() and not l.startswith(("#", "|", "-", "!"))), "")
         m = r["configs"].get(r.get("main"), {})
         f2 = f"{m['f2']:.3f} ± {m['f2_sd']:.3f}" if m else ""
         hyp = f" ({', '.join(r['hypotheses'])})" if r["hypotheses"] else ""
@@ -207,10 +220,10 @@ class Experiment:
             s.append(f"| {k.replace('|', chr(92) + '|')} | {v['f2']:.3f} ± {v['f2_sd']:.3f} | {v['recall']:.3f} | {v.get('fpr', float('nan')):.3f} | {v['precision']:.3f} "
                      f"| {v.get('f2_p10', float('nan')):.3f} · {v.get('f2_p40', float('nan')):.3f} "
                      f"| {' '.join(v['missed']) or '—'} | {v['fp3']} |")
+        if interp:
+            s.append("\n## 해석\n\n" + interp + "\n")
         s.append("\n## 그림\n")
-        for k, cap in r["figs"].items():
+        figs = sorted(r["figs"].items(), key=lambda kv: kv[0].startswith("psd"))   # psd 그림은 맨 끝
+        for k, cap in figs:
             s.append(f"### {k}\n{cap}\n\n![{k}](figs/{k}.png)\n")
-        for k, t in r.get("notes", {}).items():
-            s.append(f"## {k}\n\n```\n{t}\n```\n")
-        s.append("## 메모" + memo)
         open(readme, "w", encoding="utf-8").write("\n".join(s))

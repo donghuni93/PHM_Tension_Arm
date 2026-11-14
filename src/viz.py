@@ -93,3 +93,47 @@ def feature_auc_bar(A, top=25):
     a.tick_params(axis="y", labelsize=7)
     fig.tight_layout()
     return fig
+
+
+def tsne(views, y, names, mark=(), score=None, perplexity=30, seed=0, k=5, scale=True):
+    """t-SNE 기본 그림 (매 실험). views = {"패널 제목": (파일 수, 차원) 행렬}. scale=True면 열마다 표준화한 뒤 임베딩
+    (블록 가중 등 직접 맞춘 행렬은 scale=False)
+    - 1행: 정상 파랑 · 고장 주황. mark에 든 파일은 번호 표시 (예: 놓친 고장·오경보 정상)
+    - score를 주면 2행: 같은 배치를 이상 점수로 칠함 (고장은 주황 테두리)
+    - 제목의 '이웃 순도' = 2차원 배치에서 고장 점의 가까운 이웃 k개 중 고장 비율 (무작위면 고장 비율과 같음)
+    반환 (fig, {패널 제목: 2차원 좌표})"""
+    from sklearn.manifold import TSNE
+    from sklearn.neighbors import NearestNeighbors
+    NOR, ABN = "#2a78d6", "#eb6834"
+    y = np.asarray(y)
+    rows = 1 if score is None else 2
+    fig, axs = plt.subplots(rows, len(views), figsize=(6 * len(views), 5.6 * rows), squeeze=False)
+    emb = {}
+    for j, (title, A) in enumerate(views.items()):
+        A = np.asarray(A, dtype=float)
+        if scale:
+            A = (A - A.mean(0)) / (A.std(0) + 1e-12)
+        E = TSNE(2, perplexity=perplexity, init="pca", random_state=seed).fit_transform(A)
+        emb[title] = E
+        nb = NearestNeighbors(n_neighbors=k + 1).fit(E).kneighbors(E[y == 1], return_distance=False)[:, 1:]
+        purity = y[nb].mean()
+        for r in range(rows):
+            a = axs[r, j]
+            if r == 0:
+                a.scatter(*E[y == 0].T, s=18, color=NOR, alpha=.55, lw=0, label="정상")
+                a.scatter(*E[y == 1].T, s=28, color=ABN, lw=0, label="고장")
+                a.set_title(f"{title}\n고장 이웃 순도 {purity:.2f} (무작위 {y.mean():.2f})", fontsize=10)
+            else:
+                sc = a.scatter(*E.T, c=score, cmap="viridis", s=20, lw=0)
+                a.scatter(*E[y == 1].T, s=55, facecolor="none", edgecolor=ABN, lw=1.1, label="고장")
+                fig.colorbar(sc, ax=a, shrink=.8, label="이상 점수")
+                a.set_title(f"{title} · 색 = 이상 점수", fontsize=10)
+            for n in mark:
+                i = names.index(n)
+                a.annotate(n.replace("abn_", "A").replace("nor_", "N"), E[i], xytext=(3, 3), textcoords="offset points",
+                           fontsize=7, color=ABN if y[i] else NOR)
+            a.set_xticks([]); a.set_yticks([])
+        axs[0, j].legend(fontsize=8, loc="best")
+    fig.suptitle(f"t-SNE (perplexity {perplexity}, seed {seed}). A/N 번호 = 표시한 파일", fontsize=11)
+    fig.tight_layout()
+    return fig, emb
