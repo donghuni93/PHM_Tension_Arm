@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>텐션암 EDA 뷰어</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f3ef; --surface: #fcfcfb; --surface-2: #f0efec; --border: #dddcd6;
+  --text: #0b0b0b; --text-2: #52514e; --text-3: #85847e;
+  --nor: #2a78d6; --abn: #eb6834; --nor-band: rgba(42,120,214,.16);
+  --grid: #e6e5e0; --axis: #b9b8b1; --hl: #fff1c2; --accent: #2a78d6;
+  --ov1: rgba(98,80,214,.10); --ov2: rgba(27,175,122,.12);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #383835;
+    --text: #f0efec; --text-2: #c3c2b7; --text-3: #8d8c84;
+    --nor: #3987e5; --abn: #d95926; --nor-band: rgba(57,135,229,.22);
+    --grid: #2b2b29; --axis: #55544f; --hl: #4a3f17; --accent: #3987e5;
+    --ov1: rgba(144,133,233,.14); --ov2: rgba(25,158,112,.16);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #383835;
+  --text: #f0efec; --text-2: #c3c2b7; --text-3: #8d8c84;
+  --nor: #3987e5; --abn: #d95926; --nor-band: rgba(57,135,229,.22);
+  --grid: #2b2b29; --axis: #55544f; --hl: #4a3f17; --accent: #3987e5;
+  --ov1: rgba(144,133,233,.14); --ov2: rgba(25,158,112,.16);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text);
+  font: 13px/1.45 "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 16px; }
+header h1 { font-size: 15px; margin: 0 12px 0 0; display: inline-block; }
+.bar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.ctl { display: inline-flex; align-items: center; gap: 4px; color: var(--text-2); }
+select, input[type=text] { font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 6px; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; vertical-align: middle; }
+.seg button { font: inherit; border: 0; background: var(--surface-2); color: var(--text-2); padding: 3px 10px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--border); }
+.seg button.on { background: var(--accent); color: #fff; }
+.layout { display: grid; grid-template-columns: 250px 1fr; min-height: calc(100vh - 90px); }
+aside { border-right: 1px solid var(--border); background: var(--surface); padding: 10px; overflow: auto; max-height: calc(100vh - 50px); position: sticky; top: 50px; }
+aside h3 { font-size: 12px; color: var(--text-2); margin: 10px 0 4px; font-weight: 600; }
+.taglist div { display: flex; justify-content: space-between; gap: 6px; padding: 2px 6px; border-radius: 5px; cursor: pointer; }
+.taglist div:hover, .flist div:hover, .clist div:hover { background: var(--surface-2); }
+.taglist div.on { background: var(--hl); }
+.taglist .cnt { color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.flist div, .clist div { padding: 1px 6px; border-radius: 4px; cursor: pointer; display: flex; gap: 6px; align-items: center; font-variant-numeric: tabular-nums; }
+.flist div.cur, .clist div.cur { background: var(--hl); font-weight: 600; }
+.flist .gh, .clist .gh { cursor: default; color: var(--text-2); font-weight: 600; margin-top: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; }
+.dot.n { background: var(--nor); } .dot.a { background: var(--abn); }
+.flist .badge { margin-left: auto; color: var(--text-3); font-size: 11px; }
+main { padding: 12px 16px 40px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; min-width: 0; }
+.card h4 { margin: 0 0 6px; font-size: 12px; color: var(--text-2); font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.title .nm { font-size: 18px; font-weight: 700; }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
+.chip.lab-n { border-color: var(--nor); color: var(--text); } .chip.lab-a { border-color: var(--abn); color: var(--text); }
+.chip.warn { background: var(--hl); color: var(--text); }
+canvas { display: block; width: 100%; }
+.row2 { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+.row2e { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 12px; }
+.ftable { width: 100%; border-collapse: collapse; }
+.ftable td { padding: 2px 4px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
+.ftable td.v { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ftable td.p { width: 110px; }
+.ftable tr.out td { background: var(--hl); }
+.lnk { cursor: pointer; text-decoration: underline dotted var(--text-3); text-underline-offset: 3px; }
+.lnk:hover { color: var(--accent); }
+.track { position: relative; height: 12px; background: var(--surface-2); border-radius: 6px; }
+.track .band { position: absolute; top: 0; bottom: 0; left: 5%; width: 90%; background: var(--nor-band); border-radius: 6px; }
+.track .mid { position: absolute; top: 1px; bottom: 1px; left: 50%; width: 1px; background: var(--nor); opacity: .6; }
+.track .mk { position: absolute; top: 1px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; border: 2px solid var(--surface); }
+.track .mk.ghost { background: transparent; border: 1.5px solid var(--text-3); }
+.ftable td.o2 { color: var(--text-3); font-size: 11px; }
+.sigbar { font-weight: 600; color: var(--text); }
+.pv { font-size: 11px; color: var(--text-3); width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+.five .fcard { display: grid; grid-template-columns: 200px 1.4fr 1fr; gap: 10px; align-items: start; }
+.five .meta { font-size: 12px; }
+.five .meta .nm { font-weight: 700; font-size: 14px; cursor: pointer; }
+.five .meta table { border-collapse: collapse; margin-top: 4px; }
+.five .meta td { padding: 0 4px 0 0; font-variant-numeric: tabular-nums; }
+.five .meta tr.out td { background: var(--hl); }
+.tbl-wrap { overflow: auto; max-height: calc(100vh - 140px); border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+table.big { border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; font-size: 12px; }
+table.big th, table.big td { padding: 3px 6px; border-bottom: 1px solid var(--grid); white-space: nowrap; text-align: right; }
+table.big th { position: sticky; top: 0; background: var(--surface-2); z-index: 2; cursor: pointer; font-weight: 600; color: var(--text-2); }
+table.big th.s { color: var(--text); text-decoration: underline; }
+table.big td.o { background: var(--hl); font-weight: 700; }
+table.big td:first-child, table.big th:first-child { position: sticky; left: 0; background: var(--surface); text-align: left; z-index: 1; }
+table.big th:first-child { z-index: 3; background: var(--surface-2); }
+table.big tr:hover td { background: var(--surface-2); }
+.tip { position: fixed; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.15); display: none; z-index: 30; white-space: nowrap; }
+.legend { display: inline-flex; gap: 10px; font-weight: 400; color: var(--text-2); font-size: 11px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 3px; border-radius: 2px; }
+.legend i.bandsw { height: 9px; background: var(--nor-band); }
+.help { color: var(--text-3); font-size: 12px; font-weight: 400; }
+.kbd { border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; font-size: 11px; background: var(--surface-2); }
+.bands { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; align-items: end; height: 70px; }
+.bands div { position: relative; background: var(--surface-2); border-radius: 3px; height: 100%; }
+.bands div span { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 3px; }
+.bands-x { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; font-size: 10px; color: var(--text-3); text-align: center; }
+.navbtn { font: inherit; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); border-radius: 6px; padding: 2px 10px; cursor: pointer; }
+/* 개념 */
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100vw); background: var(--surface); border-left: 1px solid var(--border); box-shadow: -4px 0 16px rgba(0,0,0,.12); z-index: 20; padding: 14px 16px 30px; overflow: auto; transform: translateX(105%); transition: transform .18s; }
+.drawer.open { transform: none; }
+.drawer .x { position: absolute; top: 8px; right: 10px; }
+.concept h2 { font-size: 17px; margin: 0 0 2px; }
+.concept .sec { color: var(--text-3); font-size: 12px; margin-bottom: 8px; }
+.concept dl { margin: 0; }
+.concept dt { font-weight: 700; font-size: 12px; margin-top: 8px; }
+.concept dt.k-data { color: var(--accent); }
+.concept dt.k-warn { color: var(--abn); }
+.concept dd { margin: 2px 0 0; }
+.concept code { background: var(--surface-2); padding: 0 4px; border-radius: 4px; font-size: 12px; }
+.concept .rel { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 4px; }
+.concept .rel .chip { cursor: pointer; }
+.note { border-left: 3px solid var(--accent); padding: 6px 10px; background: var(--surface-2); border-radius: 0 6px 6px 0; margin-bottom: 12px; }
+.cgrid { display: grid; grid-template-columns: 260px 1fr; gap: 12px; }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; } aside { position: static; max-height: 240px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .row2, .row2e, .five .fcard, .cgrid { grid-template-columns: 1fr; } .feats { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>텐션암 EDA 뷰어</h1>
+    <span class="seg" id="mode">
+      <button data-v="one" class="on">한 개씩</button><button data-v="five">5개씩</button><button data-v="table">표</button><button data-v="scatter">산점도</button><button data-v="concept">개념</button>
+    </span>
+    <span class="ctl sigbar" title="모든 그림·지표·태그·정상 백분위를 이 신호로 계산한 값으로 바꾼다">신호 <span class="seg" id="sig"><button data-v="raw">평균 제거</button><button data-v="hp">200 Hz 고역통과</button></span></span>
+    <span class="ctl">라벨 <select id="fLab"><option value="all">전체</option><option value="0">정상</option><option value="1">고장</option></select></span>
+    <span class="ctl">모델 결과 <select id="fModel">
+      <option value="all">전체</option>
+      <optgroup label="최종 모델 (EXP-021)">
+        <option value="fin_err">최종이 틀림 (3/5 이상)</option><option value="fin_miss">최종 미탐</option><option value="fin_fp">최종 오경보</option>
+        <option value="fin_new">최종에서 새로 잡힘 (결합은 미탐)</option><option value="fin_lost">최종에서 새로 놓침 (결합은 잡음)</option>
+        <option value="fin_fixfp">최종에서 오경보 해소 (결합은 오경보)</option><option value="rule83">8.3k 규칙 켜짐</option>
+      </optgroup>
+      <optgroup label="전문가 (AE · ET)">
+        <option value="ae_miss">AE 미탐</option><option value="et_miss">ET 미탐</option>
+        <option value="both_miss">둘 다 미탐</option><option value="ae_only">AE만 미탐</option><option value="et_only">ET만 미탐</option>
+        <option value="ae_fp">AE 오경보</option><option value="et_fp">ET 오경보</option><option value="any_err">AE·ET 어느 쪽이든 틀림</option>
+      </optgroup>
+    </select></span>
+    <span class="ctl">정렬 <select id="sortKey"></select>
+      <span class="seg" id="sortDir"><button data-v="1" class="on">↑</button><button data-v="-1">↓</button></span></span>
+    <span class="ctl">묶기 <select id="groupBy"><option value="label">라벨</option><option value="none">없음</option><option value="model">모델 결과</option></select></span>
+    <span class="ctl"><input type="text" id="q" placeholder="파일 찾기 (예: 017)" size="14"></span>
+    <span class="help" id="status"></span>
+  </div>
+</header>
+<div class="layout">
+  <aside id="aside"></aside>
+  <main id="main"></main>
+</div>
+<div class="drawer" id="drawer"><button class="navbtn x" id="dx">닫기 ✕</button><div id="dbody"></div></div>
+<div class="tip" id="tip"></div>
+
+<script id="data" type="application/json">__DATA_JSON__</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById("data").textContent);
+const N = D.names.length;
+const bytes = s => { const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+const i16 = s => new Int16Array(bytes(s).buffer);
+const ENV = i16(D.env);
+const NB = D.nb, NZ = D.nz, NF = D.nf, [SF, ST] = D.spec_shape;
+const FEAT = Object.fromEntries(D.feat.map(f => [f.key, f]));
+const CON = Object.fromEntries(D.concepts.map(c => [c.key, c]));
+const GRP = Object.fromEntries(D.groups.map(g => [g.key, g]));
+
+// ---------- 상태 ----------
+const S = { mode: "one", lab: "all", model: "all", tag: null, sort: "name", dir: 1, group: "label", q: "", sig: "raw",
+            list: [], pos: 0, psdLog: true, shareY: false, sx: "std", sy: "prot", lx: true, ly: true,
+            ovP: false, ovG: false, ckey: "tension-arm", cq: "" };
+try { Object.assign(S, JSON.parse(localStorage.getItem("eda-viewer3") || "{}"), { list: [] }); } catch (e) {}
+const save = () => { try { const { list, ...k } = S; localStorage.setItem("eda-viewer3", JSON.stringify(k)); } catch (e) {} };
+
+// ---------- 신호 전환: 평균 제거(raw) / 200 Hz 고역통과(hp). 지표·태그·그림 데이터 한 벌씩 미리 계산돼 있다 ----------
+let ZOOM, PSD, SKA, ENVS, WIN, SPEC, TAG;
+const DEC = {};
+function useSig(s) {
+  if (!D.sets[s]) s = "raw";
+  S.sig = s; const set = D.sets[s];
+  if (!DEC[s]) DEC[s] = { zoom: i16(set.bin.zoom), psd: i16(set.bin.psd), sk: i16(set.bin.sk), envs: i16(set.bin.envs), win: i16(set.bin.win), spec: bytes(set.bin.spec) };
+  ({ zoom: ZOOM, psd: PSD, sk: SKA, envs: ENVS, win: WIN, spec: SPEC } = DEC[s]);
+  for (const k of ["val", "pct", "ref", "tags", "ftags", "events", "psdref", "skref", "envref", "wref", "zoom_start"]) D[k] = set[k];
+  TAG = Object.fromEntries(D.tags.map(t => [t.key, t]));
+}
+const otherSig = () => S.sig === "hp" ? "raw" : "hp";
+const sigName = s => D.sig_names[s || S.sig];
+useSig(S.sig);
+
+// ---------- 공용 ----------
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const col = i => D.y[i] ? css("--abn") : css("--nor");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (v, k) => {
+  if (v === null || v === undefined || Number.isNaN(v)) return "—";
+  const a = Math.abs(v);
+  if (k === "n_imp" || k === "n_out") return String(Math.round(v));
+  if (a !== 0 && (a < 0.001 || a >= 1e5)) return v.toExponential(2);
+  if (a >= 100) return v.toFixed(0);
+  if (a >= 10) return v.toFixed(1);
+  if (a >= 1) return v.toFixed(2);
+  return v.toPrecision(3);
+};
+const mcount = (m, i) => ({ miss: D.models[m].miss[i], fp: D.models[m].fp[i] });
+const bad = (m, i) => { const c = mcount(m, i); return D.y[i] ? c.miss >= 3 : c.fp >= 3; };   // 그 모델이 이 파일을 3/5 이상 틀림
+const ruleOn = i => !!D.rule83.on[i];
+function modelPass(i) {
+  const a = mcount("ae", i), e = mcount("et", i);
+  switch (S.model) {
+    case "fin_err": return bad("fin", i);
+    case "fin_miss": return D.y[i] && bad("fin", i); case "fin_fp": return !D.y[i] && bad("fin", i);
+    case "fin_new": return D.y[i] && bad("base", i) && !bad("fin", i); case "fin_lost": return D.y[i] && !bad("base", i) && bad("fin", i);
+    case "fin_fixfp": return !D.y[i] && bad("base", i) && !bad("fin", i); case "rule83": return ruleOn(i);
+    case "ae_miss": return a.miss >= 3; case "et_miss": return e.miss >= 3;
+    case "both_miss": return a.miss >= 3 && e.miss >= 3; case "ae_only": return a.miss >= 3 && e.miss < 3;
+    case "et_only": return e.miss >= 3 && a.miss < 3; case "ae_fp": return a.fp >= 3; case "et_fp": return e.fp >= 3;
+    case "any_err": return a.miss >= 3 || e.miss >= 3 || a.fp >= 3 || e.fp >= 3; default: return true;
+  }
+}
+function groupOf(i) {
+  if (S.group === "label") return D.y[i] ? "고장" : "정상";
+  if (S.group === "model") {                                     // 최종 모델(EXP-021) 기준
+    if (D.y[i]) return bad("fin", i) ? "고장: 최종이 놓침" : ruleOn(i) && bad("base", i) ? "고장: 8.3k 규칙으로 새로 잡음"
+      : bad("base", i) ? "고장: 최종에서 새로 잡음" : "고장: 잡음";
+    return bad("fin", i) ? "정상: 최종 오경보" : bad("base", i) ? "정상: 최종에서 오경보 해소" : "정상: 문제 없음";
+  }
+  return "";
+}
+function rebuild(keepFile) {
+  const cur = S.list[S.pos], L = [];
+  for (let i = 0; i < N; i++) {
+    if (S.lab !== "all" && String(D.y[i]) !== S.lab) continue;
+    if (!modelPass(i)) continue;
+    if (S.tag && !D.ftags[i].includes(S.tag)) continue;
+    if (S.q && !D.names[i].includes(S.q)) continue;
+    L.push(i);
+  }
+  const key = i => S.sort === "name" ? i : (D.val[S.sort][i] ?? (S.dir > 0 ? Infinity : -Infinity));
+  L.sort((a, b) => { const g = groupOf(a).localeCompare(groupOf(b), "ko"); if (S.group !== "none" && g) return g; return (key(a) - key(b)) * S.dir || a - b; });
+  S.list = L;
+  const p = L.indexOf(keepFile !== undefined ? keepFile : cur); S.pos = p >= 0 ? p : 0;
+}
+
+// ---------- 캔버스 ----------
+function canvas(h) { const c = document.createElement("canvas"); c.style.height = h + "px"; return c; }
+function ctx2d(c) {
+  const r = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  c.width = Math.round(w * r); c.height = Math.round(h * r);
+  const g = c.getContext("2d"); g.setTransform(r, 0, 0, r, 0, 0); g.font = "11px Malgun Gothic, sans-serif"; return [g, w, h];
+}
+function frame(g, w, h, P, xt, yt, xl, yl) {
+  g.strokeStyle = css("--grid"); g.lineWidth = 1; g.fillStyle = css("--text-3"); g.textBaseline = "middle";
+  for (const [, x, lab] of xt) { g.beginPath(); g.moveTo(x, P.t); g.lineTo(x, h - P.b); g.stroke(); g.textAlign = "center"; g.fillText(lab, x, h - P.b + 10); }
+  for (const [, y, lab] of yt) { g.beginPath(); g.moveTo(P.l, y); g.lineTo(w - P.r, y); g.stroke(); g.textAlign = "right"; g.fillText(lab, P.l - 4, y); }
+  g.strokeStyle = css("--axis"); g.beginPath(); g.moveTo(P.l, h - P.b); g.lineTo(w - P.r, h - P.b); g.stroke();
+  if (xl) { g.textAlign = "right"; g.fillText(xl, w - P.r, h - P.b + 22); }
+  if (yl) { g.save(); g.translate(10, P.t + (h - P.t - P.b) / 2); g.rotate(-Math.PI / 2); g.textAlign = "center"; g.fillText(yl, 0, 0); g.restore(); }
+}
+const niceTicks = (lo, hi, n = 5) => {
+  const span = hi - lo || 1, step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0)), st = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= step0);
+  const out = []; for (let v = Math.ceil(lo / st) * st; v <= hi + 1e-12; v += st) out.push(+v.toPrecision(10)); return out;
+};
+// 정상 띠 + 정상·고장 중앙값 + 이 파일 (공용 스펙트럼 그리기)
+function specPlot(c, i, o) {
+  const [g, w, h] = ctx2d(c), P = { l: 44, r: 20, t: 8, b: 22 };
+  const { n, x0, dx, arr, ref, ylo, yhi, logx, xt, xl, yl, tipf, overlays } = o;
+  const fx = k => x0 + k * dx, fmin = logx ? Math.max(fx(1), 1e-9) : fx(0), fmax = fx(n - 1);
+  const X = f => P.l + (logx ? (Math.log10(Math.max(f, fmin)) - Math.log10(fmin)) / (Math.log10(fmax) - Math.log10(fmin)) : (f - fmin) / (fmax - fmin)) * (w - P.l - P.r);
+  const Y = v => P.t + (1 - (v - ylo) / (yhi - ylo)) * (h - P.t - P.b), k0 = logx ? 1 : 0;
+  for (const ov of overlays || []) ov.bands.forEach((b, j) => {
+    const a = X(Math.max(b.lo, fmin)), z = X(Math.min(b.hi, fmax)); if (z <= a) return;
+    g.fillStyle = css(ov.color); g.fillRect(a, P.t, z - a, h - P.t - P.b);
+    g.fillStyle = css("--text-3"); g.textAlign = "left"; g.textBaseline = "top"; g.fillText(b.label, a + 3, P.t + 2 + ov.row * 13);
+  });
+  frame(g, w, h, P, xt.map(f => [f, X(f), f >= 1000 ? f / 1000 + "k" : f]), niceTicks(ylo, yhi, 4).map(v => [v, Y(v), v]), xl, yl);
+  const line = (get, cl, dash, lw) => { g.strokeStyle = cl; g.setLineDash(dash); g.lineWidth = lw; g.beginPath();
+    for (let k = k0; k < n; k++) { const xx = X(fx(k)), yy = Y(Math.max(ylo, Math.min(yhi, get(k)))); k > k0 ? g.lineTo(xx, yy) : g.moveTo(xx, yy); } g.stroke(); g.setLineDash([]); };
+  g.fillStyle = css("--nor-band"); g.beginPath();
+  for (let k = k0; k < n; k++) g.lineTo(X(fx(k)), Y(Math.min(yhi, ref.p95[k]))); for (let k = n - 1; k >= k0; k--) g.lineTo(X(fx(k)), Y(Math.max(ylo, ref.p5[k]))); g.fill();
+  line(k => ref.p50[k], css("--nor"), [4, 3], 1); line(k => ref.f50[k], css("--abn"), [4, 3], 1);
+  line(k => arr[i * n + k] / 1000, col(i), [], 1.5);
+  hover(c, mx => { const r = (mx - P.l) / (w - P.l - P.r); if (r < 0 || r > 1) return null;
+    const f = logx ? 10 ** (Math.log10(fmin) + r * (Math.log10(fmax) - Math.log10(fmin))) : fmin + r * (fmax - fmin);
+    const k = Math.max(0, Math.min(n - 1, Math.round((f - x0) / dx))); return tipf(k, fx(k), arr[i * n + k] / 1000); });
+  return X;
+}
+function drawPSD(c, i, small) {
+  const ov = small ? [] : [S.ovP && { bands: D.pbands, color: "--ov1", row: 0 }, S.ovG && { bands: D.gbands, color: "--ov2", row: 1 }].filter(Boolean);
+  const R = D.psdref, X = specPlot(c, i, { n: NF, x0: 0, dx: D.df, arr: PSD, ref: R, ylo: -13, yhi: -2, logx: S.psdLog,
+    xt: S.psdLog ? [10, 100, 1000, 10000] : [0, 2500, 5000, 7500, 10000, 12500], xl: "Hz", yl: "log PSD", overlays: ov,
+    tipf: (k, f, v) => `${f.toFixed(0)} Hz · 이 파일 ${v.toFixed(2)} · 정상 중앙 ${R.p50[k].toFixed(2)} (5–95% ${R.p5[k].toFixed(2)}~${R.p95[k].toFixed(2)}) · 고장 중앙 ${R.f50[k].toFixed(2)}` });
+}
+function drawSK(c, i) {
+  const R = D.skref;
+  specPlot(c, i, { n: D.sk_nf, x0: 0, dx: D.sk_df, arr: SKA, ref: R, ylo: 0, yhi: 3, logx: false, xt: [0, 2500, 5000, 7500, 10000, 12500], xl: "Hz", yl: "log10(1+SK)",
+    tipf: (k, f, v) => `${f.toFixed(0)} Hz · 스펙트럼 첨도 ${(10 ** v - 1).toFixed(1)} · 정상 중앙 ${(10 ** R.p50[k] - 1).toFixed(1)} (95% ${(10 ** R.p95[k] - 1).toFixed(1)})` });
+}
+function drawEnvSpec(c, i) {
+  const R = D.envref; let lo = Infinity, hi = -Infinity;
+  for (let k = 0; k < D.env_nf; k++) { lo = Math.min(lo, R.p5[k], ENVS[i * D.env_nf + k] / 1000); hi = Math.max(hi, R.p95[k], ENVS[i * D.env_nf + k] / 1000); }
+  specPlot(c, i, { n: D.env_nf, x0: D.env_f0, dx: D.env_df, arr: ENVS, ref: R, ylo: Math.floor(lo), yhi: Math.ceil(hi), logx: true, xt: [1, 10, 100], xl: "Hz (반복 주파수)", yl: "log 포락선 PSD",
+    tipf: (k, f, v) => `${f.toFixed(1)} Hz (주기 ${(1 / f).toFixed(3)} s) · 이 파일 ${v.toFixed(2)} · 정상 중앙 ${R.p50[k].toFixed(2)}` });
+}
+// 파형
+function drawWave(c, i, opt = {}) {
+  const [g, w, h] = ctx2d(c), P = { l: 46, r: 10, t: 6, b: 18 };
+  const hp = S.sig === "hp", sc = D.sc[S.sig][i], ym = opt.ymax || sc, base = i * 4 * NB + (hp ? 2 : 0) * NB;
+  const X = t => P.l + t / 2 * (w - P.l - P.r), Y = v => P.t + (1 - (v / ym + 1) / 2) * (h - P.t - P.b);
+  frame(g, w, h, P, [0, .5, 1, 1.5, 2].map(t => [t, X(t), t + "s"]), niceTicks(-ym, ym, 4).map(v => [v, Y(v), fmt(v)]), "", "g");
+  if (opt.zoomMark) { const zs = D.zoom_start[i] / D.fs; g.fillStyle = css("--nor-band"); g.fillRect(X(zs), P.t, X(zs + NZ / D.fs) - X(zs), h - P.t - P.b); }
+  g.fillStyle = col(i); const bw = Math.max(1, (w - P.l - P.r) / NB);
+  for (let b = 0; b < NB; b++) { const lo = ENV[base + b] / 32767 * sc, hi = ENV[base + NB + b] / 32767 * sc;
+    const y1 = Y(Math.min(hi, ym)), y2 = Y(Math.max(lo, -ym)); g.fillRect(X(b / NB * 2), y1, bw, Math.max(1, y2 - y1)); }
+  g.strokeStyle = css("--text-2"); g.lineWidth = 1;
+  for (const t of D.events[i]) { const x = X(t); g.beginPath(); g.moveTo(x, P.t); g.lineTo(x, P.t + 5); g.stroke(); }
+  hover(c, mx => { const t = (mx - P.l) / (w - P.l - P.r) * 2; if (t < 0 || t > 2) return null; const b = Math.min(NB - 1, Math.floor(t / 2 * NB));
+    return `${t.toFixed(3)} s · ${fmt(ENV[base + b] / 32767 * sc)} ~ ${fmt(ENV[base + NB + b] / 32767 * sc)} g`; });
+}
+function drawZoom(c, i) {
+  const [g, w, h] = ctx2d(c), P = { l: 46, r: 22, t: 6, b: 18 };
+  const sc = D.sc[S.sig][i], base = i * NZ, t0 = D.zoom_start[i] / D.fs;
+  let ym = 0; for (let k = 0; k < NZ; k++) ym = Math.max(ym, Math.abs(ZOOM[base + k])); ym = ym / 32767 * sc * 1.05 || 1e-6;
+  const X = k => P.l + k / (NZ - 1) * (w - P.l - P.r), Y = v => P.t + (1 - (v / ym + 1) / 2) * (h - P.t - P.b);
+  frame(g, w, h, P, [0, 250, 500, 750, 999].map(k => [k, X(k), ((t0 + k / D.fs) * 1000).toFixed(0) + "ms"]), niceTicks(-ym, ym, 4).map(v => [v, Y(v), fmt(v)]), "", "g");
+  g.strokeStyle = col(i); g.lineWidth = 1.2; g.beginPath();
+  for (let k = 0; k < NZ; k++) { const v = ZOOM[base + k] / 32767 * sc; k ? g.lineTo(X(k), Y(v)) : g.moveTo(X(k), Y(v)); } g.stroke();
+}
+// 창별 RMS·첨도 (50 ms × 40)
+function drawWin(c, i, which) {
+  const [g, w, h] = ctx2d(c), P = { l: 44, r: 10, t: 8, b: 18 }, nw = D.nw, base = i * 2 * nw + which * nw;
+  const vals = Array.from({ length: nw }, (_, k) => WIN[base + k] / 1000);
+  const ref = which ? D.wref.kurt_p95 : D.wref.rms_p95;
+  let lo = which ? 0 : Math.min(...vals, ref) - .2, hi = Math.max(...vals, ref) + .1; if (which) hi = Math.max(hi, 1);
+  const X = k => P.l + k / nw * (w - P.l - P.r), Y = v => P.t + (1 - (v - lo) / (hi - lo)) * (h - P.t - P.b);
+  const lab = v => which ? fmt(10 ** v - 1) : fmt(10 ** v);
+  frame(g, w, h, P, [0, .5, 1, 1.5, 2].map(t => [t, X(t / D.win_s), t + "s"]), niceTicks(lo, hi, 4).map(v => [v, Y(v), lab(v)]), "", which ? "첨도" : "RMS g");
+  const bw = (w - P.l - P.r) / nw;
+  vals.forEach((v, k) => { g.fillStyle = col(i); g.globalAlpha = v > ref ? 1 : .45; g.fillRect(X(k) + 1, Y(v), Math.max(1, bw - 2), Y(lo) - Y(v)); });
+  g.globalAlpha = 1; g.strokeStyle = css("--nor"); g.setLineDash([4, 3]); g.beginPath(); g.moveTo(P.l, Y(ref)); g.lineTo(w - P.r, Y(ref)); g.stroke(); g.setLineDash([]);
+  hover(c, mx => { const k = Math.floor((mx - P.l) / bw); if (k < 0 || k >= nw) return null;
+    return `${(k * D.win_s).toFixed(2)}–${((k + 1) * D.win_s).toFixed(2)} s · ${which ? "첨도" : "RMS"} ${lab(vals[k])} · 정상 창 95% ${lab(ref)}`; });
+}
+// 스펙트로그램
+const RAMP_L = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"];
+const hex = s => [1, 3, 5].map(k => parseInt(s.slice(k, k + 2), 16));
+function rampLUT() {
+  const th = document.documentElement.dataset.theme, dark = th === "dark" || (th !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+  const stops = [css("--surface"), ...(dark ? [...RAMP_L].reverse() : RAMP_L)].map(hex), lut = new Uint8ClampedArray(256 * 3);
+  for (let v = 0; v < 256; v++) { const t = v / 255 * (stops.length - 1), a = Math.floor(t), b = Math.min(stops.length - 1, a + 1), u = t - a;
+    for (let ch = 0; ch < 3; ch++) lut[v * 3 + ch] = stops[a][ch] * (1 - u) + stops[b][ch] * u; }
+  return lut;
+}
+function drawSpec(c, i) {
+  const [g, w, h] = ctx2d(c), P = { l: 40, r: 10, t: 6, b: 18 }, lut = rampLUT(), img = new ImageData(ST, SF);
+  for (let r = 0; r < SF; r++) for (let t = 0; t < ST; t++) { const v = SPEC[i * SF * ST + r * ST + t], o = ((SF - 1 - r) * ST + t) * 4;
+    img.data[o] = lut[v * 3]; img.data[o + 1] = lut[v * 3 + 1]; img.data[o + 2] = lut[v * 3 + 2]; img.data[o + 3] = 255; }
+  const off = document.createElement("canvas"); off.width = ST; off.height = SF; off.getContext("2d").putImageData(img, 0, 0);
+  g.imageSmoothingEnabled = false; g.drawImage(off, P.l, P.t, w - P.l - P.r, h - P.t - P.b);
+  const Y = f => P.t + (1 - f / D.spec_fmax) * (h - P.t - P.b), X = t => P.l + t / 2 * (w - P.l - P.r);
+  g.fillStyle = css("--text-3"); g.textBaseline = "middle";
+  [0, 4000, 8000, 12000].forEach(f => { g.textAlign = "right"; g.fillText(f / 1000 + "k", P.l - 4, Y(f)); });
+  [0, .5, 1, 1.5, 2].forEach(t => { g.textAlign = "center"; g.fillText(t + "s", X(t), h - P.b + 10); });
+  g.strokeStyle = css("--abn"); g.lineWidth = 1;
+  for (const t of D.events[i]) { g.beginPath(); g.moveTo(X(t), h - P.b); g.lineTo(X(t), h - P.b + 4); g.stroke(); }
+}
+const tip = document.getElementById("tip");
+function hover(c, fn) {
+  c.onmousemove = e => { const r = c.getBoundingClientRect(), s = fn(e.clientX - r.left, e.clientY - r.top);
+    if (!s) { tip.style.display = "none"; return; } tip.textContent = s; tip.style.display = "block";
+    tip.style.left = Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8) + "px"; tip.style.top = (e.clientY + 14) + "px"; };
+  c.onmouseleave = () => tip.style.display = "none";
+}
+
+// ---------- 개념 ----------
+function inline(s) {
+  return esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`([^`]+)`/g, (m, k) => FEAT[k] ? `<code class="lnk" data-f="${k}" title="${esc(FEAT[k].label)}">${k}</code>` : `<code>${k}</code>`)
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "<u>$1</u>");
+}
+function conceptHTML(key) {
+  const c = CON[key]; if (!c) return "";
+  const items = c.body.split(/\n(?=- )/).map(s => s.replace(/^- /, "").trim()).filter(Boolean).map(s => {
+    const m = s.match(/^\*\*(.+?)\*\*\s*:\s*([\s\S]*)$/); if (!m) return `<dd>${inline(s)}</dd>`;
+    const cls = m[1].startsWith("우리") ? "k-data" : m[1].startsWith("주의") || m[1].startsWith("정의 주의") ? "k-warn" : "";
+    return `<dt class="${cls}">${esc(m[1])}</dt><dd>${inline(m[2])}</dd>`; }).join("");
+  const rel = D.feat.filter(f => f.concept === key);
+  return `<div class="concept"><h2>${esc(c.title)}</h2><div class="sec">${esc(c.section || "")} · <code>#${key}</code></div><dl>${items}</dl>
+    ${rel.length ? `<div class="rel"><span class="help">이 개념을 보는 지표 (클릭 = 정렬, Shift+클릭 = 산점도 y):</span>${rel.map(f => `<span class="chip" data-f="${f.key}">${esc(f.label)}</span>`).join("")}</div>` : ""}</div>`;
+}
+function bindFeatLinks(root) {
+  root.querySelectorAll("[data-f]").forEach(el => el.onclick = e => {
+    const k = el.dataset.f; closeDrawer();
+    if (e.shiftKey) { S.sy = k; S.ly = false; setMode("scatter"); } else { S.sort = k; S.dir = -1; syncCtl(); rebuild(); if (S.mode === "concept") S.mode = "table"; syncCtl(); render(); }
+  });
+}
+const drawer = document.getElementById("drawer");
+function openConcept(key) { if (!CON[key]) return; document.getElementById("dbody").innerHTML = conceptHTML(key) +
+  `<p class="help" style="margin-top:14px">출처: <code>단계/개념사전.md</code> — 정답이 아니라 선택지. "우리 데이터"만 실험·EDA로 확인된 내용.</p>`;
+  bindFeatLinks(document.getElementById("dbody")); drawer.classList.add("open"); }
+function closeDrawer() { drawer.classList.remove("open"); }
+document.getElementById("dx").onclick = closeDrawer;
+const cLink = (key, label) => `<span class="lnk" data-c="${key}" title="개념 보기">${label}</span>`;
+function bindConceptLinks(root) { root.querySelectorAll("[data-c]").forEach(el => el.onclick = () => openConcept(el.dataset.c)); }
+
+// ---------- 지표 표 ----------
+function featRows(i, group) {
+  const O = D.sets[otherSig()];
+  return D.feat.filter(f => f.group === group).map(f => {
+    const v = D.val[f.key][i], p = D.pct[f.key][i], r = D.ref[f.key], out = p !== null && (p < 5 || p > 95);
+    const ov = O.val[f.key][i], op = O.pct[f.key][i];
+    const mk = p === null ? "" : `<span class="mk" style="left:${p}%;background:${col(i)}"></span>`;
+    const omk = op === null ? "" : `<span class="mk ghost" style="left:${op}%"></span>`;
+    return `<tr class="${out ? "out" : ""}" title="${esc(f.desc)}\n[${sigName()}] 정상 5–95%: ${fmt(r.p5, f.key)} ~ ${fmt(r.p95, f.key)} · 정상 중앙 ${fmt(r.p50, f.key)} · 고장 중앙 ${fmt(r.f50, f.key)}\n[${sigName(otherSig())}] 이 파일 ${fmt(ov, f.key)} (정상 중 ${op === null ? "—" : Math.round(op) + "%"})">
+      <td>${cLink(f.concept, esc(f.label))}</td><td class="v">${fmt(v, f.key)} <span class="help">${f.unit}</span></td>
+      <td class="v o2">${fmt(ov, f.key)}</td>
+      <td class="p"><div class="track"><span class="band"></span><span class="mid"></span>${omk}${mk}</div></td><td class="pv">${p === null ? "" : Math.round(p) + "%"}</td></tr>`;
+  }).join("");
+}
+function bandBars(i) {
+  const ks = D.feat.filter(f => f.group === "band");
+  return `<div class="bands">${ks.map(f => { const p = D.pct[f.key][i] ?? 0, out = p < 5 || p > 95;
+    return `<div title="${f.label}: 정상 중 ${Math.round(p)}%"><span style="height:${Math.max(2, p)}%;background:${col(i)};opacity:${out ? 1 : .45}"></span></div>`; }).join("")}</div>
+    <div class="bands-x">${ks.map((f, k) => `<span>${k}</span>`).join("")}</div>`;
+}
+const tagChips = i => D.ftags[i].map(t => `<span class="chip" title="${esc(TAG[t].desc)}">${TAG[t].label}</span>`).join(" ");
+function modelBadges(i) {
+  const chips = D.model_order.map(m => { const c = mcount(m, i), M = D.models[m];
+    const s = D.y[i] ? `미탐 <b>${c.miss}</b>/5` : `오경보 <b>${c.fp}</b>/5`;
+    return `<span class="chip ${bad(m, i) ? "warn" : ""}" title="${esc(M.name)} (F2 ${M.f2} ± ${M.f2_sd}, 재현율 ${M.recall}, 오경보율 ${M.fpr})"${m === "fin" ? ' style="font-weight:700"' : ""}>${M.short} ${s}</span>`; });
+  const r = D.rule83;
+  chips.push(`<span class="chip ${ruleOn(i) ? "warn" : ""}" title="8.20–8.45 kHz 최대 돌출 ≥ 0.75 dec 이고 봉우리 폭 ≥ 150 Hz면 무조건 고장 (EXP-021)">8.3k 규칙 ${ruleOn(i) ? "<b>켜짐</b>" : "꺼짐"} · 돌출 ${r.p83[i]} · 폭 ${r.w83[i]} Hz</span>`);
+  return chips.join(" ");
+}
+const segH = (id, opts, cur) => `<span class="seg" id="${id}">${opts.map(([v, l]) => `<button data-v="${v}" class="${String(cur) === String(v) ? "on" : ""}">${l}</button>`).join("")}</span>`;
+
+// ---------- 화면 ----------
+const main = document.getElementById("main");
+const empty = () => { main.innerHTML = `<p class="help">조건에 맞는 파일이 없습니다.</p>`; };
+function renderOne() {
+  if (!S.list.length) return empty();
+  const i = S.list[S.pos], lg = `<span class="legend"><span><i class="bandsw"></i>정상 5–95%</span><span><i style="background:var(--nor)"></i>정상 중앙</span><span><i style="background:var(--abn)"></i>고장 중앙</span><span><i style="background:${col(i)}"></i>${D.names[i]}</span></span>`;
+  main.innerHTML = `
+  <div class="card"><div class="title">
+    <button class="navbtn" id="prev">←</button><span class="nm">${D.names[i]}</span><button class="navbtn" id="next">→</button>
+    <span class="chip ${D.y[i] ? "lab-a" : "lab-n"}">${D.y[i] ? "고장" : "정상"}</span>
+    <span class="help">${S.pos + 1} / ${S.list.length}${S.group !== "none" ? " · " + groupOf(i) : ""}</span>${modelBadges(i)}</div>
+    <div style="margin-top:6px">${tagChips(i) || '<span class="help">태그 없음</span>'} <span class="help">· 정상 범위 밖 지표 ${D.val.n_out[i]}개 (정상의 95%는 ${fmt(D.ref.n_out.p95, "n_out")}개 이하)</span></div></div>
+  <div class="card"><h4>파형 2초 <span class="chip">${sigName()}</span>
+    <span class="help">위 눈금 = 감지된 ${cLink("impulse-count", "충격")} (|신호| > ${D.imp_k}σ) · 음영 = 아래 확대 구간 · 개념: ${cLink("mean-removal", "평균 제거")} · ${cLink("bandpass", "고역통과")} · 아래 그림·지표 모두 이 신호 기준 (머리줄 "신호"로 전환)</span></h4><div id="cw"></div></div>
+  <div class="row2">
+    <div class="card"><h4>최대 |진폭| ±20 ms 확대</h4><div id="cz"></div></div>
+    <div class="card"><h4>${cLink("stft", "스펙트로그램")} <span class="help">0–12.5 kHz, 진할수록 에너지 큼 (색 범위는 두 신호 공통), 주황 눈금 = 충격</span></h4><div id="cs"></div></div>
+  </div>
+  <div class="row2e">
+    <div class="card"><h4>${cLink("window-stats", "창별 RMS")} <span class="help">50 ms × 40창. 점선 = 정상 모든 창의 95%, 진한 막대 = 그 위</span></h4><div id="cwr"></div></div>
+    <div class="card"><h4>${cLink("window-stats", "창별 첨도")} <span class="help">같은 창. 한 창만 튀면 단발, 여러 창이면 반복</span></h4><div id="cwk"></div></div>
+  </div>
+  <div class="card"><h4>${cLink("psd", "PSD")} ${segH("px", [[1, "로그 x"], [0, "선형 x"]], +S.psdLog)}
+    ${segH("ovp", [[1, "물리 대역"]], S.ovP ? 1 : -1)} ${segH("ovg", [[1, "추정 대역 (미확인)"]], S.ovG ? 1 : -1)} ${lg}</h4><div id="cp"></div>
+    <div class="help">물리 대역 = 노션 예시 분할(${cLink("band-split", "개념")}), 추정 대역 = Gemini 추정 공진 위치(${cLink("sdof", "개념")}, 우리 데이터로 확인 안 됨)</div></div>
+  <div class="row2e">
+    <div class="card"><h4>${cLink("spectral-kurtosis", "스펙트럼 첨도")} <span class="help">주파수 칸마다 시간 방향 첨도. 높은 대역 = 충격이 실리는 대역</span></h4><div id="csk"></div></div>
+    <div class="card"><h4>${cLink("envelope-spectrum", "포락선 스펙트럼")} <span class="help">포락선의 반복 주파수. 피크 = 충격이 일정 간격으로 반복</span></h4><div id="cev"></div></div>
+  </div>
+  <p class="help">지표 이름 클릭 = 개념 설명. 막대: 정상 분포에서의 위치 (띠 = 5–95%, 선 = 중앙값, 속 빈 원 = ${sigName(otherSig())}일 때 위치). 회색 숫자 = ${sigName(otherSig())} 값. 노란 줄 = 정상 범위 밖.</p>
+  <div class="feats">${D.groups.filter(g => g.key !== "band").map(g => `<div class="card"><h4>${cLink(g.concept, esc(g.label))}</h4><table class="ftable">${featRows(i, g.key)}</table></div>`).join("")}
+    <div class="card"><h4>${cLink("band-energy", "1 kHz 대역 에너지")} <span class="help">정상 중 백분위, 진한 막대 = 정상 5–95% 밖</span></h4>${bandBars(i)}<div class="help">x = kHz 대역 시작 (0 = 0–1 kHz … 12 = 12–12.5 kHz)</div></div></div>`;
+  const put = (id, h) => { const c = canvas(h); document.getElementById(id).append(c); return c; };
+  drawWave(put("cw", 170), i, { zoomMark: true }); drawZoom(put("cz", 170), i); drawSpec(put("cs", 170), i);
+  drawWin(put("cwr", 130), i, 0); drawWin(put("cwk", 130), i, 1); drawPSD(put("cp", 250), i);
+  drawSK(put("csk", 170), i); drawEnvSpec(put("cev", 170), i);
+  document.getElementById("prev").onclick = () => step(-1); document.getElementById("next").onclick = () => step(1);
+  segBind("px", v => { S.psdLog = v === "1"; render(); });
+  segBind("ovp", () => { S.ovP = !S.ovP; render(); }); segBind("ovg", () => { S.ovG = !S.ovG; render(); });
+  bindConceptLinks(main);
+}
+const FIVE_KEYS = ["std", "kurt", "n_imp", "win_kurt_max", "s20", "centroid", "hi_ratio", "sk_max", "env_prom"];
+function renderFive() {
+  if (!S.list.length) return empty();
+  const p0 = Math.floor(S.pos / 5) * 5, idx = S.list.slice(p0, p0 + 5);
+  main.innerHTML = `<div class="card"><div class="title"><button class="navbtn" id="prev">← 이전 5</button><button class="navbtn" id="next">다음 5 →</button>
+    <span class="help">${p0 + 1}–${p0 + idx.length} / ${S.list.length}</span>
+    <span class="chip">${sigName()}</span> ${segH("sy", [[0, "y축 파일별"], [1, "y축 같게"]], +S.shareY)} ${segH("px", [[1, "PSD 로그 x"], [0, "선형 x"]], +S.psdLog)}
+    <span class="help">이름 클릭 = 한 개씩 보기</span></div></div>
+  <div class="five">${idx.map((i, k) => `<div class="card fcard">
+    <div class="meta"><span class="dot ${D.y[i] ? "a" : "n"}"></span> <span class="nm" data-i="${i}">${D.names[i]}</span>
+      <div style="margin:3px 0">${modelBadges(i)}</div><div>${tagChips(i)}</div>
+      <table>${FIVE_KEYS.map(key => { const p = D.pct[key][i], out = p !== null && (p < 5 || p > 95);
+        return `<tr class="${out ? "out" : ""}" title="${esc(FEAT[key].desc)}"><td>${FEAT[key].label}</td><td style="text-align:right">${fmt(D.val[key][i], key)}</td><td class="help">${p === null ? "" : Math.round(p) + "%"}</td></tr>`; }).join("")}</table></div>
+    <div id="w${k}"></div><div id="p${k}"></div></div>`).join("")}</div>`;
+  const ym = S.shareY ? Math.max(...idx.map(i => D.sc[S.sig][i])) : null;
+  idx.forEach((i, k) => { const cw = canvas(160), cp = canvas(160); document.getElementById("w" + k).append(cw); document.getElementById("p" + k).append(cp);
+    drawWave(cw, i, { ymax: ym }); drawPSD(cp, i, true); });
+  main.querySelectorAll(".nm[data-i]").forEach(el => el.onclick = () => { S.pos = S.list.indexOf(+el.dataset.i); setMode("one"); });
+  document.getElementById("prev").onclick = () => step(-5); document.getElementById("next").onclick = () => step(5);
+  segBind("sy", v => { S.shareY = v === "1"; render(); }); segBind("px", v => { S.psdLog = v === "1"; render(); });
+}
+function renderTable() {
+  const ks = D.feat.filter(f => f.group !== "band").map(f => f.key);
+  const grpName = k => (GRP[FEAT[k].group] || { label: "요약" }).label;
+  const head = `<tr><th data-k="name" class="${S.sort === "name" ? "s" : ""}">파일</th><th>태그</th>${D.model_order.map(m => `<th title="${esc(D.models[m].name)}">${D.models[m].short}</th>`).join("")}<th title="8.3k 규칙 (돌출 ≥ 0.75 & 폭 ≥ 150 Hz)">8.3k</th>${ks.map((k, j) => `<th data-k="${k}" class="${S.sort === k ? "s" : ""}" title="[${grpName(k)}] ${esc(FEAT[k].desc)}" style="${j && FEAT[k].group !== FEAT[ks[j - 1]].group ? "border-left:2px solid var(--border)" : ""}">${FEAT[k].label}${S.sort === k ? (S.dir > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}</tr>`;
+  let lastG = null;
+  const rows = S.list.map(i => {
+    const g = groupOf(i), gr = S.group !== "none" && g !== lastG ? `<tr><td colspan="${ks.length + 3 + D.model_order.length}" style="text-align:left;font-weight:700;background:var(--surface-2)">${g}</td></tr>` : ""; lastG = g;
+    const mt = m => { const c = mcount(m, i), t = D.y[i] ? (c.miss ? `미탐 ${c.miss}` : "") : (c.fp ? `오경보 ${c.fp}` : "");
+      return `<td class="${bad(m, i) ? "o" : ""}"${m === "fin" ? ' style="font-weight:700"' : ""}>${t}</td>`; };
+    return gr + `<tr data-i="${i}" style="cursor:pointer"><td><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</td>
+      <td style="text-align:left">${D.ftags[i].map(t => TAG[t].label).join(", ")}</td>${D.model_order.map(mt).join("")}<td>${ruleOn(i) ? "켜짐" : ""}</td>
+      ${ks.map(k => { const p = D.pct[k][i], o = p !== null && (p < 5 || p > 95); return `<td class="${o ? "o" : ""}" title="정상 중 ${p === null ? "—" : Math.round(p) + "%"}">${fmt(D.val[k][i], k)}${o ? (p > 95 ? " ▲" : " ▼") : ""}</td>`; }).join("")}</tr>`;
+  }).join("");
+  main.innerHTML = `<p class="help">노란 칸 = 정상 5–95% 밖 (▲ 위, ▼ 아래). 칸에 마우스 = 정상 중 백분위. 머리글 클릭 = 정렬, 행 클릭 = 한 개씩 보기.</p>
+    <div class="tbl-wrap"><table class="big"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
+  main.querySelectorAll("th[data-k]").forEach(th => th.onclick = () => { const k = th.dataset.k; if (S.sort === k) S.dir *= -1; else { S.sort = k; S.dir = k === "name" ? 1 : -1; } syncCtl(); update(); });
+  main.querySelectorAll("tr[data-i]").forEach(tr => tr.onclick = () => { S.pos = S.list.indexOf(+tr.dataset.i); setMode("one"); });
+}
+function featOptions() { return D.groups.concat([{ key: "summary", label: "요약" }]).map(g => `<optgroup label="${g.label}">${D.feat.filter(f => f.group === g.key).map(f => `<option value="${f.key}">${f.label}</option>`).join("")}</optgroup>`).join(""); }
+function renderScatter() {
+  main.innerHTML = `<div class="card"><div class="bar">
+    <span class="ctl">x <select id="sx">${featOptions()}</select> <label><input type="checkbox" id="lx"> 로그</label></span>
+    <span class="ctl">y <select id="sy2">${featOptions()}</select> <label><input type="checkbox" id="ly"> 로그</label></span>
+    <span class="legend"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span><span>검은 테두리 = 최종 모델(EXP-021)이 틀린 파일 · 음영 = 정상 5–95%</span></span>
+    <span class="help">점 클릭 = 한 개씩 보기. 지금 필터에 맞는 파일만 진하게</span></div><div id="sc" style="margin-top:8px"></div></div>
+    <div class="card" id="scnote"></div>`;
+  const sx = document.getElementById("sx"), sy = document.getElementById("sy2"), lx = document.getElementById("lx"), ly = document.getElementById("ly");
+  sx.value = S.sx; sy.value = S.sy; lx.checked = S.lx; ly.checked = S.ly;
+  const re = () => { S.sx = sx.value; S.sy = sy.value; S.lx = lx.checked; S.ly = ly.checked; save(); drawScatter(); };
+  [sx, sy, lx, ly].forEach(el => el.onchange = re);
+  const c = canvas(520); document.getElementById("sc").append(c); drawScatter();
+  function drawScatter() {
+    const [g, w, h] = ctx2d(c), P = { l: 56, r: 12, t: 10, b: 34 }, inList = new Set(S.list), vx = D.val[S.sx], vy = D.val[S.sy];
+    const kind = (on, v) => !on ? "lin" : v.every(a => a === null || a > 0) ? "log" : "sym";
+    const kx = kind(S.lx, vx), ky = kind(S.ly, vy);
+    const fw = k => v => k === "log" ? Math.log10(v) : k === "sym" ? Math.sign(v) * Math.log10(1 + Math.abs(v)) : v;
+    const inv = k => u => k === "log" ? 10 ** u : k === "sym" ? Math.sign(u) * (10 ** Math.abs(u) - 1) : u;
+    const tx = fw(kx), ty = fw(ky), ix = inv(kx), iy = inv(ky);
+    const pts = []; for (let i = 0; i < N; i++) if (vx[i] !== null && vy[i] !== null) pts.push([i, tx(vx[i]), ty(vy[i])]);
+    const ext = a => { const lo = Math.min(...a), hi = Math.max(...a), pad = (hi - lo) * .05 || 1; return [lo - pad, hi + pad]; };
+    const [x0, x1] = ext(pts.map(p => p[1])), [y0, y1] = ext(pts.map(p => p[2]));
+    const X = v => P.l + (v - x0) / (x1 - x0) * (w - P.l - P.r), Y = v => P.t + (1 - (v - y0) / (y1 - y0)) * (h - P.t - P.b);
+    const nm = { lin: "", log: " (로그)", sym: " (부호 로그)" };
+    frame(g, w, h, P, niceTicks(x0, x1, 6).map(v => [v, X(v), fmt(ix(v), S.sx)]), niceTicks(y0, y1, 5).map(v => [v, Y(v), fmt(iy(v), S.sy)]), FEAT[S.sx].label + nm[kx], "");
+    g.fillStyle = css("--text-3"); g.textAlign = "left"; g.fillText(FEAT[S.sy].label + nm[ky], P.l + 4, P.t + 6);
+    const rx = D.ref[S.sx], ry = D.ref[S.sy]; g.fillStyle = css("--nor-band");
+    if (rx.p5 !== null) g.fillRect(X(tx(rx.p5)), P.t, X(tx(rx.p95)) - X(tx(rx.p5)), h - P.t - P.b);
+    if (ry.p5 !== null) g.fillRect(P.l, Y(ty(ry.p95)), w - P.l - P.r, Y(ty(ry.p5)) - Y(ty(ry.p95)));
+    const cur = S.list[S.pos];
+    for (const [i, a, b] of [...pts].sort((p, q) => D.y[p[0]] - D.y[q[0]])) {
+      const x = X(a), yv = Y(b), wrong = bad("fin", i);
+      g.globalAlpha = inList.has(i) ? 1 : .18;
+      g.beginPath(); g.arc(x, yv, 4.5, 0, 7); g.fillStyle = col(i); g.fill(); g.lineWidth = 2; g.strokeStyle = css("--surface"); g.stroke();
+      if (wrong) { g.beginPath(); g.arc(x, yv, 7.5, 0, 7); g.lineWidth = 1.5; g.strokeStyle = css("--text"); g.stroke(); }
+      if (i === cur) { g.beginPath(); g.arc(x, yv, 11, 0, 7); g.lineWidth = 2; g.strokeStyle = css("--text"); g.stroke(); }
+    }
+    g.globalAlpha = 1;
+    const near = (mx, my) => { let best = null, bd = 100; for (const [i, a, b] of pts) { const d = (X(a) - mx) ** 2 + (Y(b) - my) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
+    hover(c, (mx, my) => { const i = near(mx, my); if (i === null) return null;
+      return `${D.names[i]} (${D.y[i] ? "고장" : "정상"}) · x ${fmt(vx[i], S.sx)} · y ${fmt(vy[i], S.sy)} · ${D.ftags[i].map(t => TAG[t].label).join(", ")}`; });
+    c.onclick = e => { const r = c.getBoundingClientRect(), i = near(e.clientX - r.left, e.clientY - r.top); if (i === null) return;
+      if (!S.list.includes(i)) { S.lab = "all"; S.model = "all"; S.tag = null; S.q = ""; syncCtl(); rebuild(i); } else S.pos = S.list.indexOf(i); setMode("one"); };
+    const sn = document.getElementById("scnote");
+    sn.innerHTML = [S.sx, S.sy].map(k => `<div><b>${cLink(FEAT[k].concept, esc(FEAT[k].label))}</b>: ${esc(FEAT[k].desc)} <span class="help">(정상 5–95% ${fmt(D.ref[k].p5, k)} ~ ${fmt(D.ref[k].p95, k)}, 고장 중앙 ${fmt(D.ref[k].f50, k)})</span></div>`).join("");
+    bindConceptLinks(sn);
+  }
+}
+function renderConcept() {
+  const q = S.cq.trim().toLowerCase(), hit = c => !q || (c.title + c.body + c.key).toLowerCase().includes(q);
+  main.innerHTML = `<div class="note"><b>개념 사전은 정답이 아니라 선택지 목록입니다.</b> 노션 "도메인 지식·파이프라인" 정리를 옮기고, 항목마다
+    <span style="color:var(--accent);font-weight:700">우리 데이터</span>(실험·EDA로 확인한 것)와 <span style="color:var(--abn);font-weight:700">주의</span>를 따로 적었습니다.
+    지표 코드(예: <code>kurt</code>)를 클릭하면 그 지표로 정렬한 표로, Shift+클릭하면 산점도 y축으로 갑니다. 원본: <code>단계/개념사전.md</code></div>
+    <div class="card cgrid"><div><input type="text" id="cq" placeholder="개념 찾기 (예: 첨도, 포락선)" style="width:100%" value="${esc(S.cq)}"><div class="clist" id="clist" style="margin-top:6px"></div></div>
+    <div id="cbody"></div></div>`;
+  let sec = null, html = "";
+  D.concepts.filter(hit).forEach(c => { if (c.section !== sec) { html += `<div class="gh">${esc(c.section)}</div>`; sec = c.section; }
+    html += `<div data-k="${c.key}" class="${c.key === S.ckey ? "cur" : ""}">${esc(c.title)}</div>`; });
+  const cl = document.getElementById("clist"); cl.innerHTML = html || `<span class="help">없음</span>`;
+  cl.querySelectorAll("[data-k]").forEach(el => el.onclick = () => { S.ckey = el.dataset.k; render(); });
+  const cb = document.getElementById("cbody"); cb.innerHTML = conceptHTML(S.ckey) || ""; bindFeatLinks(cb);
+  const cq = document.getElementById("cq"); cq.oninput = () => { S.cq = cq.value; const pos = cq.selectionStart; render(); const n = document.getElementById("cq"); n.focus(); n.setSelectionRange(pos, pos); };
+}
+
+// ---------- 옆 목록·태그 ----------
+function renderSide() {
+  const A = document.getElementById("aside");
+  const nN = N - D.y.reduce((a, b) => a + b, 0), nA = N - nN;
+  let h = `<h3>태그 (클릭 = 거르기, 정상/고장 수)</h3><div class="taglist"><div data-t="" class="${S.tag ? "" : "on"}"><span>모든 태그</span><span class="cnt">${nN} / ${nA}</span></div>` +
+    D.tags.map(t => { let n = 0, a = 0; for (let i = 0; i < N; i++) if (D.ftags[i].includes(t.key)) D.y[i] ? a++ : n++;
+      return `<div data-t="${t.key}" class="${S.tag === t.key ? "on" : ""}" title="${esc(t.desc)}"><span>${t.label}</span><span class="cnt">${n} / ${a}</span></div>`; }).join("") + `</div>`;
+  const cur = S.list[S.pos], p0 = Math.floor(S.pos / 5) * 5; let lastG = null, fl = "";
+  S.list.forEach((i, p) => {
+    const g = groupOf(i); if (S.group !== "none" && g !== lastG) { fl += `<div class="gh">${g}</div>`; lastG = g; }
+    const on = S.mode === "five" ? p >= p0 && p < p0 + 5 : i === cur, sv = S.sort !== "name" ? fmt(D.val[S.sort][i], S.sort) : "";
+    fl += `<div data-p="${p}" class="${on ? "cur" : ""}"><span class="dot ${D.y[i] ? "a" : "n"}"></span>${D.names[i]}<span class="badge">${sv}</span></div>`;
+  });
+  h += `<h3>파일 ${S.list.length}개${S.sort !== "name" ? " · 오른쪽 = " + FEAT[S.sort].label : ""}</h3><div class="flist">${fl || '<span class="help">없음</span>'}</div>`;
+  A.innerHTML = h;
+  A.querySelectorAll(".taglist div").forEach(d => d.onclick = () => { S.tag = d.dataset.t || null; update(); });
+  A.querySelectorAll(".flist div[data-p]").forEach(d => d.onclick = () => { S.pos = +d.dataset.p; if (!["one", "five"].includes(S.mode)) S.mode = "one"; syncCtl(); render(); });
+  const el = A.querySelector(".flist .cur"); if (el) el.scrollIntoView({ block: "nearest" });
+}
+
+// ---------- 컨트롤 ----------
+function segBind(id, fn) { document.querySelectorAll(`#${id} button`).forEach(b => b.onclick = () => fn(b.dataset.v)); }
+function syncCtl() {
+  document.querySelectorAll("#mode button").forEach(b => b.classList.toggle("on", b.dataset.v === S.mode));
+  document.querySelectorAll("#sortDir button").forEach(b => b.classList.toggle("on", +b.dataset.v === S.dir));
+  document.querySelectorAll("#sig button").forEach(b => b.classList.toggle("on", b.dataset.v === S.sig));
+  document.getElementById("fLab").value = S.lab; document.getElementById("fModel").value = S.model;
+  document.getElementById("sortKey").value = S.sort; document.getElementById("groupBy").value = S.group; document.getElementById("q").value = S.q;
+}
+function setMode(m) { S.mode = m; syncCtl(); render(); }
+function step(d) { if (!S.list.length) return; S.pos = Math.max(0, Math.min(S.list.length - 1, S.pos + d)); render(); }
+function update() { rebuild(); render(); }
+function render() {
+  save(); tip.style.display = "none";
+  ({ one: renderOne, five: renderFive, table: renderTable, scatter: renderScatter, concept: renderConcept })[S.mode]();
+  renderSide();
+  document.getElementById("status").innerHTML = S.mode === "one" ? `<span class="kbd">←</span> <span class="kbd">→</span> 파일 이동` : S.mode === "five" ? `<span class="kbd">←</span> <span class="kbd">→</span> 5개씩 이동` : "";
+}
+document.getElementById("sortKey").innerHTML = `<option value="name">파일 이름</option>` + featOptions();
+segBind("mode", v => setMode(v));
+segBind("sortDir", v => { S.dir = +v; syncCtl(); update(); });
+segBind("sig", v => { useSig(v); if (S.tag && !TAG[S.tag]) S.tag = null; syncCtl(); rebuild(); render(); });
+document.getElementById("fLab").onchange = e => { S.lab = e.target.value; update(); };
+document.getElementById("fModel").onchange = e => { S.model = e.target.value; update(); };
+document.getElementById("sortKey").onchange = e => { S.sort = e.target.value; update(); };
+document.getElementById("groupBy").onchange = e => { S.group = e.target.value; update(); };
+document.getElementById("q").oninput = e => { S.q = e.target.value.trim(); update(); };
+addEventListener("keydown", e => {
+  if (e.key === "Escape") return closeDrawer();
+  if (["INPUT", "SELECT"].includes(e.target.tagName)) return;
+  const k = S.mode === "five" ? 5 : 1;
+  if (!["one", "five"].includes(S.mode)) return;
+  if (e.key === "ArrowRight") { step(k); e.preventDefault(); } else if (e.key === "ArrowLeft") { step(-k); e.preventDefault(); }
+});
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 150); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+if (S.sort !== "name" && !FEAT[S.sort]) S.sort = "name";
+if (!FEAT[S.sx]) S.sx = "std"; if (!FEAT[S.sy]) S.sy = "prot"; if (!CON[S.ckey]) S.ckey = D.concepts[0].key;
+const hm = location.hash.slice(1); if (["one", "five", "table", "scatter", "concept"].includes(hm)) S.mode = hm;
+syncCtl(); rebuild(); render();
+</script>
+</body>
+</html>
