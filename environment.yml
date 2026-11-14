@@ -9,3 +9,10 @@ dependencies:
   - scikit-learn # IF, OC-SVM, RF, LR, 교차검증, F2 점수
   - matplotlib   # 파형·스펙트럼·관리도 그림
   - ipykernel    # VS Code Jupyter에서 이 환경을 커널로 선택하기 위해 필요
+  - pip
+  - pip:
+      # 11-14 모델 스크리닝(EXP-019). torch는 Blackwell GPU라 CUDA 12.8 빌드:
+      #   pip install torch --index-url https://download.pytorch.org/whl/cu128
+      - torch==2.11.0   # 1D/2D-CNN, 합성곱 AE, Deep SAD
+      - aeon==1.6.0     # MiniRocket
+      - catboost==1.2.10
