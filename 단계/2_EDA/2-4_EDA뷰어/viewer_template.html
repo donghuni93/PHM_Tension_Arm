@@ -12,7 +12,7 @@
   --nor: #2a78d6; --abn: #eb6834; --nor-band: rgba(42,120,214,.15);
   --grid: #ebeae5; --axis: #b9b8b1; --hl: #fff1c2; --accent: #2a78d6; --accent-soft: rgba(42,120,214,.10);
   --ov1: rgba(98,80,214,.10); --ov2: rgba(27,175,122,.12);
-  --rule83: #7a3db8; --knock: #1a9e5a;
+  --r83: #7a3db8; --knock: #1a9e5a; --lock: #b8860b; --cap: #6b7280;
   --nav-bg: #1f2328; --nav-2: #2a2f36; --nav-text: #c9ced6; --nav-text-2: #7d8590; --nav-on: #ffffff;
   --shadow: 0 1px 2px rgba(20,20,20,.04), 0 2px 8px rgba(20,20,20,.05);
   --navw: 212px; --hdr: 52px;
@@ -25,7 +25,7 @@
     --nor: #3987e5; --abn: #e0652f; --nor-band: rgba(57,135,229,.22);
     --grid: #262624; --axis: #55544f; --hl: #4a3f17; --accent: #4a94ec; --accent-soft: rgba(74,148,236,.16);
     --ov1: rgba(144,133,233,.14); --ov2: rgba(25,158,112,.16);
-    --rule83: #b38ae6; --knock: #3fc283;
+    --r83: #b38ae6; --knock: #3fc283; --lock: #e0b84a; --cap: #9ca3af;
     --nav-bg: #0b0c0e; --nav-2: #1b1e23; --nav-text: #c9ced6; --nav-text-2: #6e7681; --nav-on: #ffffff;
     --shadow: 0 1px 2px rgba(0,0,0,.3);
   }
@@ -37,7 +37,7 @@
   --nor: #3987e5; --abn: #e0652f; --nor-band: rgba(57,135,229,.22);
   --grid: #262624; --axis: #55544f; --hl: #4a3f17; --accent: #4a94ec; --accent-soft: rgba(74,148,236,.16);
   --ov1: rgba(144,133,233,.14); --ov2: rgba(25,158,112,.16);
-  --rule83: #b38ae6; --knock: #3fc283;
+  --r83: #b38ae6; --knock: #3fc283; --lock: #e0b84a; --cap: #9ca3af;
   --nav-bg: #0b0c0e; --nav-2: #1b1e23; --nav-text: #c9ced6; --nav-text-2: #6e7681; --nav-on: #ffffff;
   --shadow: 0 1px 2px rgba(0,0,0,.3);
 }
@@ -200,14 +200,8 @@ details.docs figcaption { font-size: 12px; color: var(--text-3); margin: 2px 0 1
     <h1 id="vtitle">텐션암 EDA 뷰어</h1>
     <span class="ctl sigbar" title="모든 그림·지표·태그·정상 백분위를 이 신호로 계산한 값으로 바꾼다">신호 <span class="seg" id="sig"><button data-v="raw">평균 제거</button><button data-v="hp">200 Hz 고역통과</button></span></span>
     <span class="ctl">라벨 <select id="fLab"><option value="all">전체</option><option value="0">정상</option><option value="1">고장</option></select></span>
-    <span class="ctl">모델 결과 <select id="fModel">
-      <option value="all">전체</option>
-      <optgroup label="최종 모델 (EXP-025)">
-        <option value="fin_err">최종이 틀림 (3/5 이상)</option><option value="fin_miss">최종 미탐</option><option value="fin_fp">최종 오경보</option>
-        <option value="fin_any">한 번이라도 틀림 (1/5 이상)</option>
-        <option value="rule_any">규칙 켜짐 (8.3k 또는 유격)</option><option value="rule83">8.3k 규칙 켜짐</option><option value="knock">유격 반복 규칙 켜짐</option>
-      </optgroup>
-    </select></span>
+    <span class="ctl" title="유의미 실험(단계/5_모델비교/유의미/) 중 하나. 필터·묶기·배지·표·✕·경계·분석 조각이 모두 이 모델 기준">모델 <select id="fRef"></select></span>
+    <span class="ctl">모델 결과 <select id="fModel"></select></span>
     <span class="ctl">정렬 <select id="sortKey"></select>
       <span class="seg" id="sortDir"><button data-v="1" class="on">↑</button><button data-v="-1">↓</button></span></span>
     <span class="ctl">묶기 <select id="groupBy"><option value="label">라벨</option><option value="none">없음</option><option value="model">모델 결과</option></select></span>
@@ -242,7 +236,7 @@ const GRP = Object.fromEntries(D.groups.map(g => [g.key, g]));
 // ---------- 상태 ----------
 const S = { mode: "one", lab: "all", model: "all", tag: null, sort: "name", dir: 1, group: "label", q: "", sig: "raw",
             list: [], pos: 0, psdLog: true, shareY: false, sx: "std", sy: "prot", lx: true, ly: true,
-            ovP: false, ovG: false, ckey: "tension-arm", cq: "", lrExp: 0, lrSel: null, lrBand: 1,
+            ovP: false, ovG: false, ckey: "tension-arm", cq: "", ref: null, lrSel: null, lrBand: 1, lrRule: false,
             navMini: false, theme: "auto", knSel: null, lkSel: null };
 try { Object.assign(S, JSON.parse(localStorage.getItem("eda-viewer3") || "{}"), { list: [] }); } catch (e) {}
 const save = () => { try { const { list, ...k } = S; localStorage.setItem("eda-viewer3", JSON.stringify(k)); } catch (e) {} };
@@ -276,26 +270,43 @@ const fmt = (v, k) => {
   if (a >= 1) return v.toFixed(2);
   return v.toPrecision(3);
 };
-const mcount = (m, i) => ({ miss: D.models[m].miss[i], fp: D.models[m].fp[i] });
-const bad = (m, i) => { const c = mcount(m, i); return D.y[i] ? c.miss >= 3 : c.fp >= 3; };   // 그 모델이 이 파일을 3/5 이상 틀림
-const ruleOn = i => !!D.rule83.on[i];
-const knockOn = i => !!D.knock.on[i];
+// ---------- 모델: 유의미 실험 전부 (최신 먼저). 머리줄 "모델"에서 고른 하나(S.ref)가 모든 화면의 기준 ----------
+const MODELS = D.models, MID = Object.fromEntries(MODELS.map(m => [m.id, m]));
+const RULE = Object.fromEntries(D.rules.map(r => [r.key, r]));
+if (!MID[S.ref]) S.ref = MODELS[0].id;
+const M = () => MID[S.ref];
+const prevModel = () => MODELS[MODELS.indexOf(M()) + 1] || null;          // 바로 이전 번호의 유의미 실험
+const errN = (m, i) => D.y[i] ? m.miss[i] : m.fp[i];                      // seed 5번 중 틀린 횟수
+const bad = (m, i) => errN(m, i) >= 3;                                    // 3/5 이상 틀림
+const errTxt = (m, i) => errN(m, i) ? `${D.y[i] ? "미탐" : "오경보"} ${errN(m, i)}/5` : "5번 모두 맞힘";
+const ruleN = (k, i) => RULE[k].n[i];                                     // 그 규칙이 켜진 횟수 /5
+const ruleWord = (k, i) => { const n = ruleN(k, i); return n ? (RULE[k].kind === "cap" ? "대상" : "켜짐") + (n < 5 ? ` ${n}/5` : "") : ""; };
+const rulesOn = (m, i) => m.rules.filter(k => ruleN(k, i));
+const modelLabel = m => `${m.id} ${m.short} · F2 ${m.f2}`;
 function modelPass(i) {
-  const c = mcount("fin", i);
-  switch (S.model) {
-    case "fin_err": return bad("fin", i);
-    case "fin_miss": return D.y[i] && bad("fin", i); case "fin_fp": return !D.y[i] && bad("fin", i);
-    case "fin_any": return D.y[i] ? c.miss >= 1 : c.fp >= 1;
-    case "rule_any": return ruleOn(i) || knockOn(i); case "rule83": return ruleOn(i); case "knock": return knockOn(i);
-    default: return true;
-  }
+  const m = M(), e = errN(m, i), v = S.model;
+  if (v === "err") return e >= 3;
+  if (v === "miss") return !!D.y[i] && e >= 3;
+  if (v === "fp") return !D.y[i] && e >= 3;
+  if (v === "any") return e >= 1;
+  if (v === "rule_any") return rulesOn(m, i).length > 0;
+  if (v.startsWith("rule:")) return !!ruleN(v.slice(5), i);
+  if (v === "changed") { const p = prevModel(); return !!p && bad(m, i) !== bad(p, i); }
+  return true;
+}
+function modelOptions() {
+  const m = M(), p = prevModel(), rs = m.rules;
+  return `<option value="all">전체</option><optgroup label="${m.id} 결과"><option value="err">틀림 (3/5 이상)</option>
+    <option value="miss">미탐 (3/5 이상)</option><option value="fp">오경보 (3/5 이상)</option><option value="any">한 번이라도 틀림 (1/5 이상)</option></optgroup>` +
+    (rs.length ? `<optgroup label="${m.id} 규칙">${rs.length > 1 ? `<option value="rule_any">규칙 하나라도 켜짐</option>` : ""}${rs.map(k => `<option value="rule:${k}">${RULE[k].label} ${RULE[k].kind === "cap" ? "대상" : "켜짐"}</option>`).join("")}</optgroup>` : "") +
+    (p ? `<optgroup label="비교"><option value="changed">${p.id} 대비 판정이 바뀜 (3/5 기준)</option></optgroup>` : "");
 }
 function groupOf(i) {
   if (S.group === "label") return D.y[i] ? "고장" : "정상";
-  if (S.group === "model") {                                     // 최종 모델(EXP-025) 기준
-    if (D.y[i]) return bad("fin", i) ? "고장: 최종이 놓침" : ruleOn(i) ? "고장: 8.3k 규칙으로 잡음"
-      : knockOn(i) ? "고장: 유격 반복 규칙으로 잡음" : "고장: 결합 점수로 잡음";
-    return bad("fin", i) ? "정상: 최종 오경보" : mcount("fin", i).fp ? "정상: 가끔 오경보 (1–2/5)" : "정상: 문제 없음";
+  if (S.group === "model") {                                     // 고른 모델 기준
+    const m = M(), up = rulesOn(m, i).filter(k => RULE[k].kind === "up");
+    if (D.y[i]) return bad(m, i) ? "고장: 놓침 (3/5 이상)" : up.length ? `고장: ${RULE[up[0]].label}으로 잡음` : "고장: 모델 점수로 잡음";
+    return bad(m, i) ? "정상: 오경보 (3/5 이상)" : errN(m, i) ? "정상: 가끔 오경보 (1–2/5)" : "정상: 문제 없음";
   }
   return "";
 }
@@ -495,14 +506,14 @@ function bandBars(i) {
     <div class="bands-x">${ks.map((f, k) => `<span>${k}</span>`).join("")}</div>`;
 }
 const tagChips = i => D.ftags[i].map(t => `<span class="chip" title="${esc(TAG[t].desc)}">${TAG[t].label}</span>`).join(" ");
+const modelTitle = m => esc(`${m.id} ${m.title}\n구성: ${m.cfg}\nF2 ${m.f2} ± ${m.f2_sd} · 재현율 ${m.recall} · 오경보율 ${m.fpr}`);
+const ruleChip = (k, i) => { const r = RULE[k], w = ruleWord(k, i);
+  return `<span class="chip ${w ? "warn" : ""}" title="${esc(r.desc + " (" + r.since + "부터)")}">${r.label} ${w ? `<b>${w}</b>` : "꺼짐"} · ${r.info[i]}</span>`; };
 function modelBadges(i) {
-  const chips = D.model_order.map(m => { const c = mcount(m, i), M = D.models[m];
-    const s = D.y[i] ? `미탐 <b>${c.miss}</b>/5` : `오경보 <b>${c.fp}</b>/5`;
-    return `<span class="chip ${bad(m, i) ? "warn" : ""}" title="${esc(M.name)} (F2 ${M.f2} ± ${M.f2_sd}, 재현율 ${M.recall}, 오경보율 ${M.fpr})"${m === "fin" ? ' style="font-weight:700"' : ""}>${M.short} ${s}</span>`; });
-  const r = D.rule83, k = D.knock;
-  chips.push(`<span class="chip ${ruleOn(i) ? "warn" : ""}" title="8.20–8.45 kHz 최대 돌출 ≥ 0.75 dec 이고 봉우리 폭 ≥ 150 Hz면 무조건 고장 (EXP-021부터)">8.3k 규칙 ${ruleOn(i) ? "<b>켜짐</b>" : "꺼짐"} · 돌출 ${r.p83[i]} · 폭 ${r.w83[i]} Hz</span>`);
-  chips.push(`<span class="chip ${knockOn(i) ? "warn" : ""}" title="정상 중심 거리 r(유격 반복·하중 대비 고주파) ≥ 2 이고 2위/1위 사건 ≥ 0.7이면 무조건 고장 (EXP-025, 2-12)">유격 규칙 ${knockOn(i) ? "<b>켜짐</b>" : "꺼짐"} · r ${k.r[i]} · 2위/1위 ${k.k3[i]}</span>`);
-  return chips.join(" ");
+  const m = M(), e = errN(m, i);
+  const chips = [`<span class="chip ${bad(m, i) ? "warn" : ""}" style="font-weight:700" title="${modelTitle(m)}">${m.id} ${m.short} · ${D.y[i] ? "미탐" : "오경보"} <b>${e}</b>/5</span>`, ...m.rules.map(k => ruleChip(k, i))];
+  const others = MODELS.filter(o => o !== m).map(o => { const v = errN(o, i); return v >= 3 ? `<b>${o.id} ${v}/5</b>` : `${o.id} ${v ? v + "/5" : "✓"}`; }).join(" · ");
+  return chips.join(" ") + ` <span class="help" title="다른 유의미 모델의 ${D.y[i] ? "미탐" : "오경보"} 횟수 (seed 5번 중, ✓ = 모두 맞힘)">다른 모델: ${others}</span>`;
 }
 const segH = (id, opts, cur) => `<span class="seg" id="${id}">${opts.map(([v, l]) => `<button data-v="${v}" class="${String(cur) === String(v) ? "on" : ""}">${l}</button>`).join("")}</span>`;
 
@@ -571,17 +582,17 @@ function renderFive() {
 function renderTable() {
   const ks = D.feat.filter(f => f.group !== "band").map(f => f.key);
   const grpName = k => (GRP[FEAT[k].group] || { label: "요약" }).label;
-  const head = `<tr><th data-k="name" class="${S.sort === "name" ? "s" : ""}">파일</th><th>태그</th>${D.model_order.map(m => `<th title="${esc(D.models[m].name)}">${D.models[m].short}</th>`).join("")}<th title="8.3k 규칙 (돌출 ≥ 0.75 & 폭 ≥ 150 Hz)">8.3k</th><th title="유격 반복 규칙 (r ≥ 2 & 2위/1위 ≥ 0.7)">유격</th>${ks.map((k, j) => `<th data-k="${k}" class="${S.sort === k ? "s" : ""}" title="[${grpName(k)}] ${esc(FEAT[k].desc)}" style="${j && FEAT[k].group !== FEAT[ks[j - 1]].group ? "border-left:2px solid var(--border)" : ""}">${FEAT[k].label}${S.sort === k ? (S.dir > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}</tr>`;
+  const head = `<tr><th data-k="name" class="${S.sort === "name" ? "s" : ""}">파일</th><th>태그</th>${MODELS.map(m => `<th title="${modelTitle(m)}"${m === M() ? ' style="text-decoration:underline"' : ""}>${m.id.replace("EXP-", "")}</th>`).join("")}${D.rules.map(r => `<th title="${esc(r.desc)}">${r.label.replace(" 규칙", "")}</th>`).join("")}${ks.map((k, j) => `<th data-k="${k}" class="${S.sort === k ? "s" : ""}" title="[${grpName(k)}] ${esc(FEAT[k].desc)}" style="${j && FEAT[k].group !== FEAT[ks[j - 1]].group ? "border-left:2px solid var(--border)" : ""}">${FEAT[k].label}${S.sort === k ? (S.dir > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}</tr>`;
   let lastG = null;
   const rows = S.list.map(i => {
-    const g = groupOf(i), gr = S.group !== "none" && g !== lastG ? `<tr><td colspan="${ks.length + 4 + D.model_order.length}" style="text-align:left;font-weight:700;background:var(--surface-2)">${g}</td></tr>` : ""; lastG = g;
-    const mt = m => { const c = mcount(m, i), t = D.y[i] ? (c.miss ? `미탐 ${c.miss}` : "") : (c.fp ? `오경보 ${c.fp}` : "");
-      return `<td class="${bad(m, i) ? "o" : ""}"${m === "fin" ? ' style="font-weight:700"' : ""}>${t}</td>`; };
+    const g = groupOf(i), gr = S.group !== "none" && g !== lastG ? `<tr><td colspan="${ks.length + 2 + MODELS.length + D.rules.length}" style="text-align:left;font-weight:700;background:var(--surface-2)">${g}</td></tr>` : ""; lastG = g;
+    const mt = m => { const e = errN(m, i), t = e ? `${D.y[i] ? "미탐" : "오경보"} ${e}` : "";
+      return `<td class="${bad(m, i) ? "o" : ""}"${m === M() ? ' style="font-weight:700"' : ""}>${t}</td>`; };
     return gr + `<tr data-i="${i}" style="cursor:pointer"><td><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</td>
-      <td style="text-align:left">${D.ftags[i].map(t => TAG[t].label).join(", ")}</td>${D.model_order.map(mt).join("")}<td>${ruleOn(i) ? "켜짐" : ""}</td><td>${knockOn(i) ? "켜짐" : ""}</td>
+      <td style="text-align:left">${D.ftags[i].map(t => TAG[t].label).join(", ")}</td>${MODELS.map(mt).join("")}${D.rules.map(r => `<td>${ruleWord(r.key, i)}</td>`).join("")}
       ${ks.map(k => { const p = D.pct[k][i], o = p !== null && (p < 5 || p > 95); return `<td class="${o ? "o" : ""}" title="정상 중 ${p === null ? "—" : Math.round(p) + "%"}">${fmt(D.val[k][i], k)}${o ? (p > 95 ? " ▲" : " ▼") : ""}</td>`; }).join("")}</tr>`;
   }).join("");
-  main.innerHTML = `<p class="help">노란 칸 = 정상 5–95% 밖 (▲ 위, ▼ 아래). 칸에 마우스 = 정상 중 백분위. 머리글 클릭 = 정렬, 행 클릭 = 한 개씩 보기.</p>
+  main.innerHTML = `<p class="help">노란 칸 = 정상 5–95% 밖 (▲ 위, ▼ 아래). 모델 열 = 유의미 실험의 미탐·오경보 횟수/5 (굵게·밑줄 = 고른 모델). 칸에 마우스 = 정상 중 백분위. 머리글 클릭 = 정렬, 행 클릭 = 한 개씩 보기.</p>
     <div class="tbl-wrap"><table class="big"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
   main.querySelectorAll("th[data-k]").forEach(th => th.onclick = () => { const k = th.dataset.k; if (S.sort === k) S.dir *= -1; else { S.sort = k; S.dir = k === "name" ? 1 : -1; } syncCtl(); update(); });
   main.querySelectorAll("tr[data-i]").forEach(tr => tr.onclick = () => { S.pos = S.list.indexOf(+tr.dataset.i); setMode("one"); });
@@ -591,7 +602,7 @@ function renderScatter() {
   main.innerHTML = `<div class="card"><div class="bar">
     <span class="ctl">x <select id="sx">${featOptions()}</select> <label><input type="checkbox" id="lx"> 로그</label></span>
     <span class="ctl">y <select id="sy2">${featOptions()}</select> <label><input type="checkbox" id="ly"> 로그</label></span>
-    <span class="legend"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span><span>검은 테두리 = 최종 모델(EXP-025)이 틀린 파일 · 음영 = 정상 5–95%</span></span>
+    <span class="legend"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span><span>검은 테두리 = ${M().id}이(가) 3/5 이상 틀린 파일 · 음영 = 정상 5–95%</span></span>
     <span class="help">점 클릭 = 한 개씩 보기. 지금 필터에 맞는 파일만 진하게</span></div><div id="sc" style="margin-top:8px"></div></div>
     <div class="card" id="scnote"></div>`;
   const sx = document.getElementById("sx"), sy = document.getElementById("sy2"), lx = document.getElementById("lx"), ly = document.getElementById("ly");
@@ -618,7 +629,7 @@ function renderScatter() {
     if (ry.p5 !== null) g.fillRect(P.l, Y(ty(ry.p95)), w - P.l - P.r, Y(ty(ry.p5)) - Y(ty(ry.p95)));
     const cur = S.list[S.pos];
     for (const [i, a, b] of [...pts].sort((p, q) => D.y[p[0]] - D.y[q[0]])) {
-      const x = X(a), yv = Y(b), wrong = bad("fin", i);
+      const x = X(a), yv = Y(b), wrong = bad(M(), i);
       g.globalAlpha = inList.has(i) ? 1 : .18;
       g.beginPath(); g.arc(x, yv, 4.5, 0, 7); g.fillStyle = col(i); g.fill(); g.lineWidth = 2; g.strokeStyle = css("--surface"); g.stroke();
       if (wrong) { g.beginPath(); g.arc(x, yv, 7.5, 0, 7); g.lineWidth = 1.5; g.strokeStyle = css("--text"); g.stroke(); }
@@ -637,21 +648,23 @@ function renderScatter() {
 }
 // ---------- 경계: 유의미 실험별 로지스틱 경계 (두 전문가 z 평면, OOF seed 0) ----------
 function renderLR() {
-  const E = D.lr.exps, ex = E[Math.min(S.lrExp, E.length - 1)], Z = D.lr.z;
-  const dec = i => ex.w[0] * Math.max(-3, Math.min(4.5, Z[i][0])) + ex.w[1] * Math.max(-3, Math.min(4.5, Z[i][1])) + ex.b;
-  const r83 = i => ex.rules.includes("r83") && !!D.rule83.on[i], kn = i => ex.rules.includes("knock") && !!D.knock.on[i];
-  const ruleOf = i => [r83(i) ? "8.3k 규칙" : "", kn(i) ? "유격 규칙" : ""].filter(Boolean).join(" · ");
-  const errOf = i => D.y[i] ? ex.miss[i] : ex.fp[i];
-  const errTxt = i => errOf(i) ? `${D.y[i] ? "미탐" : "오경보"} ${errOf(i)}/5` : "";
+  const ex = M(), Z = D.lr.planes[ex.plane], dec = i => decOf(ex, i);
+  const ruleOf = i => rulesOn(ex, i).map(k => `${RULE[k].label} ${ruleWord(k, i)}`).join(" · ");
+  const errOf = i => errN(ex, i), errTxt = i => errOf(i) ? `${D.y[i] ? "미탐" : "오경보"} ${errOf(i)}/5` : "";
   const band = +S.lrBand;
-  const nearI = [...Array(N).keys()].filter(i => Math.abs(dec(i)) <= band || errOf(i) >= 1).sort((a, b) => dec(a) - dec(b));
+  // 규칙으로 잡힌 고장 = 경계와 무관 → 기본으로 평면·목록에서 뺀다 (규칙이 켜진 정상은 오류라 남김)
+  const ruleAbn = [...Array(N).keys()].filter(i => D.y[i] && rulesOn(ex, i).length);
+  const hidden = new Set(S.lrRule ? [] : ruleAbn), shown = i => !hidden.has(i);
+  const nearI = [...Array(N).keys()].filter(i => shown(i) && (Math.abs(dec(i)) <= band || errOf(i) >= 1)).sort((a, b) => dec(a) - dec(b));
   main.innerHTML = `<div class="card"><div class="bar">
-      <span class="ctl">실험 <select id="lrExp">${E.map((e, k) => `<option value="${k}">${esc(e.label)}</option>`).join("")}</select></span>
+      <b title="${modelTitle(ex)}">${ex.id} ${esc(ex.short)}</b><span class="help">머리줄 "모델"에서 바꿈</span>
       <span class="ctl">경계 근처 = |결정값| ≤ <select id="lrBand">${[0.5, 1, 1.5, 2].map(v => `<option value="${v}">${v}</option>`).join("")}</select></span>
-      <span class="help">F2 ${ex.f2} ± ${ex.f2_sd} · 재현율 ${ex.recall} · 오경보율 ${ex.fpr}</span></div>
+      <label class="ctl"><input type="checkbox" id="lrRule"${S.lrRule ? " checked" : ""}> 규칙으로 잡힌 고장도 그리기</label>
+      <span class="help">F2 ${ex.f2} ± ${ex.f2_sd} · 재현율 ${ex.recall} · 오경보율 ${ex.fpr} · 평면: ${esc(D.lr.plane_label[ex.plane])}${ex.note ? " · " + esc(ex.note) : ""}</span></div>
       <div class="legend" style="margin:6px 0"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span>
-      <span>실선 = 결정값 0 · 점선 = ±1 · 주황 바탕 = 고장 쪽</span><span style="color:#7a3db8">◇ 8.3k 규칙</span><span style="color:#1a9e5a">○ 유격 규칙</span>
+      <span>실선 = 결정값 0 · 점선 = ±1 · 파랑 바탕 = 정상 영역 · 주황 바탕 = 고장 영역</span>${ex.rules.map(k => `<span style="color:var(--${k})">${RULE_MARK[k].sym} ${RULE[k].label}</span>`).join("")}
       <span>✕ 이 실험이 틀림 (굵게 = 3/5 이상)</span><span>이름 = 경계 근처 또는 틀린 파일</span></div>
+      ${ruleAbn.length ? `<div class="help" style="margin-bottom:6px">${S.lrRule ? "규칙으로 잡힌 고장도 그림 (경계와 무관하게 고장 판정)" : "평면에서 뺀 고장 (규칙으로 잡혀 경계와 무관)"} ${ruleAbn.length}개: ${ruleAbn.map(i => `${shortN(D.names[i])}(${rulesOn(ex, i).map(k => RULE[k].label).join("·")})`).join(", ")}</div>` : ""}
       <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:10px">
         <div id="lrPlot"></div>
         <div><div class="help" style="margin-bottom:4px">경계 근처·틀린 파일 ${nearI.length}개 (결정값 순, 클릭 = 정보)</div>
@@ -659,20 +672,27 @@ function renderLR() {
           ${nearI.map(i => `<tr data-i="${i}" style="cursor:pointer${S.lrSel === i ? ";outline:2px solid var(--text)" : ""}"><td style="text-align:left"><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</td><td>${dec(i).toFixed(2)}</td><td class="${errOf(i) >= 3 ? "o" : ""}">${errTxt(i)}</td><td>${ruleOf(i)}</td></tr>`).join("")}
           </tbody></table></div></div>
       </div></div><div class="card" id="lrInfo"></div>`;
-  const se = document.getElementById("lrExp"), sb = document.getElementById("lrBand");
-  se.value = String(Math.min(S.lrExp, E.length - 1)); sb.value = String(band);
-  se.onchange = () => { S.lrExp = +se.value; render(); }; sb.onchange = () => { S.lrBand = +sb.value; render(); };
+  const sb = document.getElementById("lrBand");
+  sb.value = String(band); sb.onchange = () => { S.lrBand = +sb.value; render(); };
+  document.getElementById("lrRule").onchange = e => { S.lrRule = e.target.checked; if (!S.lrRule && hidden.has(S.lrSel)) S.lrSel = null; render(); };
   const c = canvas(600); document.getElementById("lrPlot").append(c);
   const [g, w, h] = ctx2d(c), P = { l: 46, r: 12, t: 10, b: 34 }, lo = -3, hi = 4.5;
   const X = v => P.l + (v - lo) / (hi - lo) * (w - P.l - P.r), Y = v => P.t + (1 - (v - lo) / (hi - lo)) * (h - P.t - P.b);
   const cl = v => Math.max(lo, Math.min(hi, v));
-  // 바탕: 고장 쪽(결정값 ≥ 0) = 그림 사각형을 경계 반평면으로 자른 다각형 하나
-  const f = (x, yv) => ex.w[0] * x + ex.w[1] * yv + ex.b, rect = [[lo, lo], [hi, lo], [hi, hi], [lo, hi]], poly = [];
-  rect.forEach((p, k) => { const q = rect[(k + 1) % 4], fp = f(...p), fq = f(...q);
-    if (fp >= 0) poly.push(p);
-    if ((fp >= 0) !== (fq >= 0)) { const t = fp / (fp - fq); poly.push([p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])]); } });
-  if (poly.length) { g.beginPath(); poly.forEach(([a, b], k) => k ? g.lineTo(X(a), Y(b)) : g.moveTo(X(a), Y(b))); g.closePath();
-    g.globalAlpha = .16; g.fillStyle = css("--abn"); g.fill(); g.globalAlpha = 1; }
+  // 바탕: 정상 영역(결정값 < 0, 파랑)·고장 영역(결정값 ≥ 0, 주황) = 그림 사각형을 경계 반평면으로 자른 다각형
+  const f = (x, yv) => ex.w[0] * x + ex.w[1] * yv + ex.b, rect = [[lo, lo], [hi, lo], [hi, hi], [lo, hi]];
+  const half = s => { const poly = [];                                  // s = +1 고장 쪽, −1 정상 쪽
+    rect.forEach((p, k) => { const q = rect[(k + 1) % 4], fp = s * f(...p), fq = s * f(...q);
+      if (fp >= 0) poly.push(p);
+      if ((fp >= 0) !== (fq >= 0)) { const t = fp / (fp - fq); poly.push([p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])]); } });
+    return poly; };
+  for (const [s, cv, a] of [[-1, "--nor", .13], [1, "--abn", .16]]) { const poly = half(s); if (!poly.length) continue;
+    g.beginPath(); poly.forEach(([u, v], k) => k ? g.lineTo(X(u), Y(v)) : g.moveTo(X(u), Y(v))); g.closePath();
+    g.globalAlpha = a; g.fillStyle = css(cv); g.fill(); g.globalAlpha = 1;
+    // 영역 이름: 다각형 꼭짓점 평균 위치
+    const cx = poly.reduce((t, p) => t + p[0], 0) / poly.length, cy = poly.reduce((t, p) => t + p[1], 0) / poly.length;
+    g.font = "bold 14px Malgun Gothic, sans-serif"; g.textAlign = "center"; g.fillStyle = css(cv); g.globalAlpha = .75;
+    g.fillText(s > 0 ? "고장 영역" : "정상 영역", X(cx), Y(cy)); g.globalAlpha = 1; }
   const tk = niceTicks(lo, hi, 6);
   frame(g, w, h, P, tk.map(v => [v, X(v), String(v)]), tk.map(v => [v, Y(v), String(v)]), "AE z (스펙트럼 모양 이상)", "");
   g.fillStyle = css("--text-3"); g.textAlign = "left"; g.fillText("ET z (충격 피처 이상)", P.l + 4, P.t + 6);
@@ -685,12 +705,11 @@ function renderLR() {
   seg(0, [], 1.8); seg(1, [5, 4], 1); seg(-1, [5, 4], 1); g.setLineDash([]);
   // 점
   const pt = i => [X(cl(Z[i][0])), Y(cl(Z[i][1]))];
-  const order = [...Array(N).keys()].sort((a, b) => D.y[a] - D.y[b]);
+  const order = [...Array(N).keys()].filter(shown).sort((a, b) => D.y[a] - D.y[b]);
   for (const i of order) { const [x, yv] = pt(i);
     g.beginPath(); if (D.y[i]) g.arc(x, yv, 4.5, 0, 7); else g.rect(x - 4, yv - 4, 8, 8);
     g.fillStyle = col(i); g.globalAlpha = .85; g.fill(); g.globalAlpha = 1;
-    if (r83(i)) { g.beginPath(); g.moveTo(x, yv - 10); g.lineTo(x + 10, yv); g.lineTo(x, yv + 10); g.lineTo(x - 10, yv); g.closePath(); g.lineWidth = 1.5; g.strokeStyle = "#7a3db8"; g.stroke(); }
-    if (kn(i)) { g.beginPath(); g.arc(x, yv, 8, 0, 7); g.lineWidth = 1.8; g.strokeStyle = "#1a9e5a"; g.stroke(); }
+    for (const k of rulesOn(ex, i)) RULE_MARK[k].draw(g, x, yv);
     if (errOf(i)) { const s = errOf(i) >= 3 ? 7 : 5; g.beginPath(); g.moveTo(x - s, yv - s); g.lineTo(x + s, yv + s); g.moveTo(x + s, yv - s); g.lineTo(x - s, yv + s);
       g.lineWidth = errOf(i) >= 3 ? 2.2 : 1; g.strokeStyle = css("--text"); g.stroke(); }
     if (i === S.lrSel) { g.beginPath(); g.arc(x, yv, 13, 0, 7); g.lineWidth = 2.5; g.strokeStyle = css("--text"); g.stroke(); }
@@ -704,7 +723,7 @@ function renderLR() {
       g.fillStyle = css("--surface"); g.globalAlpha = .8; g.fillRect(b[0] - 1, b[1], tw + 2, 12); g.globalAlpha = 1;
       g.fillStyle = col(i); g.textAlign = "left"; g.fillText(t, x + dx, yv + dy - 3); break; } }
   g.restore();
-  const near = (mx, my) => { let best = null, bd = 120; for (let i = 0; i < N; i++) { const [x, yv] = pt(i), d = (x - mx) ** 2 + (yv - my) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
+  const near = (mx, my) => { let best = null, bd = 120; for (let i = 0; i < N; i++) { if (!shown(i)) continue; const [x, yv] = pt(i), d = (x - mx) ** 2 + (yv - my) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
   hover(c, (mx, my) => { const i = near(mx, my); if (i === null) return null;
     return `${D.names[i]} (${D.y[i] ? "고장" : "정상"}) · 결정값 ${dec(i).toFixed(2)} · AE z ${Z[i][0].toFixed(2)} · ET z ${Z[i][1].toFixed(2)}${errTxt(i) ? " · " + errTxt(i) : ""}${ruleOf(i) ? " · " + ruleOf(i) : ""}`; });
   const select = i => { S.lrSel = i; render(); };
@@ -716,11 +735,8 @@ function renderLR() {
   const side = dec(i) >= 0 ? "고장 쪽" : "정상 쪽", ok = D.y[i] ? (ex.miss[i] === 0) : (ex.fp[i] === 0);
   info.innerHTML = `<div class="bar"><b style="font-size:15px"><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</b> <span>${D.y[i] ? "고장" : "정상"}</span>
     <span class="chip">결정값 ${dec(i).toFixed(2)} (${side})</span><span class="chip">AE z ${Z[i][0].toFixed(2)}</span><span class="chip">ET z ${Z[i][1].toFixed(2)}</span>
-    <span class="chip ${ok ? "" : "warn"}">${ex.id}: ${ok ? "5번 모두 맞힘" : errTxt(i)}</span>
-    ${ex.rules.length ? `<span class="chip ${ruleOf(i) ? "warn" : ""}">규칙: ${ruleOf(i) || "꺼짐"}</span>` : ""}
     <button class="navbtn" id="lrOpen">한 개씩 보기로 열기 →</button></div>
-    <div style="margin-top:6px">${modelBadges(i)}</div><div style="margin-top:4px">${tagChips(i)}</div>
-    <div class="help" style="margin-top:6px">실험별 결과: ${E.map(e => { const v = D.y[i] ? e.miss[i] : e.fp[i]; return `${e.id} ${v ? (D.y[i] ? "미탐 " : "오경보 ") + v + "/5" : "맞힘"}`; }).join(" · ")}</div>`;
+    <div style="margin-top:6px">${modelBadges(i)}</div><div style="margin-top:4px">${tagChips(i)}</div>`;
   document.getElementById("lrOpen").onclick = () => { if (!S.list.includes(i)) { S.lab = "all"; S.model = "all"; S.tag = null; S.q = ""; syncCtl(); rebuild(i); } else S.pos = S.list.indexOf(i); setMode("one"); };
 }
 // ---------- 공용: 파일 열기 · 정보 카드 · 점 그림 ----------
@@ -729,10 +745,16 @@ function openFile(i) {
   if (!S.list.includes(i)) { S.lab = "all"; S.model = "all"; S.tag = null; S.q = ""; syncCtl(); rebuild(i); } else S.pos = S.list.indexOf(i);
   setMode("one");
 }
-const finErr = i => D.y[i] ? D.models.fin.miss[i] : D.models.fin.fp[i];
-const finTxt = i => finErr(i) ? `${D.y[i] ? "미탐" : "오경보"} ${finErr(i)}/5` : "5번 모두 맞힘";
-const LR0 = () => D.lr.exps[0];                                       // EXP-025 평면
-const decOf = (ex, i) => { const z = D.lr.z[i], c = v => Math.max(-3, Math.min(4.5, v)); return ex.w[0] * c(z[0]) + ex.w[1] * c(z[1]) + ex.b; };
+const finErr = i => errN(M(), i);                                      // 고른 모델의 틀린 횟수
+const finTxt = i => errTxt(M(), i);
+const decOf = (m, i) => { const z = D.lr.planes[m.plane][i], c = v => Math.max(-3, Math.min(4.5, v)); return m.w[0] * c(z[0]) + m.w[1] * c(z[1]) + m.b; };
+// 경계 그림의 규칙 표시: 색 = CSS 변수 --{규칙 키}
+const RULE_MARK = {
+  r83: { sym: "◇", draw: (g, x, y) => { g.beginPath(); g.moveTo(x, y - 10); g.lineTo(x + 10, y); g.lineTo(x, y + 10); g.lineTo(x - 10, y); g.closePath(); g.lineWidth = 1.5; g.strokeStyle = css("--r83"); g.stroke(); } },
+  knock: { sym: "○", draw: (g, x, y) => { g.beginPath(); g.arc(x, y, 8, 0, 7); g.lineWidth = 1.8; g.strokeStyle = css("--knock"); g.stroke(); } },
+  lock: { sym: "□", draw: (g, x, y) => { g.lineWidth = 1.8; g.strokeStyle = css("--lock"); g.strokeRect(x - 9, y - 9, 18, 18); } },
+  cap: { sym: "◌", draw: (g, x, y) => { g.beginPath(); g.setLineDash([2, 2]); g.arc(x, y, 11, 0, 7); g.lineWidth = 1.2; g.strokeStyle = css("--cap"); g.stroke(); g.setLineDash([]); } },
+};
 function infoCard(el, i, chips) {
   if (i === null || i === undefined) { el.innerHTML = `<span class="help">점이나 표의 행을 누르면 여기에 그 파일 정보가 뜹니다.</span>`; return; }
   el.innerHTML = `<div class="bar"><b style="font-size:16px"><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</b>
@@ -748,7 +770,7 @@ function docFigs(key, doc) {
 }
 const tableRows = (rows, sel) => rows.map(r => `<tr data-i="${r.i}" style="cursor:pointer" class="${sel === r.i ? "sel" : ""}">${r.cells.map((c, k) => k === 0
   ? `<td style="text-align:left"><span class="dot ${D.y[r.i] ? "a" : "n"}"></span> ${D.names[r.i]}</td>` : `<td class="${c.o ? "o" : ""}">${c.t ?? c}</td>`).join("")}</tr>`).join("");
-// x·y 배열 점 그림. 정상 = 네모, 고장 = 원, 초록 원 = 유격 규칙 켜짐, ✕ = 최종 모델이 틀림(굵게 3/5 이상), 큰 고리 = 고른 파일
+// x·y 배열 점 그림. 정상 = 네모, 고장 = 원, 초록 원 = 유격 규칙 켜짐, ✕ = 고른 모델이 틀림(굵게 3/5 이상), 큰 고리 = 고른 파일
 function pointPlot(c, o) {
   const [g, w, h] = ctx2d(c), P = { l: 50, r: 14, t: 16, b: 36 };
   const X = v => P.l + (v - o.xlo) / (o.xhi - o.xlo) * (w - P.l - P.r), Y = v => P.t + (1 - (v - o.ylo) / (o.yhi - o.ylo)) * (h - P.t - P.b);
@@ -765,7 +787,7 @@ function pointPlot(c, o) {
     g.globalAlpha = inList.has(i) ? .9 : .15; g.beginPath(); if (D.y[i]) g.arc(x, yv, s, 0, 7); else g.rect(x - s * .9, yv - s * .9, s * 1.8, s * 1.8);
     g.fillStyle = col(i); g.fill(); g.lineWidth = 1; g.strokeStyle = css("--surface"); g.stroke(); g.globalAlpha = 1;
     if (!inList.has(i)) continue;
-    if (o.knockRing && knockOn(i)) { g.beginPath(); g.arc(x, yv, s + 4, 0, 7); g.lineWidth = 1.8; g.strokeStyle = css("--knock"); g.stroke(); }
+    if (o.knockRing && ruleN("knock", i)) { g.beginPath(); g.arc(x, yv, s + 4, 0, 7); g.lineWidth = 1.8; g.strokeStyle = css("--knock"); g.stroke(); }
     const e = finErr(i);
     if (e) { const k = e >= 3 ? 6 : 4; g.beginPath(); g.moveTo(x - k, yv - k); g.lineTo(x + k, yv + k); g.moveTo(x + k, yv - k); g.lineTo(x - k, yv + k); g.lineWidth = e >= 3 ? 2.2 : 1; g.strokeStyle = css("--text"); g.stroke(); }
     if (i === o.sel) { g.beginPath(); g.arc(x, yv, s + 9, 0, 7); g.lineWidth = 2.5; g.strokeStyle = css("--text"); g.stroke(); }
@@ -783,20 +805,20 @@ function pointPlot(c, o) {
   c.onclick = e => { const r = c.getBoundingClientRect(), i = near(e.clientX - r.left, e.clientY - r.top); if (i !== null) o.onPick(i); };
   return { X, Y };
 }
-const legendPts = `<span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span>
-  <span style="color:var(--knock)">○ 유격 규칙 켜짐</span><span>✕ 최종(EXP-025)이 틀림 (굵게 = 3/5 이상)</span><span>흐린 점 = 머리줄 필터 밖</span>`;
+const legendPts = () => `<span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span>
+  <span style="color:var(--knock)">○ 유격 규칙 켜짐</span><span>✕ ${M().id}이(가) 틀림 (굵게 = 3/5 이상)</span><span>흐린 점 = 머리줄 필터 밖</span>`;
 
 // ---------- 분석 조각: 2-12 유격 반복 · 하중 대비 고주파 ----------
 function renderKnock() {
-  const K = D.knock2, ex = LR0(), dec = i => decOf(ex, i), idx = [...Array(N).keys()];
+  const K = D.knock2, ex = M(), dec = i => decOf(ex, i), idx = [...Array(N).keys()];
   const nor = idx.filter(i => !D.y[i]), abn = idx.filter(i => D.y[i]);
-  const out = idx.filter(i => K.r[i] >= 2), fpN = nor.filter(i => D.models.fin.fp[i] >= 3), fp1 = nor.filter(i => D.models.fin.fp[i] >= 1);
+  const out = idx.filter(i => K.r[i] >= 2), fpN = nor.filter(i => ex.fp[i] >= 3), fp1 = nor.filter(i => ex.fp[i] >= 1);
   // "큰 사건 한 번"형 오경보(2-11 N-A) = 자주 오경보 정상 중 R < 0.3 (설명용 구분, N-B형 059는 R이 높아 빠짐)
   const fpA = fpN.filter(i => K.R[i] < .3), fpB = fpN.filter(i => K.R[i] >= .3);
   const Rmax = fpA.length ? Math.max(...fpA.map(i => K.R[i])) : 0, dmin = fpA.length ? Math.min(...fpA.map(dec)) : 0;
   const comps = abn.filter(i => K.R[i] <= Rmax + 1e-9 && dec(i) >= dmin).sort((a, b) => K.R[a] - K.R[b]);
-  const kOn = idx.filter(knockOn);
-  main.innerHTML = `<div class="vhead"><h2>유격 반복 · 하중 대비 고주파</h2><span class="crumb">분석 조각 2-12 저에너지 고장 · 최종 모델 EXP-025의 유격 반복 규칙</span></div>
+  const kOn = idx.filter(i => ruleN("knock", i));
+  main.innerHTML = `<div class="vhead"><h2>유격 반복 · 하중 대비 고주파</h2><span class="crumb">분석 조각 2-12 저에너지 고장 · 유격 반복 규칙(EXP-025부터) · 기준 모델 ${ex.id}</span></div>
   <div class="note"><b>축 (라벨 무관 정의)</b> · D1 유격 반복 = log10(두 번째로 큰 사건 / σ) · D6 하중 대비 고주파 = log10(20 Hz 미만 RMS / σ) ·
     r = 정상 중심 거리 √((z1² + z6²)/2) (정상 120개 중앙값·MAD 기준 z) · <b>R = 2위/1위 사건 높이</b> (1에 가까우면 같은 크기 타격 반복, 0이면 큰 사건 한 번).
     σ = 200 Hz 고역통과의 1.4826·MAD, 사건 = |h| > 8σ, 10 ms 안은 한 사건. 규칙 = r ≥ 2 이고 R ≥ 0.7 (사후 문턱, 고정)</div>
@@ -806,18 +828,18 @@ function renderKnock() {
     <div class="stat"><div class="k">자주 오경보 정상 (3/5 이상)</div><div class="v">${fpN.length}</div><div class="s">큰 사건 한 번형 (R &lt; 0.3): ${fpA.map(i => `${shortN(D.names[i])} ${K.R[i].toFixed(2)}`).join(" · ") || "없음"}<br>그 밖: ${fpB.map(i => `${shortN(D.names[i])} ${K.R[i].toFixed(2)}`).join(" · ") || "없음"}</div></div>
     <div class="stat"><div class="k">R ≤ ${Rmax.toFixed(2)} 이고 결정값 ≥ ${dmin.toFixed(2)}인 고장 (R로 내리면 함께 내려갈 고장)</div><div class="v">${comps.length}</div><div class="s">${comps.map(i => `${shortN(D.names[i])} R ${K.R[i].toFixed(2)} · 결정값 ${dec(i).toFixed(1)}`).join("<br>") || "없음"}</div></div>
   </div>
-  <div class="card"><h4>① 정상 중심에서 먼 파일이 고장인가 — D6 × D1 지도 <span class="legend">${legendPts}<span>점 크기 = R</span></span></h4>
+  <div class="card"><h4>① 정상 중심에서 먼 파일이 고장인가 — D6 × D1 지도 <span class="legend">${legendPts()}<span>점 크기 = R</span></span></h4>
     <div class="rowside"><div id="knA"></div>
       <div><div class="help" style="margin-bottom:4px">r ≥ 2 파일 (r 큰 순, 클릭 = 정보)</div><div class="tbl-wrap" style="max-height:520px"><table class="big">
-        <thead><tr><th>파일</th><th>r</th><th>R</th><th>사건</th><th>최종</th></tr></thead><tbody>
+        <thead><tr><th>파일</th><th>r</th><th>R</th><th>사건</th><th>${M().id}</th></tr></thead><tbody>
         ${tableRows(out.sort((a, b) => K.r[b] - K.r[a]).map(i => ({ i, cells: [0, K.r[i].toFixed(2), { t: K.R[i].toFixed(2), o: K.R[i] >= .7 }, K.nev[i], { t: finErr(i) ? finTxt(i) : "", o: finErr(i) >= 3 }] })), S.knSel)}
         </tbody></table></div></div></div></div>
-  <div class="card"><h4>② 오경보를 "유격 반복"으로 가를 수 있나 — R × 결합 결정값 <span class="legend">${legendPts}</span></h4>
-    <div class="help" style="margin-bottom:6px">y = EXP-025 평면(AE z · ET z, OOF seed 0)의 로지스틱 결정값(설명용, 실선 0). x = R. 오경보 정상이 왼쪽(큰 사건 한 번)에 몰리고 같은 높이의 고장이 오른쪽에 있으면 R이 가르는 축이 된다. 왼쪽에 고장도 있으면 그 고장을 잃는다. 점선 = 유격 규칙 문턱 R 0.7</div>
+  <div class="card"><h4>② 오경보를 "유격 반복"으로 가를 수 있나 — R × 결합 결정값 <span class="legend">${legendPts()}</span></h4>
+    <div class="help" style="margin-bottom:6px">y = ${ex.id} 평면(AE z · ET z, OOF seed 0)의 로지스틱 결정값(설명용, 실선 0). x = R. 오경보 정상이 왼쪽(큰 사건 한 번)에 몰리고 같은 높이의 고장이 오른쪽에 있으면 R이 가르는 축이 된다. 왼쪽에 고장도 있으면 그 고장을 잃는다. 점선 = 유격 규칙 문턱 R 0.7</div>
     <div class="rowside"><div id="knB"></div>
       <div><div class="help" style="margin-bottom:4px">오경보 정상(1/5 이상)과 비교 대상 고장</div><div class="tbl-wrap" style="max-height:520px"><table class="big">
-        <thead><tr><th>파일</th><th>결정값</th><th>R</th><th>사건</th><th>최종</th></tr></thead><tbody>
-        ${tableRows([...fp1.sort((a, b) => D.models.fin.fp[b] - D.models.fin.fp[a] || dec(b) - dec(a)), ...comps].map(i => ({ i, cells: [0, dec(i).toFixed(2), K.R[i].toFixed(2), K.nev[i], { t: finTxt(i), o: finErr(i) >= 3 }] })), S.knSel)}
+        <thead><tr><th>파일</th><th>결정값</th><th>R</th><th>사건</th><th>${M().id}</th></tr></thead><tbody>
+        ${tableRows([...fp1.sort((a, b) => ex.fp[b] - ex.fp[a] || dec(b) - dec(a)), ...comps].map(i => ({ i, cells: [0, dec(i).toFixed(2), K.R[i].toFixed(2), K.nev[i], { t: finTxt(i), o: finErr(i) >= 3 }] })), S.knSel)}
         </tbody></table></div></div></div></div>
   <div class="card" id="knInfo"></div>${docFigs("knock", "2-12_1114_저에너지고장.md")}`;
   const pick = i => { S.knSel = i; render(); };
@@ -827,14 +849,14 @@ function renderKnock() {
   const cA = canvas(540); document.getElementById("knA").append(cA);
   pointPlot(cA, { x: K.z6, y: K.z1, xlo, xhi, ylo, yhi, xl: "D6 하중 대비 고주파 (z) → 오른쪽: 하중은 큰데 고주파 바탕은 조용", yl: "↑ D1 유격 반복 (z): 큰 타격이 두 번 이상",
     size: i => 3 + 5 * K.R[i], knockRing: true, sel: S.knSel, onPick: pick, tipf: tip,
-    labels: idx.filter(i => K.r[i] >= 2 || D.models.fin.fp[i] >= 3 || finErr(i) >= 3),
+    labels: idx.filter(i => K.r[i] >= 2 || ex.fp[i] >= 3 || finErr(i) >= 3),
     deco: (g, X, Y) => { for (const rr of [1, 2]) { g.beginPath(); for (let k = 0; k <= 120; k++) { const t = k / 120 * 2 * Math.PI, R = rr * Math.SQRT2; const x = X(R * Math.cos(t)), y = Y(R * Math.sin(t)); k ? g.lineTo(x, y) : g.moveTo(x, y); }
         g.setLineDash([5, 4]); g.lineWidth = 1; g.strokeStyle = css("--text-2"); g.stroke(); g.setLineDash([]);
         g.fillStyle = css("--text-3"); g.textAlign = "left"; g.fillText(`r = ${rr}`, X(rr * Math.SQRT2 * .72) + 3, Y(-rr * Math.SQRT2 * .72) + 8); }
       g.strokeStyle = css("--axis"); g.lineWidth = 1; g.beginPath(); g.moveTo(X(0), Y(ylo)); g.lineTo(X(0), Y(yhi)); g.moveTo(X(xlo), Y(0)); g.lineTo(X(xhi), Y(0)); g.stroke(); } });
   const D0 = idx.map(dec), [dlo, dhi] = ext(D0, .5);
   const cB = canvas(480); document.getElementById("knB").append(cB);
-  pointPlot(cB, { x: K.R, y: D0, xlo: -.04, xhi: 1.04, ylo: Math.max(dlo, -8), yhi: Math.min(dhi, 10), xl: "R = 2위/1위 사건 높이 → 1: 같은 크기 타격 반복 · 0: 큰 사건 한 번", yl: "↑ 결합 결정값 (EXP-025 평면, 0 = 설명용 경계)",
+  pointPlot(cB, { x: K.R, y: D0, xlo: -.04, xhi: 1.04, ylo: Math.max(dlo, -8), yhi: Math.min(dhi, 10), xl: "R = 2위/1위 사건 높이 → 1: 같은 크기 타격 반복 · 0: 큰 사건 한 번", yl: `↑ 결합 결정값 (${ex.id} 평면, 0 = 설명용 경계)`,
     knockRing: true, sel: S.knSel, onPick: pick, tipf: tip, labels: [...fp1, ...comps],
     deco: (g, X, Y) => { g.fillStyle = css("--abn"); g.globalAlpha = .07; g.fillRect(X(-.04), Y(10), X(1.04) - X(-.04), Y(0) - Y(10)); g.globalAlpha = 1;
       g.strokeStyle = css("--text"); g.lineWidth = 1.5; g.beginPath(); g.moveTo(X(-.04), Y(0)); g.lineTo(X(1.04), Y(0)); g.stroke();
@@ -851,19 +873,19 @@ function renderLock() {
   const sN = nor.map(i => L.S[i]).sort((a, b) => a - b), q = p => sN[Math.min(sN.length - 1, Math.floor(p * (sN.length - 1) + .5))];
   const s95 = q(.95), sMax = sN[sN.length - 1], iMax = nor.find(i => L.S[i] === sMax), zero = nor.filter(i => L.S[i] === 0).length;
   const above = idx.filter(i => L.S[i] > sMax), rank = [...idx].sort((a, b) => L.S[b] - L.S[a]).slice(0, 25);
-  main.innerHTML = `<div class="vhead"><h2>주기 잠금 충격</h2><span class="crumb">분석 조각 2-13 · EXP-025가 유일하게 놓치는 abn_022 (H4 하중 반전 시 유격 충격)</span></div>
+  main.innerHTML = `<div class="vhead"><h2>주기 잠금 충격</h2><span class="crumb">분석 조각 2-13 · EXP-025까지 놓치던 abn_022 (H4 하중 반전 시 유격 충격) · 기준 모델 ${M().id}</span></div>
   <div class="note"><b>축 (라벨 무관 정의)</b> · T = 30 Hz 저역 신호를 τ만큼 민 자기 자신과의 상관이 최대인 τ (0.3–1.2 s) · r_LP = 그 최대 상관 (느린 파형이 똑같이 반복되는 정도) ·
-    hit = 8σ 사건 중 T ± 3% 떨어진 곳에 다른 사건이 있는 비율 (충격이 그 주기에 잠김) · <b>S = r_LP × hit</b> (둘 다 있어야 높음). 아직 모델에 넣지 않은 EDA 축 (EXP-026 후보)</div>
+    hit = 8σ 사건 중 T ± 3% 떨어진 곳에 다른 사건이 있는 비율 (충격이 그 주기에 잠김) · <b>S = r_LP × hit</b> (둘 다 있어야 높음). EXP-029부터 주기 잠금 규칙(LOCK_S ≥ 학습 정상 최대 + 0.1 → 고장)으로 모델에 들어감</div>
   <div class="stats">
     <div class="stat"><div class="k">정상 최대를 넘는 파일</div><div class="v">${above.length}</div><div class="s">${above.map(i => shortN(D.names[i])).join(" ")} (모두 ${above.every(i => D.y[i]) ? "고장" : "고장 아님 포함"})</div></div>
     <div class="stat"><div class="k">정상 S 최대</div><div class="v">${sMax.toFixed(2)}</div><div class="s">${D.names[iMax]} · 정상 95% ${s95.toFixed(2)}</div></div>
     <div class="stat"><div class="k">S = 0 인 정상</div><div class="v">${zero}</div><div class="s">정상 ${nor.length}개 중 (주기 짝 충격 없음)</div></div>
-    <div class="stat"><div class="k">abn_022</div><div class="v">${L.S[D.names.indexOf("abn_022")].toFixed(2)}</div><div class="s">T ${L.T[D.names.indexOf("abn_022")]} s · 최종 ${finTxt(D.names.indexOf("abn_022"))}</div></div>
+    <div class="stat"><div class="k">abn_022</div><div class="v">${L.S[D.names.indexOf("abn_022")].toFixed(2)}</div><div class="s">T ${L.T[D.names.indexOf("abn_022")]} s · ${M().id} ${finTxt(D.names.indexOf("abn_022"))}</div></div>
   </div>
-  <div class="card"><h4>느린 파형 반복 × 충격 주기 잠금 <span class="legend">${legendPts}<span>곡선 = S 같은 선 (정상 95% · 정상 최대)</span></span></h4>
+  <div class="card"><h4>느린 파형 반복 × 충격 주기 잠금 <span class="legend">${legendPts()}<span>곡선 = S 같은 선 (정상 95% · 정상 최대)</span></span></h4>
     <div class="rowside"><div id="lkA"></div>
       <div><div class="help" style="margin-bottom:4px">S 상위 25 (클릭 = 정보)</div><div class="tbl-wrap" style="max-height:540px"><table class="big">
-        <thead><tr><th>파일</th><th>S</th><th>r_LP</th><th>hit</th><th>T s</th><th>사건</th><th>최종</th></tr></thead><tbody>
+        <thead><tr><th>파일</th><th>S</th><th>r_LP</th><th>hit</th><th>T s</th><th>사건</th><th>${M().id}</th></tr></thead><tbody>
         ${tableRows(rank.map(i => ({ i, cells: [0, { t: L.S[i].toFixed(2), o: L.S[i] > sMax }, L.rlp[i].toFixed(2), L.hit[i].toFixed(2), L.T[i], L.nev[i], { t: finErr(i) ? finTxt(i) : "", o: finErr(i) >= 3 }] })), S.lkSel)}
         </tbody></table></div></div></div></div>
   <div class="card" id="lkInfo"></div>${docFigs("lock", "2-13_1114_주기잠금충격_022.md")}`;
@@ -896,7 +918,7 @@ const IC = {
 };
 const NAV = [
   ["EDA", [["one", "한 개씩 보기", "← →"], ["five", "5개씩 보기", ""], ["table", "지표 표", "52"], ["scatter", "산점도", ""]]],
-  ["모델", [["lr", "로지스틱 경계", "EXP-025"]]],
+  ["모델", [["lr", "로지스틱 경계", ""]]],
   ["분석 조각", [["knock", "유격 반복 · 저에너지", "2-12"], ["lock", "주기 잠금 충격", "2-13"]]],
   ["참고", [["concept", "개념 사전", ""]]],
 ];
@@ -907,7 +929,7 @@ const svg = k => `<svg viewBox="0 0 24 24">${IC[k]}</svg>`;
 function renderNav() {
   const el = document.getElementById("nav");
   el.innerHTML = `<div class="brand"><span class="logo">9</span><div><b>텐션암 이상감지</b><span>9조 · EDA 뷰어</span></div></div>` +
-    NAV.map(([sec, it]) => `<div class="nsec"><h5>${sec}</h5>${it.map(([k, l, h]) => `<div class="nitem ${S.mode === k ? "on" : ""}" data-m="${k}" title="${l}">${svg(k)}<span class="nl">${l}</span>${h ? `<span class="nh">${h}</span>` : ""}</div>`).join("")}</div>`).join("") +
+    NAV.map(([sec, it]) => `<div class="nsec"><h5>${sec}</h5>${it.map(([k, l, h]) => `<div class="nitem ${S.mode === k ? "on" : ""}" data-m="${k}" title="${l}">${svg(k)}<span class="nl">${l}</span>${(k === "lr" ? S.ref : h) ? `<span class="nh">${k === "lr" ? S.ref : h}</span>` : ""}</div>`).join("")}</div>`).join("") +
     `<div class="nfoot"><div class="nitem" id="navMini" title="${S.navMini ? "메뉴 펼치기" : "메뉴 접기"}">${svg(S.navMini ? "wide" : "mini")}<span class="nl">메뉴 접기</span></div></div>`;
   el.querySelectorAll("[data-m]").forEach(d => d.onclick = () => setMode(d.dataset.m));
   document.getElementById("navMini").onclick = () => { S.navMini = !S.navMini; applyChrome(); render(); };
@@ -962,7 +984,9 @@ function syncCtl() {
   document.querySelectorAll("#mode button").forEach(b => b.classList.toggle("on", b.dataset.v === S.mode));
   document.querySelectorAll("#sortDir button").forEach(b => b.classList.toggle("on", +b.dataset.v === S.dir));
   document.querySelectorAll("#sig button").forEach(b => b.classList.toggle("on", b.dataset.v === S.sig));
-  document.getElementById("fLab").value = S.lab; document.getElementById("fModel").value = S.model;
+  document.getElementById("fLab").value = S.lab; document.getElementById("fRef").value = S.ref;
+  const fm = document.getElementById("fModel"); fm.innerHTML = modelOptions(); fm.value = S.model;
+  if (fm.value !== S.model) { S.model = "all"; fm.value = "all"; }      // 고른 모델에 없는 항목(다른 모델의 규칙 등)이면 전체로
   document.getElementById("sortKey").value = S.sort; document.getElementById("groupBy").value = S.group; document.getElementById("q").value = S.q;
 }
 function setMode(m) { S.mode = m; syncCtl(); render(); }
@@ -984,6 +1008,8 @@ segBind("sortDir", v => { S.dir = +v; syncCtl(); update(); });
 segBind("sig", v => { useSig(v); if (S.tag && !TAG[S.tag]) S.tag = null; syncCtl(); rebuild(); render(); });
 document.getElementById("fLab").onchange = e => { S.lab = e.target.value; update(); };
 document.getElementById("fModel").onchange = e => { S.model = e.target.value; update(); };
+document.getElementById("fRef").innerHTML = MODELS.map(m => `<option value="${m.id}" title="${modelTitle(m)}">${esc(modelLabel(m))}</option>`).join("");
+document.getElementById("fRef").onchange = e => { S.ref = e.target.value; syncCtl(); update(); };
 document.getElementById("sortKey").onchange = e => { S.sort = e.target.value; update(); };
 document.getElementById("groupBy").onchange = e => { S.group = e.target.value; update(); };
 document.getElementById("q").oninput = e => { S.q = e.target.value.trim(); update(); };
