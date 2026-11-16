@@ -31,8 +31,10 @@ ex.save_fig(viz.psd_band(f, L, y, names, ex.focus), "psd_focus",
 fig, _ = viz.tsne({"ext150 피처": E.values}, y, names, mark=ex.focus)
 ex.save_fig(fig, "tsne", "입력 공간에서 고장이 정상과 따로 모이는가, 놓친 파일은 어디에 있는가")
 
-# %% 그림 3: 이 실험의 가설을 보여주는 그림
-# fig = ...; ex.save_fig(fig, "이름", "무엇을 보는 그림인지")
+# %% 그림 3: 이 실험의 가설을 보여주는 그림 = 핵심 그림 (key=True)
+# README에서 해석 첫 문단(결론 요약) 바로 아래에 자동으로 놓인다. 그 아래에 '그림 읽는 법' → 상세 설명을 손으로 쓴다
+# 결합 모델 실험은 boundary_lr(x = 로지스틱 결정값, y = 새 축, 테두리 = 규칙/새 축이 바꾼 파일)이 기본
+# fig = ...; ex.save_fig(fig, "이름", "무엇을 보는 그림인지", key=True)
 
 # %% 중첩 CV
 et = make_et()

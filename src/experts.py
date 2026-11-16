@@ -13,6 +13,7 @@
 피처 함수나 AE 설정을 바꾸면 outputs/cache/joblib_experts 를 지운다
 """
 import os
+import copy
 import numpy as np
 from joblib import Memory, Parallel, delayed
 from scipy.signal import butter, sosfiltfilt, welch
@@ -407,11 +408,45 @@ class Rule83:
         return (P83[te] >= self.p_min) & (W[te] >= self.w_min)
 
 
+class KnockRule:
+    """유격 반복 규칙 (2-12, EXP-025): 정상 중심 거리 r ≥ r_min 이고 2위/1위 사건 높이 ≥ ratio_min이면 무조건 고장 (te,) bool.
+    r = √((z1² + z2²)/2), z = K1(유격 반복)·K2(하중 대비 고주파)를 학습 정상의 중앙값·MAD로 맞춘 값 (fit(tr), 폴드 안).
+    문턱 2·0.7은 2-12에서 라벨을 본 뒤 정한 사후 값 (결정.md '사후 문턱 예외')"""
+    def __init__(self, r_min=2.0, ratio_min=0.7): self.r_min, self.ratio_min = r_min, ratio_min
+    def __repr__(self): return f"Knock(r≥{self.r_min}, R≥{self.ratio_min})"
+    def fit(self, tr):
+        tr = np.asarray(tr)
+        K = _knock()[tr[y[tr] == 0]][:, :2]
+        self.med_ = np.median(K, 0)
+        self.mad_ = 1.4826 * np.median(np.abs(K - self.med_), 0) + 1e-12
+        return self
+    def r(self, te):
+        Z = (_knock()[list(te)][:, :2] - self.med_) / self.mad_
+        return np.sqrt((Z ** 2).mean(1))
+    def __call__(self, te):
+        return (self.r(te) >= self.r_min) & (_knock()[list(te)][:, 2] >= self.ratio_min)
+
+
+def _knock():
+    from src.exp import cached_table as _ct
+    from src.features import feature_table_knock
+    return _ct("knock", feature_table_knock, X).values
+
+
 class RuleOverride(BaseEstimator):
-    """기본 결합 모델 + 규칙: 규칙이 켜진 파일은 점수에 +100 (어떤 임계값보다도 위 = 무조건 고장)"""
+    """기본 결합 모델 + 규칙: 규칙이 켜진 파일은 점수에 +100 (어떤 임계값보다도 위 = 무조건 고장)
+    rule: 규칙 하나 또는 리스트(하나라도 켜지면 고장). fit(tr)이 있는 규칙은 학습 파일로 먼저 fit (폴드 안)"""
     def __init__(self, base_kw=None, rule=None): self.base_kw, self.rule = base_kw, rule
+    def _rules(self):
+        return [] if self.rule is None else (list(self.rule) if isinstance(self.rule, (list, tuple)) else [self.rule])
     def fit(self, F, yy):
-        self.m_ = ScoreStack(**(self.base_kw or {})).fit(F, yy); return self
+        idx = np.asarray(F)[:, 0].astype(int)
+        self.m_ = ScoreStack(**(self.base_kw or {})).fit(F, yy)
+        self.rules_ = [copy.deepcopy(r).fit(idx) if hasattr(r, "fit") else r for r in self._rules()]
+        return self
     def decision_function(self, F):
         s = self.m_.decision_function(F)
-        return s + 100.0 * self.rule(np.asarray(F)[:, 0].astype(int)) if self.rule is not None else s
+        te = np.asarray(F)[:, 0].astype(int)
+        for r in self.rules_:
+            s = s + 100.0 * r(te)
+        return s

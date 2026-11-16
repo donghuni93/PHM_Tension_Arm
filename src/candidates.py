@@ -323,6 +323,46 @@ def mspc_ext(tr, te):
     return np.log10(t2 / np.median(t2n) + spe / np.median(spen))[:, None]
 
 
+# ---------- 정상만 학습하는 국소 이상 모델 (EXP-023: 회색 고장 014·017·022) ----------
+def _rep(name, tr):
+    """표현(150, d): 'mr' MiniRocket PPV(tr로 fit) · 'ar' AR 잔차 피처 5 · 'ext' ext150"""
+    if name == "mr":
+        return minirocket_feats(tuple(np.asarray(tr).tolist()))
+    if name == "ar":
+        return ar_feats(tuple(np.asarray(tr).tolist()))
+    return E
+
+
+@mem.cache
+def oneclass(tr, te, rep="mr", model="knn"):
+    """학습 정상만으로 표준화(+ 10차원 넘으면 PCA 누적 분산 95%) → 정상만 학습한 이상 점수 (te, 1). 클수록 이상
+    knn: 가장 가까운 정상 5개까지 평균 거리 · lof: LocalOutlierFactor(novelty, k=10) · iforest: IsolationForest(300그루)
+    다수 고장과 닮았는지가 아니라 '정상 무리에서 얼마나 떨어졌나'만 본다 → 유형이 다른 소수 고장용"""
+    from sklearn.decomposition import PCA
+    from sklearn.ensemble import IsolationForest
+    from sklearn.neighbors import LocalOutlierFactor, NearestNeighbors
+    tr, te = np.array(tr), np.array(te)
+    F = _rep(rep, tr)
+    N = F[tr[y[tr] == 0]]
+    sc = StandardScaler().fit(N)
+    Zn, Zt = sc.transform(N), sc.transform(F[te])
+    if Zn.shape[1] > 10:
+        p = PCA(0.95, random_state=0).fit(Zn)
+        Zn, Zt = p.transform(Zn), p.transform(Zt)
+    if model == "knn":
+        return NearestNeighbors(n_neighbors=5).fit(Zn).kneighbors(Zt)[0].mean(1)[:, None]
+    if model == "lof":
+        return -LocalOutlierFactor(n_neighbors=10, novelty=True).fit(Zn).score_samples(Zt)[:, None]
+    return -IsolationForest(n_estimators=300, random_state=0).fit(Zn).score_samples(Zt)[:, None]
+
+
+def oc(rep, model):
+    """oneclass를 (tr, te) 전문가 함수로 (이름 유지)"""
+    f = lambda tr, te: oneclass(tr, te, rep, model)
+    f.__name__ = f"oc_{rep}_{model}"
+    return f
+
+
 # ---------- 9. CatBoost ----------
 @mem.cache
 def catboost_ext(tr, te):

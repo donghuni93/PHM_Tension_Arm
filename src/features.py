@@ -340,3 +340,30 @@ def feature_table_band200(X, fs=25000):
     out = {f"G{lo:05d}": pw[:, (fq >= lo) & (fq < lo + 200)].sum(1) / tot for lo in GRID200[:-1]}
     out["P08200_08400"] = pw[:, (fq >= 8200) & (fq < 8400)].sum(1) / tot
     return pd.DataFrame({k: np.log10(v + 1e-20) for k, v in out.items()})
+
+
+# ---------------------------------------------------------------------------
+# 유격 반복 · 하중 대비 고주파 (2-12, EXP-025). 라벨 없이 계산
+# ---------------------------------------------------------------------------
+def extract_features_knock(x, fs=25000):
+    """K1 유격 반복 = log10(두 번째로 큰 사건 / σ), K2 하중 대비 고주파 = log10(저주파(<20 Hz) RMS / σ),
+    K3 2위/1위 사건 높이. σ = 200 Hz 고역통과 신호의 1.4826·MAD, 사건 = |h| > 8σ, 10 ms 안은 한 사건.
+    2-12 run.py의 D1·D6·R과 같은 정의 (두 번째 사건이 없으면 K1 = log10(8), K3 = 0)"""
+    xc = x - x.mean()
+    h = sosfiltfilt(butter(4, 200, btype="highpass", fs=fs, output="sos"), xc)
+    lo = sosfiltfilt(butter(4, 20, btype="lowpass", fs=fs, output="sos"), xc)
+    sig = 1.4826 * np.median(np.abs(h - np.median(h))) + 1e-12
+    idx = np.flatnonzero(np.abs(h) > 8 * sig)
+    if len(idx):
+        gs = np.split(idx, np.flatnonzero(np.diff(idx) > int(0.01 * fs)) + 1)
+        hg = np.sort([np.abs(h[g]).max() / sig for g in gs])[::-1]
+    else:
+        hg = np.array([])
+    return {"K1_second_snr": float(np.log10(hg[1])) if len(hg) > 1 else float(np.log10(8)),
+            "K2_load_to_hf": float(np.log10(lo.std() / sig)),
+            "K3_top2_ratio": float(hg[1] / hg[0]) if len(hg) > 1 else 0.0}
+
+
+def feature_table_knock(X, fs=25000):
+    """신호 배열 → 유격 반복 표 (K1–K3). 행 순서는 X와 같다"""
+    return pd.DataFrame([extract_features_knock(x, fs) for x in X])

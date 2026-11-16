@@ -128,12 +128,19 @@ def _git_hash():
         return "미확인"
 
 
+KEY_OPEN, KEY_CLOSE = "<!-- key-figs: 자동 (save_fig key=True) -->", "<!-- /key-figs -->"
+
+
 class Experiment:
     """실험 폴더 하나 = 코드(run.py) + figs/ + result.json + README.md
 
     README 맨 위 '노션 카드' = 노션 실험 DB 속성 (팀원·모델·F2 점수·변경 사항·메모).
     F2 점수는 record(..., main=True)로 지정한 대표 구성(없으면 처음 기록한 구성).
-    README의 '## 해석'(결과 표 아래)은 손으로 쓰는 곳이라 다시 실행해도 보존한다. 카드의 메모 칸은 그 첫 문장. 수치 메모는 result.json에만."""
+    README의 '## 해석'(결과 표 아래)은 손으로 쓰는 곳이라 다시 실행해도 보존한다. 카드의 메모 칸은 그 첫 문장. 수치 메모는 result.json에만.
+
+    README 순서 (11-14 사용자 결정): 카드 → 결과 표 → 해석 첫 문단(결론 요약) → **핵심 그림**(save_fig(..., key=True))
+    → 그 아래 손으로 쓴 설명(그림 읽는 법·상세) → '## 그림'(나머지 그림). 핵심 그림은 해석 첫 문단 바로 뒤에
+    자동으로 끼워 넣고(<!-- key-figs --> 표시), 다시 읽을 때는 빼서 손으로 쓴 해석만 보존한다"""
 
     def __init__(self, run_file, exp_id, title, hypotheses=(), member="", model="", changes="",
                  focus=("abn_002", "abn_022", "abn_029")):
@@ -148,11 +155,15 @@ class Experiment:
         self.res.setdefault("configs", {}); self.res.setdefault("figs", {})
         self._write()
 
-    def save_fig(self, fig, name, caption=""):
-        """figs/{name}.png 저장. caption은 README에 '무엇을 보는 그림인지' 한 줄"""
+    def save_fig(self, fig, name, caption="", key=False):
+        """figs/{name}.png 저장. caption은 README에 '무엇을 보는 그림인지' 한 줄.
+        key=True = 핵심 그림: README 해석 첫 문단 바로 아래에 놓는다 (결과 해석 + 그림을 먼저, 설명은 그 아래)"""
         import matplotlib.pyplot as plt
         fig.savefig(os.path.join(self.figs, f"{name}.png"), dpi=80)
         self.res["figs"][name] = caption
+        keys = self.res.setdefault("key_figs", [])
+        if key and name not in keys:
+            keys.append(name)
         self._write()
         if "inline" not in plt.get_backend().lower():
             plt.close(fig)
@@ -188,6 +199,9 @@ class Experiment:
         옛 형식 = '## 메모' 뒤 전부 (안내문 '(결론·해석을 …)'은 버림)"""
         if "\n## 해석\n" in txt:
             body = txt.split("\n## 해석\n", 1)[1].split("\n## 그림", 1)[0]
+            while KEY_OPEN in body and KEY_CLOSE in body:                     # 자동으로 넣은 핵심 그림은 뺀다
+                a, rest = body.split(KEY_OPEN, 1)
+                body = a.rstrip("\n") + "\n\n" + rest.split(KEY_CLOSE, 1)[1].lstrip("\n")
         elif "## 메모" in txt:
             body = txt.split("## 메모", 1)[1]
         else:
@@ -195,8 +209,21 @@ class Experiment:
         lines = [l for l in body.splitlines() if not l.startswith("(결론·해석을")]
         return "\n".join(lines).strip("\n")
 
+    @staticmethod
+    def _with_key_figs(interp, block):
+        """해석 첫 문단(결론 요약) 바로 뒤에 핵심 그림 블록을 끼운다. 해석이 비어 있으면 블록만"""
+        if not block:
+            return interp
+        if not interp:
+            return block
+        lines = interp.splitlines()
+        i = next((k for k, l in enumerate(lines) if l.strip()), 0)          # 첫 문단 시작
+        while i < len(lines) and lines[i].strip():                          # 첫 문단 끝 (빈 줄 전)
+            i += 1
+        return "\n".join(lines[:i] + ["", block, ""] + lines[i:]).replace("\n\n\n", "\n\n")
+
     def _write(self):
-        """README = 노션 카드 → 결과 표 → 해석(손으로 씀, 다시 실행해도 유지) → 그림(psd_missed가 맨 끝).
+        """README = 노션 카드 → 결과 표 → 해석 첫 문단 → 핵심 그림(key=True) → 손으로 쓴 설명 → 그림(나머지, psd가 맨 끝).
         note()로 남긴 수치 메모는 result.json에만 두고 README에는 쓰지 않는다 (11-14 사용자 결정)"""
         json.dump(self.res, open(self.json, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
         readme = os.path.join(self.dir, "README.md")
@@ -220,10 +247,13 @@ class Experiment:
             s.append(f"| {k.replace('|', chr(92) + '|')} | {v['f2']:.3f} ± {v['f2_sd']:.3f} | {v['recall']:.3f} | {v.get('fpr', float('nan')):.3f} | {v['precision']:.3f} "
                      f"| {v.get('f2_p10', float('nan')):.3f} · {v.get('f2_p40', float('nan')):.3f} "
                      f"| {' '.join(v['missed']) or '—'} | {v['fp3']} |")
-        if interp:
-            s.append("\n## 해석\n\n" + interp + "\n")
+        keys = [k for k in r.get("key_figs", []) if k in r["figs"]]
+        block = "\n".join([KEY_OPEN] + [f"![{k}](figs/{k}.png)\n\n*{k}* — {r['figs'][k]}\n" for k in keys] + [KEY_CLOSE]) if keys else ""
+        body = self._with_key_figs(interp, block)
+        if body:
+            s.append("\n## 해석\n\n" + body + "\n")
         s.append("\n## 그림\n")
-        figs = sorted(r["figs"].items(), key=lambda kv: kv[0].startswith("psd"))   # psd 그림은 맨 끝
+        figs = sorted([kv for kv in r["figs"].items() if kv[0] not in keys], key=lambda kv: kv[0].startswith("psd"))   # psd 그림은 맨 끝
         for k, cap in figs:
             s.append(f"### {k}\n{cap}\n\n![{k}](figs/{k}.png)\n")
         open(readme, "w", encoding="utf-8").write("\n".join(s))
