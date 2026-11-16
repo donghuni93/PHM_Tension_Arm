@@ -372,3 +372,66 @@ def catboost_ext(tr, te):
     m = CatBoostClassifier(iterations=500, auto_class_weights="Balanced", random_seed=0, verbose=0,
                            thread_count=4, allow_writing_files=False).fit(E[tr], y[tr])
     return _logit(m.predict_proba(E[te])[:, 1], len(tr))[:, None]
+
+
+# ---------- EXP-033 딥러닝 검토: 입력별 지도 신경망 (설정은 실행 전 고정, 튜닝 없음) ----------
+@mem.cache
+def mlp_psd(tr, te, epochs=300):
+    """MLP (GPU). 입력 = AE와 같은 스펙트럼(200 Hz 고역통과, 1초 구간 8개 log10 Welch PSD 1025칸)의 파일 평균.
+    학습 정상 기준 칸별 표준화 → 1025-128-32-1 (ReLU, dropout 0.2) → BCE(고장 가중 = 정상/고장 수), AdamW(1e-3, wd 1e-2), 전체 배치.
+    AE는 정상만 복원(비지도)하고, 이 MLP는 같은 입력에서 고장/정상 경계를 지도 학습한다 → '입력은 같고 학습 방식만 다를 때' 비교"""
+    from src.experts import LP
+    torch, dev = _torch(); nn = torch.nn
+    tr, te = np.array(tr), np.array(te)
+    A = LP.mean(1)
+    n = A[tr[y[tr] == 0]]
+    A = ((A - n.mean(0)) / (n.std(0) + 1e-6)).astype(np.float32)
+    net = nn.Sequential(nn.Linear(A.shape[1], 128), nn.ReLU(), nn.Dropout(0.2), nn.Linear(128, 32), nn.ReLU(),
+                        nn.Dropout(0.2), nn.Linear(32, 1), nn.Flatten(0)).to(dev)
+    Xt, yt = torch.tensor(A[tr], device=dev), torch.tensor(y[tr].astype(np.float32), device=dev)
+    lossf = nn.BCEWithLogitsLoss(pos_weight=torch.tensor((y[tr] == 0).sum() / max(1, (y[tr] == 1).sum()), device=dev))
+    opt = torch.optim.AdamW(net.parameters(), lr=1e-3, weight_decay=1e-2)
+    for _ in range(epochs):
+        net.train(); loss = lossf(net(Xt), yt); opt.zero_grad(); loss.backward(); opt.step()
+    net.eval()
+    with torch.no_grad():
+        return net(torch.tensor(A[te], device=dev)).cpu().numpy()[:, None]
+
+
+@mem.cache
+def cnn2d_full(tr, te, epochs=60):
+    """2D-CNN (GPU). 입력 = 2초 전체 log STFT 한 장 (256칸 × 약 194프레임, 48.8 Hz × 10 ms). 구간으로 자르지 않는다.
+    EXP-019 cnn2d_mil은 0.33초 구간 MIL이라 0.9초 간격 같은 '사건 사이 관계'를 볼 수 없었다(딥러닝_검토 2절 추정) → 이것을 바꾼 판.
+    학습 정상 기준 주파수 칸별 표준화 → 합성곱 4층(stride 2, 256×194 → 16×13) → 주파수 평균 → 시간축 1D 합성곱(커널 5, 팽창 2,
+    약 1.3초 시야) → 시간 최대 풀링 → 선형. 학습 때만 시간축 원형 이동(정상 상태 신호라 시작 시점은 임의) 증강"""
+    torch, dev = _torch(); nn = torch.nn
+    tr, te = np.array(tr), np.array(te)
+    S = _stft_all()
+    n = S[tr[y[tr] == 0]]
+    mu, sd = n.mean((0, 2))[None, :, None], n.std((0, 2))[None, :, None] + 1e-6
+    Q = torch.tensor(((S - mu) / sd)[:, None].astype(np.float32), device=dev)    # (150, 1, 256, T)
+
+    class Net(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.enc = _enc2d(torch)
+            self.t = nn.Sequential(nn.Conv1d(32, 32, 5, dilation=2, padding=4), nn.BatchNorm1d(32), nn.ReLU())
+            self.out = nn.Linear(32, 1)
+        def forward(self, x):
+            h = self.enc(x).mean(2)                       # (B, 32, T')
+            return self.out(self.t(h).amax(2)).squeeze(1)
+
+    net = Net().to(dev)
+    yt = y[tr].astype(np.float32)
+    lossf = nn.BCEWithLogitsLoss(pos_weight=torch.tensor((yt == 0).sum() / max(1, (yt == 1).sum()), device=dev))
+    opt = torch.optim.Adam(net.parameters(), lr=1e-3)
+    rng = np.random.default_rng(0)
+    for _ in range(epochs):
+        net.train()
+        for b in np.array_split(rng.permutation(len(tr)), max(1, len(tr) // 16)):
+            xb = torch.roll(Q[torch.tensor(tr[b], device=dev)], int(rng.integers(Q.shape[-1])), dims=-1)
+            loss = lossf(net(xb), torch.tensor(yt[b], device=dev))
+            opt.zero_grad(); loss.backward(); opt.step()
+    net.eval()
+    with torch.no_grad():
+        return net(Q[torch.tensor(te, device=dev)]).cpu().numpy()[:, None]

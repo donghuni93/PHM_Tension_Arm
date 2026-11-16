@@ -34,13 +34,14 @@ X, y, names = load_train()
 E = cached_table("ext", feature_table_ext, X).values
 
 
-def segment_logpsd(X, seg=FS, nseg=8, nperseg=2048):
-    """평균 제거 → 200 Hz 고역통과(Butterworth 4차, 양방향) → 1초 구간 nseg개 → log10 Welch PSD. 라벨 안 씀"""
+def segment_logpsd(X, seg=FS, nseg=8, nperseg=2048, average="mean"):
+    """평균 제거 → 200 Hz 고역통과(Butterworth 4차, 양방향) → 1초 구간 nseg개 → log10 Welch PSD. 라벨 안 씀
+    average: Welch 프레임(2048점, 50% 겹침 → 1초에 23개) 평균 방식. 'median'이면 짧은 충격이 든 프레임 몇 개를 무시 (EXP-032)"""
     Xc = X - X.mean(1, keepdims=True)
     H = sosfiltfilt(butter(4, 200, btype="highpass", fs=FS, output="sos"), Xc, axis=-1)
     starts = np.linspace(0, X.shape[1] - seg, nseg).astype(int)
     S = np.stack([H[:, s:s + seg] for s in starts], 1)
-    f, P = welch(S, fs=FS, nperseg=nperseg, axis=-1)
+    f, P = welch(S, fs=FS, nperseg=nperseg, axis=-1, average=average)
     return f, np.log10(P + 1e-20)
 
 
@@ -234,8 +235,26 @@ class BlockScaler(BaseEstimator, TransformerMixin):
     def transform(self, Z): return (Z - self.mu_) / self.sd_ * self.w_
 
 
+TUNE_GRID = {  # EXP-026: 결합기 하이퍼파라미터 후보 (안쪽 4-fold, PR-AUC로 고름 → 바깥 fold 안에서만 선택)
+    "lr_cv": {"logisticregression__C": [0.01, 0.1, 1, 10, 100]},
+    "svm_lin_cv": {"svc__C": [0.01, 0.1, 1, 10, 100]},
+    "svm_rbf_cv": {"svc__C": [0.1, 1, 10, 100], "svc__gamma": [0.01, 0.03, 0.1, 0.3, 1]},
+}
+
+
 def _combiner(kind, blocks):
     pre = [] if blocks is None else [BlockScaler(blocks)]
+    if kind in TUNE_GRID:
+        from sklearn.model_selection import GridSearchCV
+        from sklearn.preprocessing import StandardScaler
+        base = {"lr_cv": LogisticRegression(class_weight="balanced", max_iter=2000),
+                "svm_lin_cv": SVC(kernel="linear", class_weight="balanced"),
+                "svm_rbf_cv": SVC(kernel="rbf", class_weight="balanced")}[kind]
+        return GridSearchCV(make_pipeline(*pre, StandardScaler(), base), TUNE_GRID[kind], scoring="average_precision",
+                            cv=StratifiedKFold(4, shuffle=True, random_state=0), n_jobs=1)
+    if kind == "svm_rbf_fix":
+        from sklearn.preprocessing import StandardScaler
+        return make_pipeline(*pre, StandardScaler(), SVC(kernel="rbf", C=1.0, gamma="scale", class_weight="balanced"))
     if kind == "lr":
         return make_pipeline(*pre, LogisticRegression(C=1.0, class_weight="balanced"))
     if kind == "svm_lin":
@@ -427,6 +446,31 @@ class KnockRule:
         return (self.r(te) >= self.r_min) & (_knock()[list(te)][:, 2] >= self.ratio_min)
 
 
+class ExcludeFit(BaseEstimator):
+    """학습에서만 파일 일부를 뺀다 (EXP-028 배제 실험). fit 때 excl 파일 번호를 지우고 make()로 학습,
+    채점(decision_function)은 모든 파일 → 빠진 파일도 바깥·안쪽 fold에서 그대로 평가된다 (평가에서 빼지 않음)"""
+    def __init__(self, make=None, excl=()): self.make, self.excl = make, excl
+    def fit(self, F, yy):
+        F, yy = np.asarray(F), np.asarray(yy)
+        keep = ~np.isin(F[:, 0].astype(int), list(self.excl))
+        self.m_ = self.make().fit(F[keep], yy[keep])
+        return self
+    def decision_function(self, F): return self.m_.decision_function(F)
+
+
+def knock_axes(tr, te):
+    """EXP-026 연속 입력: 유격 반복 규칙의 두 축 → (te, 2) = [r (정상 중심 거리, tr 정상으로 fit), K3 2위/1위 사건 높이]"""
+    kn = KnockRule().fit(tr)
+    return np.column_stack([kn.r(te), _knock()[list(te)][:, 2]])
+
+
+def peak83_axes(tr, te):
+    """EXP-026 연속 입력: 8.3 kHz 규칙의 두 축 → (te, 2) = [P83 돌출(dec), W83 반높이 폭(Hz)]. 학습 없음"""
+    P83, W, _ = peak83_table()
+    te = list(te)
+    return np.column_stack([P83[te], W[te]])
+
+
 def _knock():
     from src.exp import cached_table as _ct
     from src.features import feature_table_knock
@@ -450,3 +494,120 @@ class RuleOverride(BaseEstimator):
         for r in self.rules_:
             s = s + 100.0 * r(te)
         return s
+
+
+# ---------- 큰 타격 개수 · 사건 울림 · 주기 잠금 (EXP-029, 2-13·2-14·2-15) ----------
+HIT_COLS = ("HIT_n20_log", "HIT_k4")                         # 2-14 큰 타격 반복
+EV_COLS = ("EV_n05g_log", "EV_fc_khz", "EV_decay_log")       # 2-15 절대 크기 사건 수 · 사건 울림
+_HITS = None
+
+
+def _hits():
+    global _HITS
+    if _HITS is None:
+        from src.features import feature_table_hits
+        _HITS = cached_table("hits", feature_table_hits, X)
+    return _HITS
+
+
+def hit_axes(tr, te):
+    """2-14 큰 타격 축 → (te, 2) = [log1p(20σ 이상 타격 수), log10(4번째 타격/σ)]. 학습 없음"""
+    return _hits()[list(HIT_COLS)].values[list(te)]
+
+
+def ev_axes(tr, te):
+    """2-15 사건 축 → (te, 3) = [log1p(0.5 g 이상 사건 수), 사건 주파수 중심 kHz, log10 감쇠 ms]. 학습 없음"""
+    return _hits()[list(EV_COLS)].values[list(te)]
+
+
+@mem.cache
+def et_trees_x(tr, te, extra=(), seed=0):
+    """ext150 + 추가 열(extra = hits 표의 열 이름들) ET 학습 → te의 나무별 고장 확률 (te, 300)"""
+    tr, te = np.array(tr), np.array(te)
+    Ex = np.hstack([E, _hits()[list(extra)].values]) if extra else E
+    m = make_et(seed=seed)().fit(Ex[tr], y[tr])
+    return np.column_stack([t.predict_proba(Ex[te])[:, 1] for t in m.estimators_]).astype(np.float32)
+
+
+class ETLogitX:
+    """ET 점수(logit 나무 평균 확률), 입력 = ext150 + extra 열 → (te, 1). extra=()면 et_logit과 같은 값"""
+    def __init__(self, extra=()): self.extra = tuple(extra)
+    def __repr__(self): return f"ETx{self.extra}"
+    def __call__(self, tr, te):
+        p = np.clip(et_trees_x(tr, te, self.extra).mean(1), 1 / 600, 1 - 1 / 600)
+        return np.log(p / (1 - p))[:, None]
+
+
+class LockRule:
+    """주기 잠금 규칙 (2-13): LOCK_S ≥ 학습 정상의 최대 + margin이면 무조건 고장 (te,) bool. 문턱은 폴드 안 정상만으로"""
+    def __init__(self, margin=0.1): self.margin = margin
+    def __repr__(self): return f"Lock(S≥정상최대+{self.margin})"
+    def fit(self, tr):
+        tr = np.asarray(tr); S = _hits()["LOCK_S"].values
+        self.th_ = S[tr[y[tr] == 0]].max() + self.margin
+        return self
+    def __call__(self, te):
+        return _hits()["LOCK_S"].values[list(te)] >= self.th_
+
+
+class SingleHitCap(BaseEstimator):
+    """RuleOverride + 단일 타격 감점 (2-14): 큰 타격(th σ 이상)이 정확히 n개인 파일은 점수를
+    학습 정상 OOF 결합 점수의 중앙값 이하로 누른다. 규칙으로 켜진 파일(+100)은 건드리지 않는다"""
+    def __init__(self, base_kw=None, rule=None, n=1): self.base_kw, self.rule, self.n = base_kw, rule, n
+    def fit(self, F, yy):
+        yy = np.asarray(yy)
+        self.m_ = RuleOverride(self.base_kw, self.rule).fit(F, yy)
+        st = self.m_.m_
+        s_oof = st.m_.decision_function(st.oof_z_)
+        self.cap_ = float(np.median(s_oof[yy == 0]))
+        return self
+    def decision_function(self, F):
+        s = self.m_.decision_function(F)
+        te = np.asarray(F)[:, 0].astype(int)
+        one = (_hits()["HIT_n20"].values[te] == self.n) & (s < 50)
+        return np.where(one, np.minimum(s, self.cap_), s)
+
+
+# ---------- AE 변형: 정상상태 스펙트럼 전문가 (EXP-032) ----------
+# 기본 AE(ae_segerr)는 1초 구간의 평균 Welch PSD를 복원한다. 큰 타격 한 번도 광대역으로 PSD를 올려 AE 오차가 커지므로
+# AE가 ET(충격)와 같은 파일을 함께 민다. 중앙값 Welch는 충격 프레임 몇 개를 무시 → AE는 '타격이 없을 때의 울림 구조'만 본다
+_LPV = {}
+
+
+def logpsd_var(psd="mean"):
+    """구간 log PSD (파일, 8, 1025). psd: 'mean'(= LP, EXP-012) | 'median'. 처음 한 번 계산해 캐시 파일로"""
+    if psd == "mean":
+        return LP
+    if psd not in _LPV:
+        p = os.path.join(CACHE, f"seg_logpsd_hp200_8x1s_{psd}.npz")
+        if os.path.exists(p):
+            _LPV[psd] = np.load(p)["LP"]
+        else:
+            _, L = segment_logpsd(X, average=psd); np.savez(p, LP=L); _LPV[psd] = L
+    return _LPV[psd]
+
+
+@mem.cache
+def ae_segerr_v(tr, te, psd="median", shape=False, hidden=(128, 16, 128), seed=0):
+    """ae_segerr의 설정판: 입력 PSD 평균 방식(psd) · 모양만(shape, 구간 평균 log PSD 제거) · 은닉층(hidden).
+    psd='mean', shape=False, hidden=(128,16,128)이면 ae_segerr와 같은 계산 → (te, 8, 1025) float32"""
+    tr, te = np.array(tr), np.array(te)
+    L = logpsd_var(psd)
+    L = L - L.mean(-1, keepdims=True) if shape else L
+    S = L[tr[y[tr] == 0]].reshape(-1, L.shape[-1])
+    mu, sd = S.mean(0), S.std(0) + 1e-8
+    Zs = (S - mu) / sd
+    m = MLPRegressor(hidden_layer_sizes=tuple(hidden), activation="relu", solver="adam", learning_rate_init=1e-3,
+                     max_iter=60, alpha=0.0, random_state=seed).fit(Zs, Zs)
+    Z = (L[te] - mu) / sd
+    R = m.predict(Z.reshape(-1, Z.shape[-1])).reshape(Z.shape)
+    return ((R - Z) ** 2).astype(np.float32)
+
+
+class AEVar:
+    """AE 변형 점수 → (te, 1) = log10(구간·bin 평균 복원 오차). ScoreStack 전문가로 쓴다"""
+    def __init__(self, psd="median", shape=False, hidden=(128, 16, 128)):
+        self.psd, self.shape, self.hidden = psd, shape, tuple(hidden)
+    def __repr__(self): return f"AE({self.psd},{'모양' if self.shape else '절대'},{'-'.join(map(str, self.hidden))})"
+    def __call__(self, tr, te):
+        return np.log10(ae_segerr_v(tr, te, self.psd, self.shape, self.hidden).mean((1, 2)))[:, None]

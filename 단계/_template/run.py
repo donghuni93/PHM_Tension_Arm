@@ -1,6 +1,6 @@
 # %% [markdown]
 # EXP-nnn 제목
-# - 가설: H? (notes/물리가설.md) — 이 실험이 확인하려는 물리 변화와 예상 신호 징후
+# - 가설: H? (단계/1_기준·기록/물리가설.md) — 이 실험이 확인하려는 물리 변화와 예상 신호 징후
 # - 바꾼 것: 이전 최고 대비 무엇을 바꾸는가 (하나만)
 # 사용: 단계/5_모델비교/스크리닝/EXP-nnn_이름/ 으로 폴더째 복사 → VS Code에서 셀 단위 실행(Shift+Enter), 또는
 #   conda run -n qe-phm python 단계/5_모델비교/스크리닝/EXP-nnn_이름/run.py
@@ -31,9 +31,13 @@ ex.save_fig(viz.psd_band(f, L, y, names, ex.focus), "psd_focus",
 fig, _ = viz.tsne({"ext150 피처": E.values}, y, names, mark=ex.focus)
 ex.save_fig(fig, "tsne", "입력 공간에서 고장이 정상과 따로 모이는가, 놓친 파일은 어디에 있는가")
 
-# %% 그림 3: 이 실험의 가설을 보여주는 그림 = 핵심 그림 (key=True)
+# %% 그림 3: 핵심 그림 (key=True)
 # README에서 해석 첫 문단(결론 요약) 바로 아래에 자동으로 놓인다. 그 아래에 '그림 읽는 법' → 상세 설명을 손으로 쓴다
-# 결합 모델 실험은 boundary_lr(x = 로지스틱 결정값, y = 새 축, 테두리 = 규칙/새 축이 바꾼 파일)이 기본
+# 결합 모델 실험은 logistic_plane이 필수 핵심 그림 (결정.md 기본 그림, 11-16):
+#   AE z × ET z 평면(OOF seed 0) + 로지스틱 경계(0 실선, ±1 점선), 기준 | 새 구성 나란히, × = 자주 틀린 파일
+#   규칙으로 잡힌 고장은 이 평면에서 뺀다(뺀 목록은 상자로 표시), 규칙이 켜진 정상은 남긴다. t-SNE에만 모든 파일
+#   예시 코드: 단계/5_모델비교/유의미/EXP-029_1116_큰타격수·사건울림·주기잠금/figs_기본.py
+# 그 밖의 기본 그림: hard_files(어려운 파일 위험도, 열 = 구성) · psd_missed(맨 끝)
 # fig = ...; ex.save_fig(fig, "이름", "무엇을 보는 그림인지", key=True)
 
 # %% 중첩 CV

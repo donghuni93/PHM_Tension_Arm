@@ -1,4 +1,4 @@
-"""피처 추출. 피처의 물리 의미는 단계/4_피처/README.md, 가설 연결은 notes/물리가설.md.
+"""피처 추출. 피처의 물리 의미는 단계/4_피처/README.md, 가설 연결은 단계/1_기준·기록/물리가설.md.
 
 키 이름 앞의 id(T01, F07 …)가 스펙 표의 id다.
 train·val·test 모두 이 함수로 계산해야 같은 피처가 된다.
@@ -199,7 +199,7 @@ def feature_table_ext(X, fs=25000):
 
 
 # ---------------------------------------------------------------------------
-# 물리 가설 피처 (EXP-006). 가설 id는 notes/물리가설.md
+# 물리 가설 피처 (EXP-006). 가설 id는 단계/1_기준·기록/물리가설.md
 # 대역·격자는 데이터를 보기 전에 정한 고정값만 쓴다 (라벨 보고 고르지 않음)
 # ---------------------------------------------------------------------------
 from scipy.signal import welch
@@ -367,3 +367,64 @@ def extract_features_knock(x, fs=25000):
 def feature_table_knock(X, fs=25000):
     """신호 배열 → 유격 반복 표 (K1–K3). 행 순서는 X와 같다"""
     return pd.DataFrame([extract_features_knock(x, fs) for x in X])
+
+
+# ---------------------------------------------------------------------------
+# 큰 타격 개수 · 사건 울림 · 주기 잠금 (2-13 · 2-14 · 2-15, EXP-029). 라벨 없이 계산
+# 사건 = 200 Hz 고역통과 |h| > 8σ (σ = 1.4826·MAD), 10 ms 안은 한 사건, 높이 = 사건 최대 |h| / σ (2-12와 같은 정의)
+# ---------------------------------------------------------------------------
+def extract_features_hits(x, fs=25000):
+    """신호 1개 → dict
+    HIT_n20 / HIT_n20_log : 높이 20σ 이상 큰 타격 수 (2-14) · log1p
+    HIT_k4                : log10(4번째로 큰 타격 / σ), 4개 미만이면 0 (2-14 K1_4)
+    EV_n05g_log           : 절대 크기 0.5 g 이상 사건 수 log1p (2-15 제안 1: 충격 수는 절대 크기와 함께)
+    EV_fc_khz             : 상위 5개 사건 ±2 ms(한닝, 256점) 스펙트럼 무게중심의 중앙값 kHz (2-15 FC), 사건 없으면 NaN
+    EV_decay_log          : 같은 사건들의 포락선이 1/e로 떨어지는 시간(ms, 20 ms 안) 중앙값 log10 (2-15 DECAY), 없으면 NaN
+    LOCK_S                : 주기 잠금 충격 점수 = r_LP × hit (2-13 기본 설정: 30 Hz 저역, 0.3–1.2 s, ±3%)"""
+    xc = np.asarray(x, dtype=float); xc = xc - xc.mean()
+    h = sosfiltfilt(butter(4, 200, btype="highpass", fs=fs, output="sos"), xc)
+    sig = 1.4826 * np.median(np.abs(h - np.median(h))) + 1e-12
+    idx = np.flatnonzero(np.abs(h) > 8 * sig)
+    if len(idx):
+        gs = np.split(idx, np.flatnonzero(np.diff(idx) > int(0.010 * fs)) + 1)
+        pk = np.array([g[np.argmax(np.abs(h[g]))] for g in gs])
+    else:
+        pk = np.array([], int)
+    a = np.abs(h[pk]) / sig if len(pk) else np.array([])
+    s = np.sort(a)[::-1]
+    o = {"HIT_n20": int((a >= 20).sum()), "HIT_n20_log": float(np.log1p((a >= 20).sum())),
+         "HIT_k4": float(np.log10(max(s[3], 1.0))) if len(s) >= 4 else 0.0,
+         "EV_n05g_log": float(np.log1p((np.abs(h[pk]) >= 0.5).sum())) if len(pk) else 0.0}
+    # 사건 울림 (2-15)
+    hw = int(0.002 * fs); fc, dc = [], []
+    env = np.abs(hilbert(h)) if len(pk) else None
+    f = np.fft.rfftfreq(256, 1 / fs)
+    for p in pk[np.argsort(-a)][:5]:
+        seg = h[max(p - hw, 0): p + hw]; seg = seg * np.hanning(len(seg))
+        P = np.abs(np.fft.rfft(seg, 256)) ** 2
+        fc.append((P * f).sum() / P.sum())
+        e = env[p: p + int(0.02 * fs)]; below = np.flatnonzero(e < e[0] / np.e)
+        dc.append((below[0] if len(below) else len(e)) / fs * 1000)
+    o["EV_fc_khz"] = float(np.median(fc) / 1000) if fc else np.nan
+    o["EV_decay_log"] = float(np.log10(max(np.median(dc), 0.04))) if dc else np.nan
+    # 주기 잠금 (2-13)
+    D = 50; fs2 = fs / D
+    L = sosfiltfilt(butter(4, 30, btype="lowpass", fs=fs, output="sos"), xc)[::D]
+    ks = np.arange(int(0.3 * fs2), int(1.2 * fs2) + 1, 2)
+    r = np.array([np.corrcoef(L[:len(L) - k], L[k:])[0, 1] for k in ks]); T = ks[r.argmax()] / fs2
+    ev = pk / fs
+    if len(ev) >= 2:
+        d = np.abs(ev[None, :] - ev[:, None]); hit = float((np.abs(d - T) <= 0.03 * T).any(1).mean())
+    else:
+        hit = 0.0
+    o["LOCK_S"] = float(r.max() * hit)
+    return o
+
+
+def feature_table_hits(X, fs=25000):
+    """신호 배열 → 큰 타격·사건 울림·주기 잠금 표. 행 순서는 X와 같다.
+    사건이 없어 NaN인 EV_fc_khz·EV_decay_log는 전체 파일 중앙값으로 채운다 (라벨 무관)"""
+    T = pd.DataFrame([extract_features_hits(x, fs) for x in X])
+    for c in ("EV_fc_khz", "EV_decay_log"):
+        T[c] = T[c].fillna(T[c].median())
+    return T

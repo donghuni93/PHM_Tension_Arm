@@ -32,6 +32,45 @@ def load_dataset(data_dir):
     return X, y, names
 
 
+def load_folder(folder, pattern="*.csv"):
+    """라벨이 없는 폴더(val·test)의 CSV를 이름순으로 읽는다. 하위 폴더까지 찾는다
+
+    반환
+    - X: (파일 수, 샘플 수) 신호 배열, 단위 g
+    - names: 파일 이름(확장자 제외). X와 같은 순서
+    """
+    # 압축을 풀 때 생기는 숨김 파일(__MACOSX/._val_001.csv 등)은 신호가 아니므로 뺀다
+    paths = sorted((p for p in Path(folder).rglob(pattern)
+                    if not p.name.startswith(".") and "__MACOSX" not in p.parts), key=lambda p: p.stem)
+    if not paths:
+        raise FileNotFoundError(f"{folder} 아래에 {pattern} 파일이 없다")
+    names = [p.stem for p in paths]
+    if len(set(names)) != len(names):
+        raise ValueError("이름이 같은 파일이 여러 폴더에 있다. 폴더를 하나만 지정한다")
+    signals = []
+    for p in paths:
+        x = _read_signal(p)
+        if x.ndim != 1:
+            raise ValueError(f"{p.name}: 열이 {x.shape[-1]}개다. 신호는 1열이어야 한다 (제출 양식 CSV가 폴더에 섞여 있지 않은지 확인)")
+        signals.append(x)
+    lengths = sorted({len(x) for x in signals})
+    if len(lengths) != 1:
+        raise ValueError(f"파일 길이가 서로 다르다: {lengths}")
+    return np.stack(signals), names
+
+
+def _read_signal(path):
+    """신호 CSV 1개 읽기. 학습 파일과 같은 np.loadtxt를 쓰되 BOM과 머리글 한 줄은 허용한다"""
+    try:
+        return np.loadtxt(path, encoding="utf-8-sig")
+    except ValueError:
+        pass
+    try:
+        return np.loadtxt(path, encoding="utf-8-sig", skiprows=1)   # 첫 줄이 머리글인 경우
+    except ValueError as e:
+        raise ValueError(f"{path.name}: 숫자 1열로 읽을 수 없다 (쉼표로 나뉜 여러 열이거나 숫자가 아닌 값이 있음). 원인: {e}") from e
+
+
 def slice_signals(X, win=12500, step=6250):
     """신호마다 길이 win의 조각을 step 간격으로 자른다 (기본 0.5초, 50% 겹침, decisions D10)
 

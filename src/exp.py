@@ -229,7 +229,7 @@ class Experiment:
         readme = os.path.join(self.dir, "README.md")
         interp = self._read_interp(open(readme, encoding="utf-8").read()) if os.path.exists(readme) else ""
         r = self.res
-        notes = os.path.relpath(os.path.join(ROOT, "notes", "물리가설.md"), self.dir).replace("\\", "/")
+        notes = os.path.relpath(os.path.join(ROOT, "단계", "1_기준·기록", "물리가설.md"), self.dir).replace("\\", "/")
         first = next((l.strip() for l in interp.splitlines() if l.strip() and not l.startswith(("#", "|", "-", "!"))), "")
         m = r["configs"].get(r.get("main"), {})
         f2 = f"{m['f2']:.3f} ± {m['f2_sd']:.3f}" if m else ""
