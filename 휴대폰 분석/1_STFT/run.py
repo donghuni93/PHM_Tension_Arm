@@ -112,3 +112,18 @@ for a, fn, (l, h), tt in ((ax[0], lambda S: S.mean(1), (lo, hi), "프레임 평�
 ax[0].set_ylabel("dB"); ax[1].legend(fontsize=7, ncol=2)
 fig.savefig(os.path.join(FIG, "stft_profile.png"), dpi=130, bbox_inches="tight"); plt.close(fig)
 print("저장:", FIG)
+
+# %% 4장을 한 장으로 합치기 (휴대폰에서 한 번에 보기용): figs/stft_all.png
+import matplotlib.image as mpimg
+parts = ["stft_256.png", "stft_1024.png", "stft_512_diff.png", "stft_profile.png"]
+imgs = [mpimg.imread(os.path.join(FIG, p)) for p in parts]
+# 세로로 쌓되 폭을 맞춘다 (가장 넓은 그림 기준, 모자란 폭은 흰색)
+W = max(im.shape[1] for im in imgs)
+rows = []
+for im in imgs:
+    pad = W - im.shape[1]
+    rgb = im[..., :3]
+    rows.append(np.pad(rgb, ((0, 0), (pad // 2, pad - pad // 2), (0, 0)), constant_values=1.0))
+big = np.concatenate(rows, axis=0)
+plt.imsave(os.path.join(FIG, "stft_all.png"), big)
+print("합본:", os.path.join(FIG, "stft_all.png"), big.shape)
