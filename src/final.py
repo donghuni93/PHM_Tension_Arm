@@ -12,7 +12,9 @@
   3. Core.parts    : 파일별 점수와 규칙 판정
   4. FinalModel    : 임계값(판정 기준선)까지 정해서 0/1과 근거를 낸다
 
-최종 구성 = EXP-025 (EXP-030에서 고정): AE + ET → 로지스틱 + 8.3 kHz 모드 규칙 + 유격 반복 규칙.
+최종 구성 = EXP-034 c (11-17 사용자 결정으로 EXP-025에서 교체):
+  AE + ET(ext150 + 울림 2열) → 로지스틱 + 유격 반복 규칙 + 8.3 kHz 규칙(스펙트럼 봉우리 OR 충격 공진) + 본체 모드 내림.
+  ring=False면 예전 최종 EXP-025(울림 열·공진 규칙·본체 내림 없음)와 같다.
 주기 잠금·단일 타격은 판정에 쓰지 않고 '관찰' 열로만 남긴다 (use_lock·use_cap 기본값 False).
 """
 import warnings
@@ -21,7 +23,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from scipy.ndimage import median_filter, uniform_filter1d
-from scipy.signal import butter, sosfiltfilt, welch
+from scipy.signal import butter, find_peaks, hilbert, sosfiltfilt, welch
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import LogisticRegression
@@ -37,7 +39,71 @@ N_SAMPLES = 50000
 P83_MIN, W83_MIN = 0.75, 150.0      # 8.3 kHz 모드 규칙: 돌출(dec), 반높이 폭(Hz)
 R_MIN, RATIO_MIN = 2.0, 0.7         # 유격 반복 규칙: 정상 중심 거리, 2위/1위 타격 높이
 LOCK_MARGIN = 0.1                   # 주기 잠금(관찰용): 학습 정상 최대 + 여유
-KEYS = ("LP", "E", "K", "P83", "W83", "n20", "S")
+RES_FIT_MIN = 0.7                   # 8.3 kHz 공진 규칙: 8.0–8.7 kHz · ζ ≤ 0.02 충격의 감쇠 사인파 맞춤 fit (2-16, EXP-034)
+BODY_MIN, BODY_NMIN = 0.9, 3        # 본체 모드 내림: 5.5–7.75 kHz로 울린 충격 비율, 최소 충격 수
+KEYS = ("LP", "E", "K", "P83", "W83", "n20", "S", "RING", "RES", "NIMP")
+
+
+# ---------------------------------------------------------------------------
+# 0. 충격 울림 (2-16, 신효섭 정의): 충격을 찾아 충격 뒤 8 ms가 어떤 감쇠 사인파와 가장 닮았는지
+# ---------------------------------------------------------------------------
+_SEG = int(0.008 * FS)
+
+
+def _ring_atoms():
+    """감쇠 사인파 사전: 주파수 1–12 kHz(250 Hz 간격) × 감쇠비 0.01·0.02·0.04·0.08 = 180개. 각각 sin·cos 2열의 직교 기저"""
+    t = np.arange(_SEG) / FS
+    atoms, par = [], []
+    for f in np.arange(1000, 12001, 250):
+        for z in (0.01, 0.02, 0.04, 0.08):
+            w = 2 * np.pi * f
+            wd, a = w * np.sqrt(1 - z ** 2), np.exp(-z * w * t)
+            Q, _ = np.linalg.qr(np.stack([a * np.sin(wd * t), a * np.cos(wd * t)], 1))
+            atoms.append(Q)
+            par.append((f, z))
+    return np.stack(atoms), np.array(par)
+
+
+def impact_rings(X):
+    """신호 → 충격 하나하나의 (파일 번호, 울림 주파수 f, 감쇠비 ζ, fit). 2-16_run.py와 같은 계산
+
+    평균 제거 → 1 kHz 고역통과 → Hilbert 포락선 → 500 Hz 저역 → 포락선 > 6 × 중앙값 봉우리(5 ms 간격) = 충격
+    fit = 충격 뒤 8 ms(단위 길이로 맞춤)를 사전의 2차원 기저에 투영한 길이 (1 = 완전히 같은 모양)
+    """
+    X = np.asarray(X, dtype=float)
+    X1k = sosfiltfilt(butter(4, 1000, btype="highpass", fs=FS, output="sos"), X - X.mean(1, keepdims=True), axis=-1)
+    lp500 = butter(4, 500, btype="lowpass", fs=FS, output="sos")
+    atoms, par = _ring_atoms()
+    rows = []
+    for i, x in enumerate(X1k):
+        env = sosfiltfilt(lp500, np.abs(hilbert(x)))
+        pk, _ = find_peaks(env, height=6 * np.median(env), distance=int(0.005 * FS))
+        pk = pk[pk + _SEG <= len(x)]
+        if not len(pk):
+            continue
+        S = np.stack([x[p:p + _SEG] for p in pk])
+        S = S / (np.linalg.norm(S, axis=1, keepdims=True) + 1e-12)
+        fit = np.linalg.norm(np.einsum("ks,ast->kat", S, atoms), axis=2)
+        b = fit.argmax(1)
+        rows += [(i, par[bb, 0], par[bb, 1], ft) for bb, ft in zip(b, fit.max(1))]
+    return np.array(rows, dtype=float).reshape(-1, 4)
+
+
+def ring_table(X):
+    """파일별 울림 요약: RING (n,2) = [2.125–4.125 kHz로 울린 비율, 5.5–7.75 kHz(본체 모드)로 울린 비율] (충격 0개 = −1),
+    RES (n,) = 8.0–8.7 kHz · ζ ≤ 0.02 충격의 최대 fit (없으면 0), NIMP (n,) = 충격 수"""
+    n = len(X)
+    R = impact_rings(X)
+    fi, f, z, ft = (R[:, k] for k in range(4))
+    fi = fi.astype(int)
+    nimp = np.bincount(fi, minlength=n).astype(float)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        frac = lambda m: np.where(nimp > 0, np.bincount(fi, weights=m.astype(float), minlength=n) / nimp, -1.0)
+        ring = np.column_stack([frac((f >= 2125) & (f < 4125)), frac((f >= 5500) & (f < 7750))])
+    res = np.zeros(n)
+    m = (f >= 8000) & (f < 8700) & (z <= 0.02)
+    np.maximum.at(res, fi[m], ft[m])
+    return ring, res, nimp
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +116,8 @@ def signal_tables(X, cols=None):
     E   (n, 150)     ET 입력: 확장 피처 (src/features.py extract_features_ext)
     K   (n, 3)       유격 반복: K1 두 번째 타격/σ, K2 저주파 RMS/σ, K3 2위/1위
     P83·W83 (n,)     8.20–8.45 kHz 봉우리의 돌출(dec)과 반높이 폭(Hz)
+    RING (n, 2)      ET 추가 입력: 충격 중 2.125–4.125 kHz · 5.5–7.75 kHz로 울린 비율 (충격 0개 = −1)
+    RES·NIMP (n,)    8.3 kHz 공진 충격의 최대 fit · 충격 수 (ring_table)
     n20 (n,)         큰 타격(바탕의 20배 이상) 수   — 관찰용
     S   (n,)         주기 잠금 점수                 — 관찰용
     cols: 학습 때의 E 열 이름. 주면 같은 순서로 맞춘다 (없는 열은 0)
@@ -97,8 +165,10 @@ def signal_tables(X, cols=None):
             r += 1
         W83[i] = f[r] - f[l]
 
+    RING, RES, NIMP = ring_table(X)
     T = dict(LP=LP, E=E.values.astype(float), K=K[["K1_second_snr", "K2_load_to_hf", "K3_top2_ratio"]].values,
-             P83=P83, W83=W83, n20=Hit["HIT_n20"].values.astype(int), S=Hit["LOCK_S"].values)
+             P83=P83, W83=W83, n20=Hit["HIT_n20"].values.astype(int), S=Hit["LOCK_S"].values,
+             RING=RING, RES=RES, NIMP=NIMP)
     return T, list(E.columns)
 
 
@@ -146,20 +216,22 @@ def _et_score(et, E):
 class Core:
     """전문가 2개(AE·ET) → 정상 기준 z → 로지스틱 결합 → 규칙. 임계값은 여기서 정하지 않는다 (FinalModel)
 
-    src/experts.py의 RuleOverride(ScoreStack((ae_mean, et_logit), 'lr'), [Rule83, KnockRule]) 와 같은 계산
+    ring=True  : EXP-034 c 와 같은 계산 (ET 입력 + 울림 2열, 8.3k = 스펙트럼 OR 공진, 본체 모드 내림)
+    ring=False : src/experts.py의 RuleOverride(ScoreStack((ae_mean, et_logit), 'lr'), [Rule83, KnockRule]) = EXP-025
     """
 
-    def __init__(self, use_cap=False, use_lock=False):
-        self.use_cap, self.use_lock = use_cap, use_lock
+    def __init__(self, use_cap=False, use_lock=False, ring=True):
+        self.use_cap, self.use_lock, self.ring = use_cap, use_lock, ring
 
-    @staticmethod
-    def _experts(T, y):
-        return _fit_ae(T["LP"][y == 0]), _fit_et(T["E"], y)
+    def _E(self, T):
+        return np.hstack([T["E"], T["RING"]]) if self.ring else T["E"]
 
-    @staticmethod
-    def _raw(experts, T):
+    def _experts(self, T, y):
+        return _fit_ae(T["LP"][y == 0]), _fit_et(self._E(T), y)
+
+    def _raw(self, experts, T):
         ae, et = experts
-        return np.column_stack([_ae_score(ae, T["LP"]), _et_score(et, T["E"])])
+        return np.column_stack([_ae_score(ae, T["LP"]), _et_score(et, self._E(T))])
 
     def fit(self, T, y):
         y = np.asarray(y)
@@ -193,16 +265,24 @@ class Core:
         Z = (raw - self.med_) / self.sc_
         lr = self.lr_.decision_function(Z)
         r = np.sqrt((((T["K"][:, :2] - self.kmed_) / self.kmad_) ** 2).mean(1))
-        rule83 = (T["P83"] >= P83_MIN) & (T["W83"] >= W83_MIN)
+        spec83 = (T["P83"] >= P83_MIN) & (T["W83"] >= W83_MIN)
+        res83 = (T["RES"] >= RES_FIT_MIN) & self.ring
+        rule83 = spec83 | res83
         knock = (r >= R_MIN) & (T["K"][:, 2] >= RATIO_MIN)
+        body = (T["RING"][:, 1] >= BODY_MIN) & (T["NIMP"] >= BODY_NMIN) & self.ring
         lock = T["S"] >= self.lock_th_
         score = lr + 100.0 * rule83 + 100.0 * knock
         if self.use_lock:
             score = score + 100.0 * lock
         if self.use_cap:
             score = np.where((T["n20"] == 1) & (score < 50), np.minimum(score, self.cap_), score)
-        return pd.DataFrame(dict(ae_z=Z[:, 0], et_z=Z[:, 1], lr=lr, P83=T["P83"], W83=T["W83"], rule83=rule83,
-                                 r=r, K3=T["K"][:, 2], knock=knock, n20=T["n20"], S=T["S"], lock_obs=lock, score=score))
+        # 본체 모드 내림: 충격이 거의 모두 본체 모드(약 7 kHz)로 울리면 정상 OOF 중앙값 이하로. 규칙으로 켜진 파일(+100)은 그대로
+        body_cap = body & (score < 50)
+        score = np.where(body_cap, np.minimum(score, self.cap_), score)
+        return pd.DataFrame(dict(ae_z=Z[:, 0], et_z=Z[:, 1], lr=lr, P83=T["P83"], W83=T["W83"], spec83=spec83,
+                                 RES=T["RES"], res83=res83, rule83=rule83, r=r, K3=T["K"][:, 2], knock=knock,
+                                 n_imp=T["NIMP"], ring24=T["RING"][:, 0], ring_body=T["RING"][:, 1], body=body_cap,
+                                 n20=T["n20"], S=T["S"], lock_obs=lock, score=score))
 
 
 # ---------------------------------------------------------------------------
@@ -219,14 +299,14 @@ class FinalModel:
     thr_seeds 개수만큼 구해 중앙값을 쓴다. 가장 낮은 값–가장 높은 값 사이의 파일은 '경계'로 표시한다
     """
 
-    def __init__(self, use_cap=False, use_lock=False, thr_seeds=(0, 1, 2), n_jobs=-1):
-        self.use_cap, self.use_lock, self.thr_seeds, self.n_jobs = use_cap, use_lock, tuple(thr_seeds), n_jobs
+    def __init__(self, use_cap=False, use_lock=False, ring=True, thr_seeds=(0, 1, 2), n_jobs=-1):
+        self.use_cap, self.use_lock, self.ring, self.thr_seeds, self.n_jobs = use_cap, use_lock, ring, tuple(thr_seeds), n_jobs
 
     def fit(self, X, y, names=None):
         y = np.asarray(y)
         self.names_ = list(names) if names is not None else [f"train_{i:03d}" for i in range(len(y))]
         T, self.cols_ = signal_tables(X)
-        kw = dict(use_cap=self.use_cap, use_lock=self.use_lock)
+        kw = dict(use_cap=self.use_cap, use_lock=self.use_lock, ring=self.ring)
         idx = np.arange(len(y))
         jobs = [(s, tr, te) for s in self.thr_seeds
                 for tr, te in StratifiedGroupKFold(4, shuffle=True, random_state=s).split(idx, y, idx)]
@@ -252,24 +332,35 @@ class FinalModel:
         D["single_hit_obs"] = D["n20"] == 1
         # 규칙 문턱까지의 거리: 두 조건 중 덜 채운 쪽의 비율 (1 이상 = 규칙 켜짐). 0.8–1.0이면 문턱 20% 이내 = 확인 대상
         D["rule83_ratio"] = np.minimum(D["P83"] / P83_MIN, D["W83"] / W83_MIN)
+        if self.ring:                                   # 공진 규칙도 8.3 kHz 규칙의 한 갈래 → 둘 중 문턱에 가까운 쪽
+            D["rule83_ratio"] = np.maximum(D["rule83_ratio"], D["RES"] / RES_FIT_MIN)
         D["knock_ratio"] = np.minimum(D["r"] / R_MIN, D["K3"] / RATIO_MIN)
         D["rule_near"] = (np.maximum(D["rule83_ratio"], D["knock_ratio"]) >= 0.8) & ~D["rule83"] & ~D["knock"]
+        # 본체 모드 내림 문턱 근처(비율 0.72–0.9, 충격 3개 이상)에서 고장 쪽으로 판정된 파일 = 내림이 걸릴 뻔함
+        D["body_near"] = (self.ring & (D["n_imp"] >= BODY_NMIN) & (D["ring_body"] >= 0.8 * BODY_MIN) & ~D["body"]
+                          & (D["ring_body"] < BODY_MIN))
         D["reason"] = [self._reason(r) for r in D.itertuples()]
         return D
 
     def _reason(self, r):
         why = []
-        if r.rule83:
+        if r.spec83:
             why.append(f"8.3 kHz 모드 규칙 (돌출 {r.P83:.2f} dec, 폭 {r.W83:.0f} Hz)")
+        if r.res83:
+            why.append(f"8.3 kHz 공진 규칙 (8.0–8.7 kHz 깨끗한 공진 충격 fit {r.RES:.2f})")
+        if r.body:
+            why.append(f"본체 모드 내림 (충격 {r.n_imp:.0f}개 중 {r.ring_body:.0%}가 5.5–7.75 kHz)")
         if r.knock:
             why.append(f"유격 반복 규칙 (정상 중심 거리 {r.r:.1f}, 2위/1위 {r.K3:.2f})")
-        if not why:
+        if not (r.rule83 or r.knock):
             side = "≥" if r.pred else "<"
             why.append(f"결합 점수 {r.lr:+.2f} {side} 임계값 {self.thr_:.2f} (스펙트럼 z {r.ae_z:+.1f}, 충격 z {r.et_z:+.1f})")
         if r.borderline:
             why.append("경계: 임계값 seed에 따라 판정이 바뀜")
         if r.rule_near:
             why.append(f"[확인] 규칙 문턱 20% 이내 (8.3 kHz {r.rule83_ratio:.2f}, 유격 {r.knock_ratio:.2f}; 1 이상이면 켜짐)")
+        if r.body_near and r.pred:
+            why.append(f"[확인] 본체 모드 내림 문턱 20% 이내 (본체 울림 {r.ring_body:.2f}, 0.9 이상이면 내림)")
         if r.lock_obs:
             why.append(f"[관찰] 주기 잠금 점수 {r.S:.2f} ≥ {self.core_.lock_th_:.2f}")
         if r.single_hit_obs:

@@ -34,7 +34,8 @@ write_submission(D, os.path.join(OUT, os.path.basename(out_name)), template)
 n1 = int(D.pred.sum())
 S = [f"읽은 파일 {len(D)}개 ({D.file.iloc[0]} … {D.file.iloc[-1]})",
      f"파일 {len(D)}개 → 고장 판정 {n1}개 ({n1 / len(D):.0%}) · 정상 판정 {len(D) - n1}개 · 임계값 {m.thr_:.3f}",
-     f"  규칙으로 고장: 8.3 kHz {int(D.rule83.sum())}개 · 유격 반복 {int(D.knock.sum())}개 · 둘 다 {int((D.rule83 & D.knock).sum())}개",
+     f"  규칙으로 고장: 8.3 kHz 스펙트럼 {int(D.spec83.sum())}개 · 8.3 kHz 공진 {int(D.res83.sum())}개 · 유격 반복 {int(D.knock.sum())}개 (겹침 포함, 규칙 고장 합계 {int((D.rule83 | D.knock).sum())}개)",
+     f"  본체 모드 내림으로 정상: {' '.join(D.file[D.body]) or '없음'} · 내림 문턱 20% 이내인데 고장 판정: {' '.join(D.file[D.body_near & (D.pred == 1)]) or '없음'}",
      f"  결합 점수만으로 고장: {int(((D.pred == 1) & ~D.rule83 & ~D.knock).sum())}개",
      f"  경계 파일 (임계값 seed에 따라 판정이 바뀜): {' '.join(D.file[D.borderline]) or '없음'}",
      f"  규칙 문턱 20% 이내인데 켜지지 않은 파일: {' '.join(D.file[D.rule_near]) or '없음'}",
