@@ -1,0 +1,17 @@
+﻿feature,AUC,고장쪽,ext최대상관,가장비슷한ext
+impact_n,0.774,큼,0.673,T12_clearance
+ring_2_5k,0.862,큼,0.626,P02_kurtosis_012
+ring_5_8k,0.836,작음,0.635,P02_kurtosis_012
+ring_ge8k,0.756,큼,0.529,P02_rms_087
+ring_f_iqr,0.749,큼,0.531,S01_cv_012
+ring_f_med,0.712,작음,0.636,E01_env_kurtosis_000
+so_ring25_over58,0.85,큼,0.569,E01_env_kurtosis_000
+so_ring811_over58,0.849,큼,0.603,B04_ratio_08125
+so_ring_dom25,0.771,큼,0.697,E01_env_kurtosis_000
+so_bp25_5k_kurt,0.829,큼,0.971,P02_kurtosis_025
+so_bp25_5k_winkurt_max,0.852,큼,0.837,P02_kurtosis_025
+so_811_over_58,0.826,큼,0.599,B04_ratio_08125
+seg_kurt_mean,0.87,큼,0.792,W03_win_kurtosis_max
+SK_200_3k,0.78,큼,0.864,S01_max_to_mean_012
+AR_res_ratio,0.833,큼,0.763,F01_spectral_centroid
+AR_res_kurt,0.72,큼,0.844,P02_kurtosis_037
