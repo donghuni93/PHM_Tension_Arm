@@ -31,11 +31,11 @@ for tr, te in StratifiedGroupKFold(5, shuffle=True, random_state=0).split(g, y, 
 Zc = np.clip(Z, -3, 4.5)
 R83 = Rule83(0.75, 150)(g); KN = KnockRule(2.0, 0.7).fit(g)(g)
 
-EXPS = [("EXP-012_스펙트럼AE_tSNE", "AE 단독: AE z 한 축 로지스틱 (세로선)", "ae", ()),
-        ("EXP-014_ET·AE결합", "AE + ET 로지스틱 결합", "both", ()),
-        ("EXP-020_8k봉우리축", "EXP-014 경계 (이 실험의 8–9 kHz 축은 평면 밖)", "both", ()),
-        ("EXP-021_8k모드규칙", "EXP-014 경계 + 8.3 kHz 모드 규칙", "both", ("r83",)),
-        ("EXP-025_유격반복규칙", "EXP-014 경계 + 8.3 kHz 모드 규칙 + 유격 반복 규칙 (최종)", "both", ("r83", "knock"))]
+EXPS = [("EXP-012_1113_스펙트럼AE_tSNE", "AE 단독: AE z 한 축 로지스틱 (세로선)", "ae", ()),
+        ("EXP-014_1114_ET·AE결합", "AE + ET 로지스틱 결합", "both", ()),
+        ("EXP-020_1114_8k봉우리축", "EXP-014 경계 (이 실험의 8–9 kHz 축은 평면 밖)", "both", ()),
+        ("EXP-021_1114_8k모드규칙", "EXP-014 경계 + 8.3 kHz 모드 규칙", "both", ("r83",)),
+        ("EXP-025_1114_유격반복규칙", "EXP-014 경계 + 8.3 kHz 모드 규칙 + 유격 반복 규칙 (최종)", "both", ("r83", "knock"))]
 xx, yy_ = np.meshgrid(np.linspace(-3, 4.5, 400), np.linspace(-3, 4.5, 400))
 G = np.c_[xx.ravel(), yy_.ravel()]
 

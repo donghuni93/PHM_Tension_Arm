@@ -819,7 +819,7 @@ function renderKnock() {
         <thead><tr><th>파일</th><th>결정값</th><th>R</th><th>사건</th><th>최종</th></tr></thead><tbody>
         ${tableRows([...fp1.sort((a, b) => D.models.fin.fp[b] - D.models.fin.fp[a] || dec(b) - dec(a)), ...comps].map(i => ({ i, cells: [0, dec(i).toFixed(2), K.R[i].toFixed(2), K.nev[i], { t: finTxt(i), o: finErr(i) >= 3 }] })), S.knSel)}
         </tbody></table></div></div></div></div>
-  <div class="card" id="knInfo"></div>${docFigs("knock", "2-12_저에너지고장.md")}`;
+  <div class="card" id="knInfo"></div>${docFigs("knock", "2-12_1114_저에너지고장.md")}`;
   const pick = i => { S.knSel = i; render(); };
   const tip = i => `${D.names[i]} (${D.y[i] ? "고장" : "정상"}) · r ${K.r[i].toFixed(2)} · R ${K.R[i].toFixed(2)} · 사건 ${K.nev[i]} · z1 ${K.z1[i].toFixed(2)} · z6 ${K.z6[i].toFixed(2)} · 결정값 ${dec(i).toFixed(2)} · ${finTxt(i)}`;
   const ext = (a, pad) => { const v = a.filter(x => x !== null); return [Math.min(...v) - pad, Math.max(...v) + pad]; };
@@ -866,7 +866,7 @@ function renderLock() {
         <thead><tr><th>파일</th><th>S</th><th>r_LP</th><th>hit</th><th>T s</th><th>사건</th><th>최종</th></tr></thead><tbody>
         ${tableRows(rank.map(i => ({ i, cells: [0, { t: L.S[i].toFixed(2), o: L.S[i] > sMax }, L.rlp[i].toFixed(2), L.hit[i].toFixed(2), L.T[i], L.nev[i], { t: finErr(i) ? finTxt(i) : "", o: finErr(i) >= 3 }] })), S.lkSel)}
         </tbody></table></div></div></div></div>
-  <div class="card" id="lkInfo"></div>${docFigs("lock", "2-13_주기잠금충격_022.md")}`;
+  <div class="card" id="lkInfo"></div>${docFigs("lock", "2-13_1114_주기잠금충격_022.md")}`;
   const pick = i => { S.lkSel = i; render(); };
   const c = canvas(540); document.getElementById("lkA").append(c);
   pointPlot(c, { x: L.rlp, y: L.hit, xlo: -.02, xhi: 1.02, ylo: -.04, yhi: 1.06, xl: "r_LP 느린 파형이 같은 모양으로 반복되는 정도 →", yl: "↑ hit 충격이 그 주기만큼 떨어진 짝을 가진 비율",

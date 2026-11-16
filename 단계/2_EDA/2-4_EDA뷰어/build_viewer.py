@@ -255,7 +255,7 @@ def model_counts(exp_dir, short, cfg=None):
 
 
 # 11-14: 최종 모델만 = EXP-025 (EXP-014 결합 + 8.3 kHz 모드 규칙 + 유격 반복 규칙). AE·ET·결합 비교는 뺌 (사용자 결정)
-MODELS = {"fin": model_counts("유의미/EXP-025_유격반복규칙", "최종")}
+MODELS = {"fin": model_counts("유의미/EXP-025_1114_유격반복규칙", "최종")}
 MODEL_ORDER = ["fin"]
 from src.experts import peak83_table, Rule83, KnockRule             # 최종 모델의 두 규칙이 켜지는 파일 (라벨 안 씀)
 from src.features import feature_table_knock
@@ -270,8 +270,8 @@ KNOCK = dict(on=_kn(np.arange(len(names))).astype(int).tolist(),
 # %% 분석 조각 화면 (11-14): 2-12 유격 반복 지도 · 2-13 주기 잠금 점수. 각 조각 run.py가 남긴 파일별 값 표를 그대로 읽는다
 import pandas as pd
 _EDA = os.path.join(ROOT, "단계", "2_EDA")
-_F12 = pd.read_csv(os.path.join(_EDA, "2-12_저에너지고장", "figs", "features.csv"), index_col=0, encoding="utf-8-sig").loc[list(names)]
-_F13 = pd.read_csv(os.path.join(_EDA, "2-13_주기잠금충격_022", "figs", "lock_score.csv"), index_col=0, encoding="utf-8-sig").loc[list(names)]
+_F12 = pd.read_csv(os.path.join(_EDA, "2-12_1114_저에너지고장", "figs", "features.csv"), index_col=0, encoding="utf-8-sig").loc[list(names)]
+_F13 = pd.read_csv(os.path.join(_EDA, "2-13_1114_주기잠금충격_022", "figs", "lock_score.csv"), index_col=0, encoding="utf-8-sig").loc[list(names)]
 assert (_F12.y.values == y).all() and (_F13.y.values == y).all()
 _r = lambda s, nd=3: [round(float(v), nd) for v in s]
 KNOCK2 = dict(z1=_r(_F12.z1), z6=_r(_F12.z6), r=_r(_F12.r), R=_r(_F12.R), d1=_r(_F12.D1), d6=_r(_F12.D6),
@@ -279,9 +279,9 @@ KNOCK2 = dict(z1=_r(_F12.z1), z6=_r(_F12.z6), r=_r(_F12.r), R=_r(_F12.R), d1=_r(
 LOCK = dict(rlp=_r(_F13.r_LP), T=_r(_F13["T"]), hit=_r(_F13.hit), nev=_F13.n_ev.astype(int).tolist(), S=_r(_F13.S))
 _png = lambda p: "data:image/png;base64," + base64.b64encode(open(os.path.join(_EDA, p), "rb").read()).decode()
 DOCFIGS = dict(
-    knock=[dict(src=_png("2-12_저에너지고장/figs/2_left_waves.png"), cap="왼쪽 무리(하중은 작은데 타격 반복) 파형 — 색 = 200 Hz 고역통과, 검은 선 = 20 Hz 저역(하중)")],
-    lock=[dict(src=_png("2-13_주기잠금충격_022/figs/1_022_wave.png"), cap="abn_022 — 느린 파형이 0.94 s마다 같은 모양으로 반복되고 충격이 그 주기에 잠김"),
-          dict(src=_png("2-13_주기잠금충격_022/figs/5_022_014_001.png"), cap="같은 유형 비교 — 022 · 014(약함) · 001(부분)")])
+    knock=[dict(src=_png("2-12_1114_저에너지고장/figs/2_left_waves.png"), cap="왼쪽 무리(하중은 작은데 타격 반복) 파형 — 색 = 200 Hz 고역통과, 검은 선 = 20 Hz 저역(하중)")],
+    lock=[dict(src=_png("2-13_1114_주기잠금충격_022/figs/1_022_wave.png"), cap="abn_022 — 느린 파형이 0.94 s마다 같은 모양으로 반복되고 충격이 그 주기에 잠김"),
+          dict(src=_png("2-13_1114_주기잠금충격_022/figs/5_022_014_001.png"), cap="같은 유형 비교 — 022 · 014(약함) · 001(부분)")])
 
 # %% 로지스틱 경계 화면 (11-14): 두 전문가 z 평면(AE z, ET z, OOF seed 0) + 유의미 실험별 경계·규칙·틀린 횟수
 #   단계/5_모델비교/fig_logistic_plane.py와 같은 정의. 경계 = 그 평면에 맞춘 로지스틱 결정값 0 (설명용, 실제 임계값은 fold마다)
@@ -295,11 +295,11 @@ for _tr, _te in StratifiedGroupKFold(5, shuffle=True, random_state=0).split(_g, 
 _Zc = np.clip(_Z, -3, 4.5)
 LR_EXPS = []
 for folder, label, kind, rules in (
-        ("유의미/EXP-025_유격반복규칙", "EXP-025 최종 = 결합 + 8.3k 규칙 + 유격 규칙", "both", ["r83", "knock"]),
-        ("유의미/EXP-021_8k모드규칙", "EXP-021 = 결합 + 8.3k 규칙", "both", ["r83"]),
-        ("유의미/EXP-020_8k봉우리축", "EXP-020 (8–9 kHz 축은 평면 밖, EXP-014 경계)", "both", []),
-        ("유의미/EXP-014_ET·AE결합", "EXP-014 = AE + ET 로지스틱 결합", "both", []),
-        ("유의미/EXP-012_스펙트럼AE_tSNE", "EXP-012 = AE 단독 (AE z 한 축)", "ae", [])):
+        ("유의미/EXP-025_1114_유격반복규칙", "EXP-025 최종 = 결합 + 8.3k 규칙 + 유격 규칙", "both", ["r83", "knock"]),
+        ("유의미/EXP-021_1114_8k모드규칙", "EXP-021 = 결합 + 8.3k 규칙", "both", ["r83"]),
+        ("유의미/EXP-020_1114_8k봉우리축", "EXP-020 (8–9 kHz 축은 평면 밖, EXP-014 경계)", "both", []),
+        ("유의미/EXP-014_1114_ET·AE결합", "EXP-014 = AE + ET 로지스틱 결합", "both", []),
+        ("유의미/EXP-012_1113_스펙트럼AE_tSNE", "EXP-012 = AE 단독 (AE z 한 축)", "ae", [])):
     _m = LogisticRegression(C=1.0, class_weight="balanced").fit(_Zc[:, [0] if kind == "ae" else [0, 1]], y)
     w = _m.coef_[0].tolist() + ([0.0] if kind == "ae" else [])
     mc = model_counts(folder, label)
