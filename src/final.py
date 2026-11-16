@@ -41,6 +41,7 @@ R_MIN, RATIO_MIN = 2.0, 0.7         # 유격 반복 규칙: 정상 중심 거리
 LOCK_MARGIN = 0.1                   # 주기 잠금(관찰용): 학습 정상 최대 + 여유
 RES_FIT_MIN = 0.7                   # 8.3 kHz 공진 규칙: 8.0–8.7 kHz · ζ ≤ 0.02 충격의 감쇠 사인파 맞춤 fit (2-16, EXP-034)
 BODY_MIN, BODY_NMIN = 0.9, 3        # 본체 모드 내림: 5.5–7.75 kHz로 울린 충격 비율, 최소 충격 수
+FIXED_THR = 1.0                     # 제출용 고정 임계값 (11-17 사용자 결정, EXP-035: 중첩 CV 바깥 점수의 고정 최적값 1.094에서 왼쪽으로 여유를 둔 값, F2 0.957). None이면 seed 중앙값
 KEYS = ("LP", "E", "K", "P83", "W83", "n20", "S", "RING", "RES", "NIMP")
 
 
@@ -295,12 +296,13 @@ def _inner_job(T, y, tr, te, kw):
 class FinalModel:
     """학습 파일 전체로 학습하고, 새 신호를 0(정상)/1(고장)로 판정한다
 
-    임계값: 학습 파일을 4등분한 OOF 점수에서 F2가 최대인 값(같으면 낮은 쪽). 분할 seed마다 값이 달라지므로
-    thr_seeds 개수만큼 구해 중앙값을 쓴다. 가장 낮은 값–가장 높은 값 사이의 파일은 '경계'로 표시한다
+    임계값: thr_fixed(기본 FIXED_THR = 1.0, 11-17)로 고정한다. thr_fixed=None이면 예전 정책 = 학습 파일을 4등분한 OOF 점수에서
+    F2가 최대인 값(같으면 낮은 쪽)을 분할 seed마다 구해 중앙값. 고정이어도 seed별 값은 구해서 그 최소–최대 사이를 '경계'로 표시한다
     """
 
-    def __init__(self, use_cap=False, use_lock=False, ring=True, thr_seeds=(0, 1, 2), n_jobs=-1):
+    def __init__(self, use_cap=False, use_lock=False, ring=True, thr_seeds=(0, 1, 2), n_jobs=-1, thr_fixed=FIXED_THR):
         self.use_cap, self.use_lock, self.ring, self.thr_seeds, self.n_jobs = use_cap, use_lock, ring, tuple(thr_seeds), n_jobs
+        self.thr_fixed = thr_fixed
 
     def fit(self, X, y, names=None):
         y = np.asarray(y)
@@ -315,7 +317,7 @@ class FinalModel:
         for (s, _, _), (te, sc) in zip(jobs, out):
             self.oof_[self.thr_seeds.index(s), te] = sc
         self.thr_all_ = np.array([best_f2_threshold(y, o) for o in self.oof_])
-        self.thr_ = float(np.median(self.thr_all_))
+        self.thr_ = float(np.median(self.thr_all_)) if self.thr_fixed is None else float(self.thr_fixed)
         self.core_ = Core(**kw).fit(T, y)
         self.y_ = y
         return self

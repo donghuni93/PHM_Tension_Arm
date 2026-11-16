@@ -35,9 +35,10 @@ L = [f"학습 파일 {len(y)}개 (정상 {(y == 0).sum()} · 고장 {(y == 1).su
      f"[내림] 본체 모드: 충격 ≥ {BODY_NMIN}개이고 5.5–7.75 kHz 울림 비율 ≥ {BODY_MIN} → 점수를 학습 정상 OOF 중앙값 {c.cap_:.3f} 이하로",
      f"[ET 입력] ext150 + 울림 2열 (2.125–4.125 kHz · 5.5–7.75 kHz로 울린 충격 비율)",
      f"[관찰용, 판정에 쓰지 않음] 주기 잠금 문턱 {c.lock_th_:.3f} · 큰 타격 정확히 1개",
-     "", f"[임계값] 분할 seed {list(m.thr_seeds)} 에서 각각 {np.round(m.thr_all_, 3).tolist()} → 중앙값 {m.thr_:.3f}",
+     "", (f"[임계값] 고정 {m.thr_:.3f} (EXP-035, 11-17 사용자 결정). 참고: 분할 seed {list(m.thr_seeds)} 에서 고른 값 {np.round(m.thr_all_, 3).tolist()}, 이 최소–최대 사이 점수는 '경계'로 표시" if m.thr_fixed is not None
+          else f"[임계값] 분할 seed {list(m.thr_seeds)} 에서 각각 {np.round(m.thr_all_, 3).tolist()} → 중앙값 {m.thr_:.3f}"),
      "  (결합 점수가 이 값 이상이면 고장. 규칙이 켜진 파일은 +100이라 항상 고장)", ""]
-L.append("[학습 파일 OOF 성적] 각 파일을 '자기를 빼고 학습한 모델'로 채점 → 최종 임계값 적용. 임계값을 이 점수들에서 골랐고 분할마다 점수 눈금이 달라 seed별 값이 크게 다르다. 성능 추정값이 아니다 (추정값은 중첩 CV 0.955 ± 0.007, EXP-034 c)")
+L.append("[학습 파일 OOF 성적] 각 파일을 '자기를 빼고 학습한 모델'로 채점 → 최종 임계값 적용. 임계값을 이 점수들에서 골랐고 분할마다 점수 눈금이 달라 seed별 값이 크게 다르다. 성능 추정값이 아니다 (추정값은 중첩 CV: 고정 1.0에서 0.957 ± 0.010, EXP-035 — 같은 데이터에서 고른 값이라 낙관적)")
 for s, o in zip(m.thr_seeds, m.oof_):
     p = (o >= m.thr_).astype(int)
     L.append(f"  seed {s}: F2 {fbeta_score(y, p, beta=2):.3f} · 놓친 고장 {' '.join(short(names[i]) for i in np.flatnonzero((y == 1) & (p == 0))) or '없음'}"
