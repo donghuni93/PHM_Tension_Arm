@@ -3,7 +3,7 @@
 # - 지표: 개념 사전(단계/개념사전.md)의 방법 중 계산 가능한 것. 묶음 8개 (기본 크기 · 형상 · 충격·비정상성 · 저주파 ·
 #   스펙트럼 모양 · 물리 대역 · 포락선 · 1 kHz 대역). 정상 대비 백분위, 설명용 태그
 # - 그림 데이터: 파형 포락(2초), 최대 충격 ±20 ms, 창별 RMS·첨도, PSD, 스펙트럼 첨도, 포락선 스펙트럼, 스펙트로그램
-# - 모델 결과: 최종 EXP-021(EXP-014 결합 + 8.3 kHz 규칙) · 결합 EXP-014 · AE EXP-012 · ET EXP-007 기준의 seed 5번 중 미탐·오경보 횟수 + 8.3k 규칙 켜짐
+# - 모델 결과: 최종 EXP-025(EXP-014 결합 + 8.3 kHz 규칙 + 유격 반복 규칙)의 seed 5번 중 미탐·오경보 횟수 + 두 규칙 켜짐
 # - 라벨은 백분위 기준(정상 분포)과 색에만 쓴다. EDA용 기술 통계이고 모델 선택에 쓰지 않는다
 # 실행: conda run -n qe-phm python "단계/2_EDA/2-4_EDA뷰어/build_viewer.py"  → 같은 폴더 EDA뷰어.html
 
@@ -12,7 +12,7 @@ import os, re, sys, json, base64
 HERE = os.path.dirname(os.path.abspath(__file__)) if "__file__" in dir() else os.getcwd()
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, ROOT)
-from src.exp import load_train
+from src.exp import load_train, cached_table
 import numpy as np
 from scipy.signal import butter, sosfiltfilt, welch, spectrogram, hilbert
 from scipy.ndimage import median_filter
@@ -254,17 +254,58 @@ def model_counts(exp_dir, short, cfg=None):
                 miss=[int(c["miss_counts"].get(n, 0)) for n in names], fp=[int(c["fp_counts"].get(n, 0)) for n in names])
 
 
-# 11-14: 최종 모델 = EXP-021 (EXP-014 결합 + 8.3 kHz 모드 규칙). 결합·전문가 결과도 비교용으로 함께
-MODELS = {"fin": model_counts("유의미/EXP-021_8k모드규칙", "최종"),
-          "base": model_counts("유의미/EXP-014_ET·AE결합", "결합"),
-          "ae": model_counts("유의미/EXP-012_스펙트럼AE_tSNE", "AE"),
-          "et": model_counts("기각/EXP-007_공선성제거", "ET", cfg=next(iter(json.load(open(os.path.join(
-              ROOT, "단계", "5_모델비교", "기각/EXP-007_공선성제거", "result.json"), encoding="utf-8"))["configs"])))}
-MODEL_ORDER = ["fin", "base", "ae", "et"]
-from src.experts import peak83_table, Rule83                       # 8.3 kHz 모드 규칙이 켜지는 파일 (라벨 안 씀)
+# 11-14: 최종 모델만 = EXP-025 (EXP-014 결합 + 8.3 kHz 모드 규칙 + 유격 반복 규칙). AE·ET·결합 비교는 뺌 (사용자 결정)
+MODELS = {"fin": model_counts("유의미/EXP-025_유격반복규칙", "최종")}
+MODEL_ORDER = ["fin"]
+from src.experts import peak83_table, Rule83, KnockRule             # 최종 모델의 두 규칙이 켜지는 파일 (라벨 안 씀)
+from src.features import feature_table_knock
 _P83, _W83, _ = peak83_table()
 RULE83 = dict(on=Rule83(0.75, 150)(np.arange(len(names))).astype(int).tolist(),
               p83=[round(float(v), 2) for v in _P83], w83=[int(round(float(v))) for v in _W83])
+_kn = KnockRule(2.0, 0.7).fit(np.arange(len(names)))              # 설명용: 정상 150개 중심 (평가에서는 fold 안, 켜지는 파일은 25번 모두 같음)
+_K = cached_table("knock", feature_table_knock, X)
+KNOCK = dict(on=_kn(np.arange(len(names))).astype(int).tolist(),
+             r=[round(float(v), 2) for v in _kn.r(np.arange(len(names)))], k3=[round(float(v), 2) for v in _K["K3_top2_ratio"]])
+
+# %% 분석 조각 화면 (11-14): 2-12 유격 반복 지도 · 2-13 주기 잠금 점수. 각 조각 run.py가 남긴 파일별 값 표를 그대로 읽는다
+import pandas as pd
+_EDA = os.path.join(ROOT, "단계", "2_EDA")
+_F12 = pd.read_csv(os.path.join(_EDA, "2-12_저에너지고장", "figs", "features.csv"), index_col=0, encoding="utf-8-sig").loc[list(names)]
+_F13 = pd.read_csv(os.path.join(_EDA, "2-13_주기잠금충격_022", "figs", "lock_score.csv"), index_col=0, encoding="utf-8-sig").loc[list(names)]
+assert (_F12.y.values == y).all() and (_F13.y.values == y).all()
+_r = lambda s, nd=3: [round(float(v), nd) for v in s]
+KNOCK2 = dict(z1=_r(_F12.z1), z6=_r(_F12.z6), r=_r(_F12.r), R=_r(_F12.R), d1=_r(_F12.D1), d6=_r(_F12.D6),
+              nev=_F12.n_events.astype(int).tolist(), d2=_r(_F12.D2, 2), sig=_r(_F12.sigma_mg, 2), load=_r(_F12.load_mg, 2))
+LOCK = dict(rlp=_r(_F13.r_LP), T=_r(_F13["T"]), hit=_r(_F13.hit), nev=_F13.n_ev.astype(int).tolist(), S=_r(_F13.S))
+_png = lambda p: "data:image/png;base64," + base64.b64encode(open(os.path.join(_EDA, p), "rb").read()).decode()
+DOCFIGS = dict(
+    knock=[dict(src=_png("2-12_저에너지고장/figs/2_left_waves.png"), cap="왼쪽 무리(하중은 작은데 타격 반복) 파형 — 색 = 200 Hz 고역통과, 검은 선 = 20 Hz 저역(하중)")],
+    lock=[dict(src=_png("2-13_주기잠금충격_022/figs/1_022_wave.png"), cap="abn_022 — 느린 파형이 0.94 s마다 같은 모양으로 반복되고 충격이 그 주기에 잠김"),
+          dict(src=_png("2-13_주기잠금충격_022/figs/5_022_014_001.png"), cap="같은 유형 비교 — 022 · 014(약함) · 001(부분)")])
+
+# %% 로지스틱 경계 화면 (11-14): 두 전문가 z 평면(AE z, ET z, OOF seed 0) + 유의미 실험별 경계·규칙·틀린 횟수
+#   단계/5_모델비교/fig_logistic_plane.py와 같은 정의. 경계 = 그 평면에 맞춘 로지스틱 결정값 0 (설명용, 실제 임계값은 fold마다)
+from src.experts import ScoreStack, ae_mean, et_logit
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import StratifiedGroupKFold
+_g = np.arange(len(names)); _F = _g[:, None]
+_Z = np.empty((len(names), 2))
+for _tr, _te in StratifiedGroupKFold(5, shuffle=True, random_state=0).split(_g, y, _g):
+    _Z[_te] = ScoreStack(experts=(ae_mean, et_logit), combine="lr").fit(_F[_tr], y[_tr]).zscores(_F[_te])[:, :2]
+_Zc = np.clip(_Z, -3, 4.5)
+LR_EXPS = []
+for folder, label, kind, rules in (
+        ("유의미/EXP-025_유격반복규칙", "EXP-025 최종 = 결합 + 8.3k 규칙 + 유격 규칙", "both", ["r83", "knock"]),
+        ("유의미/EXP-021_8k모드규칙", "EXP-021 = 결합 + 8.3k 규칙", "both", ["r83"]),
+        ("유의미/EXP-020_8k봉우리축", "EXP-020 (8–9 kHz 축은 평면 밖, EXP-014 경계)", "both", []),
+        ("유의미/EXP-014_ET·AE결합", "EXP-014 = AE + ET 로지스틱 결합", "both", []),
+        ("유의미/EXP-012_스펙트럼AE_tSNE", "EXP-012 = AE 단독 (AE z 한 축)", "ae", [])):
+    _m = LogisticRegression(C=1.0, class_weight="balanced").fit(_Zc[:, [0] if kind == "ae" else [0, 1]], y)
+    w = _m.coef_[0].tolist() + ([0.0] if kind == "ae" else [])
+    mc = model_counts(folder, label)
+    LR_EXPS.append(dict(id=mc["name"].split()[0], label=label, w=[round(v, 5) for v in w], b=round(float(_m.intercept_[0]), 5),
+                        rules=rules, f2=mc["f2"], f2_sd=mc["f2_sd"], recall=mc["recall"], fpr=mc["fpr"], miss=mc["miss"], fp=mc["fp"]))
+LR = dict(z=[[round(float(a), 3), round(float(b), 3)] for a, b in _Z], exps=LR_EXPS)
 
 # %% 그림 데이터 (int16·uint8로 줄임)
 NB, NZ = 1000, 1000                         # 파형 포락 50 샘플(2 ms)씩 최소·최대 / 최대 충격 ±20 ms
@@ -312,7 +353,7 @@ D = dict(
     names=list(names), y=y.tolist(), fs=FS, df=float(A0["df"]), nf=int(len(A0["f"])),
     groups=[dict(key=k, label=l, concept=c) for k, l, c in GROUPS],
     feat=[dict(key=k, label=l, unit=u, group=g, desc=d, concept=c) for k, l, u, g, d, c in FEAT],
-    models=MODELS, model_order=MODEL_ORDER, rule83=RULE83, concepts=CONCEPTS, concept_intro=intro,
+    models=MODELS, model_order=MODEL_ORDER, rule83=RULE83, knock=KNOCK, lr=LR, knock2=KNOCK2, lock=LOCK, docfigs=DOCFIGS, concepts=CONCEPTS, concept_intro=intro,
     sk_df=float(A0["fs_"][1] - A0["fs_"][0]), sk_nf=int(len(A0["fs_"])), env_f0=float(A0["fe"][0]), env_df=float(A0["fe"][1] - A0["fe"][0]), env_nf=int(len(A0["fe"])),
     nw=NW, win_s=WIN / FS, nb=NB, nz=NZ,
     sc={s: clean(np.abs(Z).max(1), 6) for s, Z in SIGS.items()},

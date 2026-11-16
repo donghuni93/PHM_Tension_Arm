@@ -7,69 +7,113 @@
 <style>
 :root {
   color-scheme: light;
-  --bg: #f4f3ef; --surface: #fcfcfb; --surface-2: #f0efec; --border: #dddcd6;
-  --text: #0b0b0b; --text-2: #52514e; --text-3: #85847e;
-  --nor: #2a78d6; --abn: #eb6834; --nor-band: rgba(42,120,214,.16);
-  --grid: #e6e5e0; --axis: #b9b8b1; --hl: #fff1c2; --accent: #2a78d6;
+  --bg: #f3f2ee; --surface: #fdfdfc; --surface-2: #f1f0ec; --surface-3: #e9e8e3; --border: #e0dfd9; --border-2: #cfcec7;
+  --text: #121212; --text-2: #4f4e4a; --text-3: #8a8983;
+  --nor: #2a78d6; --abn: #eb6834; --nor-band: rgba(42,120,214,.15);
+  --grid: #ebeae5; --axis: #b9b8b1; --hl: #fff1c2; --accent: #2a78d6; --accent-soft: rgba(42,120,214,.10);
   --ov1: rgba(98,80,214,.10); --ov2: rgba(27,175,122,.12);
+  --rule83: #7a3db8; --knock: #1a9e5a;
+  --nav-bg: #1f2328; --nav-2: #2a2f36; --nav-text: #c9ced6; --nav-text-2: #7d8590; --nav-on: #ffffff;
+  --shadow: 0 1px 2px rgba(20,20,20,.04), 0 2px 8px rgba(20,20,20,.05);
+  --navw: 212px; --hdr: 52px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #383835;
+    --bg: #111110; --surface: #191918; --surface-2: #222220; --surface-3: #2b2b29; --border: #31312e; --border-2: #45453f;
     --text: #f0efec; --text-2: #c3c2b7; --text-3: #8d8c84;
-    --nor: #3987e5; --abn: #d95926; --nor-band: rgba(57,135,229,.22);
-    --grid: #2b2b29; --axis: #55544f; --hl: #4a3f17; --accent: #3987e5;
+    --nor: #3987e5; --abn: #e0652f; --nor-band: rgba(57,135,229,.22);
+    --grid: #262624; --axis: #55544f; --hl: #4a3f17; --accent: #4a94ec; --accent-soft: rgba(74,148,236,.16);
     --ov1: rgba(144,133,233,.14); --ov2: rgba(25,158,112,.16);
+    --rule83: #b38ae6; --knock: #3fc283;
+    --nav-bg: #0b0c0e; --nav-2: #1b1e23; --nav-text: #c9ced6; --nav-text-2: #6e7681; --nav-on: #ffffff;
+    --shadow: 0 1px 2px rgba(0,0,0,.3);
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #383835;
+  --bg: #111110; --surface: #191918; --surface-2: #222220; --surface-3: #2b2b29; --border: #31312e; --border-2: #45453f;
   --text: #f0efec; --text-2: #c3c2b7; --text-3: #8d8c84;
-  --nor: #3987e5; --abn: #d95926; --nor-band: rgba(57,135,229,.22);
-  --grid: #2b2b29; --axis: #55544f; --hl: #4a3f17; --accent: #3987e5;
+  --nor: #3987e5; --abn: #e0652f; --nor-band: rgba(57,135,229,.22);
+  --grid: #262624; --axis: #55544f; --hl: #4a3f17; --accent: #4a94ec; --accent-soft: rgba(74,148,236,.16);
   --ov1: rgba(144,133,233,.14); --ov2: rgba(25,158,112,.16);
+  --rule83: #b38ae6; --knock: #3fc283;
+  --nav-bg: #0b0c0e; --nav-2: #1b1e23; --nav-text: #c9ced6; --nav-text-2: #6e7681; --nav-on: #ffffff;
+  --shadow: 0 1px 2px rgba(0,0,0,.3);
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text);
-  font: 13px/1.45 "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif; }
-header { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 16px; }
-header h1 { font-size: 15px; margin: 0 12px 0 0; display: inline-block; }
-.bar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
-.ctl { display: inline-flex; align-items: center; gap: 4px; color: var(--text-2); }
-select, input[type=text] { font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 6px; }
-.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; vertical-align: middle; }
-.seg button { font: inherit; border: 0; background: var(--surface-2); color: var(--text-2); padding: 3px 10px; cursor: pointer; }
-.seg button + button { border-left: 1px solid var(--border); }
-.seg button.on { background: var(--accent); color: #fff; }
-.layout { display: grid; grid-template-columns: 250px 1fr; min-height: calc(100vh - 90px); }
-aside { border-right: 1px solid var(--border); background: var(--surface); padding: 10px; overflow: auto; max-height: calc(100vh - 50px); position: sticky; top: 50px; }
-aside h3 { font-size: 12px; color: var(--text-2); margin: 10px 0 4px; font-weight: 600; }
-.taglist div { display: flex; justify-content: space-between; gap: 6px; padding: 2px 6px; border-radius: 5px; cursor: pointer; }
+  font: 13px/1.5 "Pretendard", "Pretendard Variable", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif; }
+::-webkit-scrollbar { width: 10px; height: 10px; } ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+.app { display: grid; grid-template-columns: var(--navw) minmax(0, 1fr); min-height: 100vh; }
+.app.mini { --navw: 56px; }
+/* ---- 왼쪽 메뉴 (VS Code 액티비티 바 + 탐색기) ---- */
+nav.act { position: sticky; top: 0; height: 100vh; overflow: auto; background: var(--nav-bg); color: var(--nav-text); display: flex; flex-direction: column; z-index: 6; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 14px 14px 12px; border-bottom: 1px solid var(--nav-2); }
+.brand .logo { width: 28px; height: 28px; border-radius: 8px; flex: none; background: linear-gradient(135deg, var(--nor), var(--abn)); display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 13px; }
+.brand b { display: block; color: var(--nav-on); font-size: 13.5px; letter-spacing: -.01em; }
+.brand span { display: block; color: var(--nav-text-2); font-size: 11px; }
+.nsec { padding: 12px 8px 2px; }
+.nsec h5 { margin: 0 0 4px 8px; font-size: 10.5px; letter-spacing: .08em; color: var(--nav-text-2); font-weight: 700; }
+.nitem { display: flex; align-items: center; gap: 10px; padding: 6px 10px; margin: 1px 0; border-radius: 7px; cursor: pointer; position: relative; color: var(--nav-text); white-space: nowrap; }
+.nitem:hover { background: var(--nav-2); color: var(--nav-on); }
+.nitem.on { background: var(--nav-2); color: var(--nav-on); font-weight: 600; }
+.nitem.on::before { content: ""; position: absolute; left: -8px; top: 6px; bottom: 6px; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent); }
+.nitem svg { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.nitem .nh { margin-left: auto; font-size: 10.5px; color: var(--nav-text-2); font-variant-numeric: tabular-nums; }
+.nfoot { margin-top: auto; padding: 10px 8px; border-top: 1px solid var(--nav-2); }
+.app.mini .brand { justify-content: center; padding: 14px 0 12px; } .app.mini .brand div, .app.mini .nsec h5, .app.mini .nitem .nl, .app.mini .nitem .nh { display: none; }
+.app.mini .nitem { justify-content: center; padding: 8px 0; } .app.mini .nsec { padding: 10px 6px 2px; } .app.mini .nsec + .nsec { border-top: 1px solid var(--nav-2); }
+/* ---- 머리줄 ---- */
+.work { min-width: 0; }
+header { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: 9px 18px; min-height: var(--hdr); }
+header h1 { font-size: 15px; margin: 0 6px 0 0; display: inline-flex; align-items: baseline; gap: 8px; letter-spacing: -.01em; }
+header h1 small { font-size: 11.5px; font-weight: 500; color: var(--text-3); }
+.bar { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.bar .sp { flex: 1; }
+.ctl { display: inline-flex; align-items: center; gap: 5px; color: var(--text-2); font-size: 12px; }
+select, input[type=text] { font: inherit; font-size: 12.5px; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; padding: 4px 8px; outline: none; }
+#sortKey { max-width: 170px; } #fModel { max-width: 170px; }
+select:focus, input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; vertical-align: middle; background: var(--surface-2); padding: 2px; gap: 2px; }
+.seg button { font: inherit; font-size: 12px; border: 0; background: transparent; color: var(--text-2); padding: 2px 10px; cursor: pointer; border-radius: 6px; }
+.seg button:hover { color: var(--text); }
+.seg button.on { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.sigbar .seg button.on { background: var(--accent); color: #fff; }
+.iconbtn { font: inherit; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); border-radius: 7px; padding: 3px 9px; cursor: pointer; }
+.iconbtn:hover { color: var(--text); border-color: var(--border-2); }
+.layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: calc(100vh - var(--hdr)); }
+.layout.noside { grid-template-columns: minmax(0, 1fr); } .layout.noside aside { display: none; }
+aside { border-right: 1px solid var(--border); background: var(--surface); padding: 10px; overflow: auto; max-height: calc(100vh - var(--hdr)); position: sticky; top: var(--hdr); }
+aside h3 { font-size: 10.5px; letter-spacing: .06em; color: var(--text-3); margin: 12px 0 4px 6px; font-weight: 700; }
+.taglist div { display: flex; justify-content: space-between; gap: 6px; padding: 3px 8px; border-radius: 6px; cursor: pointer; }
 .taglist div:hover, .flist div:hover, .clist div:hover { background: var(--surface-2); }
-.taglist div.on { background: var(--hl); }
+.taglist div.on { background: var(--accent-soft); color: var(--text); font-weight: 600; }
 .taglist .cnt { color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.flist div, .clist div { padding: 1px 6px; border-radius: 4px; cursor: pointer; display: flex; gap: 6px; align-items: center; font-variant-numeric: tabular-nums; }
-.flist div.cur, .clist div.cur { background: var(--hl); font-weight: 600; }
-.flist .gh, .clist .gh { cursor: default; color: var(--text-2); font-weight: 600; margin-top: 6px; }
+.flist div, .clist div { padding: 2px 8px; border-radius: 6px; cursor: pointer; display: flex; gap: 6px; align-items: center; font-variant-numeric: tabular-nums; }
+.flist div.cur, .clist div.cur { background: var(--accent-soft); font-weight: 700; box-shadow: inset 2px 0 0 var(--accent); }
+.flist .gh, .clist .gh { cursor: default; color: var(--text-2); font-weight: 700; margin-top: 8px; font-size: 11.5px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; }
-.dot.n { background: var(--nor); } .dot.a { background: var(--abn); }
+.dot.n { background: var(--nor); border-radius: 2px; } .dot.a { background: var(--abn); }
 .flist .badge { margin-left: auto; color: var(--text-3); font-size: 11px; }
-main { padding: 12px 16px 40px; min-width: 0; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; min-width: 0; }
-.card h4 { margin: 0 0 6px; font-size: 12px; color: var(--text-2); font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.title .nm { font-size: 18px; font-weight: 700; }
-.chip { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
-.chip.lab-n { border-color: var(--nor); color: var(--text); } .chip.lab-a { border-color: var(--abn); color: var(--text); }
-.chip.warn { background: var(--hl); color: var(--text); }
+main { padding: 16px 20px 48px; min-width: 0; }
+.vhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; }
+.vhead h2 { margin: 0; font-size: 19px; letter-spacing: -.02em; }
+.vhead .crumb { color: var(--text-3); font-size: 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; min-width: 0; box-shadow: var(--shadow); }
+.card h4 { margin: 0 0 8px; font-size: 12.5px; color: var(--text); font-weight: 700; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.title .nm { font-size: 19px; font-weight: 800; letter-spacing: -.01em; }
+.chip { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 11.5px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
+.chip.lab-n { border-color: var(--nor); color: var(--nor); background: var(--accent-soft); font-weight: 700; } .chip.lab-a { border-color: var(--abn); color: var(--abn); background: color-mix(in srgb, var(--abn) 10%, transparent); font-weight: 700; }
+.chip.warn { background: var(--hl); color: var(--text); border-color: color-mix(in srgb, var(--hl) 60%, var(--border-2)); }
 canvas { display: block; width: 100%; }
-.row2 { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
-.row2e { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 12px; }
+.row2 { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; }
+.row2e { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.rowside { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; }
+.feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 14px; }
 .ftable { width: 100%; border-collapse: collapse; }
-.ftable td { padding: 2px 4px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
+.ftable td { padding: 3px 4px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
 .ftable td.v { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ftable td.p { width: 110px; }
 .ftable tr.out td { background: var(--hl); }
@@ -85,34 +129,46 @@ canvas { display: block; width: 100%; }
 .pv { font-size: 11px; color: var(--text-3); width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
 .five .fcard { display: grid; grid-template-columns: 200px 1.4fr 1fr; gap: 10px; align-items: start; }
 .five .meta { font-size: 12px; }
-.five .meta .nm { font-weight: 700; font-size: 14px; cursor: pointer; }
+.five .meta .nm { font-weight: 800; font-size: 14px; cursor: pointer; }
 .five .meta table { border-collapse: collapse; margin-top: 4px; }
 .five .meta td { padding: 0 4px 0 0; font-variant-numeric: tabular-nums; }
 .five .meta tr.out td { background: var(--hl); }
-.tbl-wrap { overflow: auto; max-height: calc(100vh - 140px); border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
-table.big { border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; font-size: 12px; }
-table.big th, table.big td { padding: 3px 6px; border-bottom: 1px solid var(--grid); white-space: nowrap; text-align: right; }
-table.big th { position: sticky; top: 0; background: var(--surface-2); z-index: 2; cursor: pointer; font-weight: 600; color: var(--text-2); }
-table.big th.s { color: var(--text); text-decoration: underline; }
+.tbl-wrap { overflow: auto; max-height: calc(100vh - 150px); border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); }
+table.big { border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; font-size: 12px; width: max-content; min-width: 100%; }
+table.big th, table.big td { padding: 4px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; text-align: right; }
+table.big th { position: sticky; top: 0; background: var(--surface-2); z-index: 2; cursor: pointer; font-weight: 700; color: var(--text-2); }
+table.big th.s { color: var(--accent); }
 table.big td.o { background: var(--hl); font-weight: 700; }
 table.big td:first-child, table.big th:first-child { position: sticky; left: 0; background: var(--surface); text-align: left; z-index: 1; }
 table.big th:first-child { z-index: 3; background: var(--surface-2); }
 table.big tr:hover td { background: var(--surface-2); }
-.tip { position: fixed; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.15); display: none; z-index: 30; white-space: nowrap; }
-.legend { display: inline-flex; gap: 10px; font-weight: 400; color: var(--text-2); font-size: 11px; flex-wrap: wrap; }
+table.big tr.sel td { background: var(--accent-soft); }
+.tip { position: fixed; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 5px 9px; font-size: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.16); display: none; z-index: 30; white-space: nowrap; }
+.legend { display: inline-flex; gap: 12px; font-weight: 400; color: var(--text-2); font-size: 11.5px; flex-wrap: wrap; align-items: center; }
 .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 3px; border-radius: 2px; }
 .legend i.bandsw { height: 9px; background: var(--nor-band); }
 .help { color: var(--text-3); font-size: 12px; font-weight: 400; }
-.kbd { border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; font-size: 11px; background: var(--surface-2); }
+.kbd { border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 5px; padding: 0 5px; font-size: 11px; background: var(--surface-2); }
 .bands { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; align-items: end; height: 70px; }
 .bands div { position: relative; background: var(--surface-2); border-radius: 3px; height: 100%; }
 .bands div span { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 3px; }
 .bands-x { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; font-size: 10px; color: var(--text-3); text-align: center; }
-.navbtn { font: inherit; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); border-radius: 6px; padding: 2px 10px; cursor: pointer; }
+.navbtn { font: inherit; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); border-radius: 7px; padding: 3px 11px; cursor: pointer; }
+.navbtn:hover { border-color: var(--border-2); background: var(--surface-3); }
+.navbtn.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* 요약 숫자 */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; box-shadow: var(--shadow); }
+.stat .k { font-size: 11.5px; color: var(--text-3); }
+.stat .v { font-size: 20px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat .s { font-size: 11.5px; color: var(--text-2); }
+details.docs summary { cursor: pointer; font-weight: 700; font-size: 12.5px; }
+details.docs img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); background: #fff; margin-top: 8px; }
+details.docs figcaption { font-size: 12px; color: var(--text-3); margin: 2px 0 10px; }
 /* 개념 */
-.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100vw); background: var(--surface); border-left: 1px solid var(--border); box-shadow: -4px 0 16px rgba(0,0,0,.12); z-index: 20; padding: 14px 16px 30px; overflow: auto; transform: translateX(105%); transition: transform .18s; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100vw); background: var(--surface); border-left: 1px solid var(--border); box-shadow: -8px 0 24px rgba(0,0,0,.14); z-index: 20; padding: 16px 18px 30px; overflow: auto; transform: translateX(105%); transition: transform .18s; }
 .drawer.open { transform: none; }
-.drawer .x { position: absolute; top: 8px; right: 10px; }
+.drawer .x { position: absolute; top: 10px; right: 12px; }
 .concept h2 { font-size: 17px; margin: 0 0 2px; }
 .concept .sec { color: var(--text-3); font-size: 12px; margin-bottom: 8px; }
 .concept dl { margin: 0; }
@@ -123,34 +179,33 @@ table.big tr:hover td { background: var(--surface-2); }
 .concept code { background: var(--surface-2); padding: 0 4px; border-radius: 4px; font-size: 12px; }
 .concept .rel { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 4px; }
 .concept .rel .chip { cursor: pointer; }
-.note { border-left: 3px solid var(--accent); padding: 6px 10px; background: var(--surface-2); border-radius: 0 6px 6px 0; margin-bottom: 12px; }
-.cgrid { display: grid; grid-template-columns: 260px 1fr; gap: 12px; }
+.note { border-left: 3px solid var(--accent); padding: 8px 12px; background: var(--accent-soft); border-radius: 0 8px 8px 0; margin-bottom: 14px; }
+.note.warn { border-left-color: var(--abn); background: color-mix(in srgb, var(--abn) 8%, transparent); }
+.cgrid { display: grid; grid-template-columns: 260px 1fr; gap: 14px; }
+@media (max-width: 1100px) { .rowside { grid-template-columns: 1fr; } }
 @media (max-width: 900px) {
+  .app, .app.mini { grid-template-columns: 1fr; }
+  nav.act { position: static; height: auto; flex-direction: row; flex-wrap: wrap; } .nsec { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px; } .nsec h5, .nfoot, .brand span { display: none; }
   .layout { grid-template-columns: 1fr; } aside { position: static; max-height: 240px; border-right: 0; border-bottom: 1px solid var(--border); }
   .row2, .row2e, .five .fcard, .cgrid { grid-template-columns: 1fr; } .feats { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
+<div class="app" id="app">
+<nav class="act" id="nav"></nav>
+<div class="work">
 <header>
   <div class="bar">
-    <h1>텐션암 EDA 뷰어</h1>
-    <span class="seg" id="mode">
-      <button data-v="one" class="on">한 개씩</button><button data-v="five">5개씩</button><button data-v="table">표</button><button data-v="scatter">산점도</button><button data-v="concept">개념</button>
-    </span>
+    <h1 id="vtitle">텐션암 EDA 뷰어</h1>
     <span class="ctl sigbar" title="모든 그림·지표·태그·정상 백분위를 이 신호로 계산한 값으로 바꾼다">신호 <span class="seg" id="sig"><button data-v="raw">평균 제거</button><button data-v="hp">200 Hz 고역통과</button></span></span>
     <span class="ctl">라벨 <select id="fLab"><option value="all">전체</option><option value="0">정상</option><option value="1">고장</option></select></span>
     <span class="ctl">모델 결과 <select id="fModel">
       <option value="all">전체</option>
-      <optgroup label="최종 모델 (EXP-021)">
+      <optgroup label="최종 모델 (EXP-025)">
         <option value="fin_err">최종이 틀림 (3/5 이상)</option><option value="fin_miss">최종 미탐</option><option value="fin_fp">최종 오경보</option>
-        <option value="fin_new">최종에서 새로 잡힘 (결합은 미탐)</option><option value="fin_lost">최종에서 새로 놓침 (결합은 잡음)</option>
-        <option value="fin_fixfp">최종에서 오경보 해소 (결합은 오경보)</option><option value="rule83">8.3k 규칙 켜짐</option>
-      </optgroup>
-      <optgroup label="전문가 (AE · ET)">
-        <option value="ae_miss">AE 미탐</option><option value="et_miss">ET 미탐</option>
-        <option value="both_miss">둘 다 미탐</option><option value="ae_only">AE만 미탐</option><option value="et_only">ET만 미탐</option>
-        <option value="ae_fp">AE 오경보</option><option value="et_fp">ET 오경보</option><option value="any_err">AE·ET 어느 쪽이든 틀림</option>
+        <option value="fin_any">한 번이라도 틀림 (1/5 이상)</option>
+        <option value="rule_any">규칙 켜짐 (8.3k 또는 유격)</option><option value="rule83">8.3k 규칙 켜짐</option><option value="knock">유격 반복 규칙 켜짐</option>
       </optgroup>
     </select></span>
     <span class="ctl">정렬 <select id="sortKey"></select>
@@ -158,11 +213,15 @@ table.big tr:hover td { background: var(--surface-2); }
     <span class="ctl">묶기 <select id="groupBy"><option value="label">라벨</option><option value="none">없음</option><option value="model">모델 결과</option></select></span>
     <span class="ctl"><input type="text" id="q" placeholder="파일 찾기 (예: 017)" size="14"></span>
     <span class="help" id="status"></span>
+    <span class="sp"></span>
+    <button class="iconbtn" id="theme" title="밝게 / 어둡게 / 시스템 따라"></button>
   </div>
 </header>
-<div class="layout">
+<div class="layout" id="layout">
   <aside id="aside"></aside>
   <main id="main"></main>
+</div>
+</div>
 </div>
 <div class="drawer" id="drawer"><button class="navbtn x" id="dx">닫기 ✕</button><div id="dbody"></div></div>
 <div class="tip" id="tip"></div>
@@ -183,7 +242,8 @@ const GRP = Object.fromEntries(D.groups.map(g => [g.key, g]));
 // ---------- 상태 ----------
 const S = { mode: "one", lab: "all", model: "all", tag: null, sort: "name", dir: 1, group: "label", q: "", sig: "raw",
             list: [], pos: 0, psdLog: true, shareY: false, sx: "std", sy: "prot", lx: true, ly: true,
-            ovP: false, ovG: false, ckey: "tension-arm", cq: "" };
+            ovP: false, ovG: false, ckey: "tension-arm", cq: "", lrExp: 0, lrSel: null, lrBand: 1,
+            navMini: false, theme: "auto", knSel: null, lkSel: null };
 try { Object.assign(S, JSON.parse(localStorage.getItem("eda-viewer3") || "{}"), { list: [] }); } catch (e) {}
 const save = () => { try { const { list, ...k } = S; localStorage.setItem("eda-viewer3", JSON.stringify(k)); } catch (e) {} };
 
@@ -219,25 +279,23 @@ const fmt = (v, k) => {
 const mcount = (m, i) => ({ miss: D.models[m].miss[i], fp: D.models[m].fp[i] });
 const bad = (m, i) => { const c = mcount(m, i); return D.y[i] ? c.miss >= 3 : c.fp >= 3; };   // 그 모델이 이 파일을 3/5 이상 틀림
 const ruleOn = i => !!D.rule83.on[i];
+const knockOn = i => !!D.knock.on[i];
 function modelPass(i) {
-  const a = mcount("ae", i), e = mcount("et", i);
+  const c = mcount("fin", i);
   switch (S.model) {
     case "fin_err": return bad("fin", i);
     case "fin_miss": return D.y[i] && bad("fin", i); case "fin_fp": return !D.y[i] && bad("fin", i);
-    case "fin_new": return D.y[i] && bad("base", i) && !bad("fin", i); case "fin_lost": return D.y[i] && !bad("base", i) && bad("fin", i);
-    case "fin_fixfp": return !D.y[i] && bad("base", i) && !bad("fin", i); case "rule83": return ruleOn(i);
-    case "ae_miss": return a.miss >= 3; case "et_miss": return e.miss >= 3;
-    case "both_miss": return a.miss >= 3 && e.miss >= 3; case "ae_only": return a.miss >= 3 && e.miss < 3;
-    case "et_only": return e.miss >= 3 && a.miss < 3; case "ae_fp": return a.fp >= 3; case "et_fp": return e.fp >= 3;
-    case "any_err": return a.miss >= 3 || e.miss >= 3 || a.fp >= 3 || e.fp >= 3; default: return true;
+    case "fin_any": return D.y[i] ? c.miss >= 1 : c.fp >= 1;
+    case "rule_any": return ruleOn(i) || knockOn(i); case "rule83": return ruleOn(i); case "knock": return knockOn(i);
+    default: return true;
   }
 }
 function groupOf(i) {
   if (S.group === "label") return D.y[i] ? "고장" : "정상";
-  if (S.group === "model") {                                     // 최종 모델(EXP-021) 기준
-    if (D.y[i]) return bad("fin", i) ? "고장: 최종이 놓침" : ruleOn(i) && bad("base", i) ? "고장: 8.3k 규칙으로 새로 잡음"
-      : bad("base", i) ? "고장: 최종에서 새로 잡음" : "고장: 잡음";
-    return bad("fin", i) ? "정상: 최종 오경보" : bad("base", i) ? "정상: 최종에서 오경보 해소" : "정상: 문제 없음";
+  if (S.group === "model") {                                     // 최종 모델(EXP-025) 기준
+    if (D.y[i]) return bad("fin", i) ? "고장: 최종이 놓침" : ruleOn(i) ? "고장: 8.3k 규칙으로 잡음"
+      : knockOn(i) ? "고장: 유격 반복 규칙으로 잡음" : "고장: 결합 점수로 잡음";
+    return bad("fin", i) ? "정상: 최종 오경보" : mcount("fin", i).fp ? "정상: 가끔 오경보 (1–2/5)" : "정상: 문제 없음";
   }
   return "";
 }
@@ -441,8 +499,9 @@ function modelBadges(i) {
   const chips = D.model_order.map(m => { const c = mcount(m, i), M = D.models[m];
     const s = D.y[i] ? `미탐 <b>${c.miss}</b>/5` : `오경보 <b>${c.fp}</b>/5`;
     return `<span class="chip ${bad(m, i) ? "warn" : ""}" title="${esc(M.name)} (F2 ${M.f2} ± ${M.f2_sd}, 재현율 ${M.recall}, 오경보율 ${M.fpr})"${m === "fin" ? ' style="font-weight:700"' : ""}>${M.short} ${s}</span>`; });
-  const r = D.rule83;
-  chips.push(`<span class="chip ${ruleOn(i) ? "warn" : ""}" title="8.20–8.45 kHz 최대 돌출 ≥ 0.75 dec 이고 봉우리 폭 ≥ 150 Hz면 무조건 고장 (EXP-021)">8.3k 규칙 ${ruleOn(i) ? "<b>켜짐</b>" : "꺼짐"} · 돌출 ${r.p83[i]} · 폭 ${r.w83[i]} Hz</span>`);
+  const r = D.rule83, k = D.knock;
+  chips.push(`<span class="chip ${ruleOn(i) ? "warn" : ""}" title="8.20–8.45 kHz 최대 돌출 ≥ 0.75 dec 이고 봉우리 폭 ≥ 150 Hz면 무조건 고장 (EXP-021부터)">8.3k 규칙 ${ruleOn(i) ? "<b>켜짐</b>" : "꺼짐"} · 돌출 ${r.p83[i]} · 폭 ${r.w83[i]} Hz</span>`);
+  chips.push(`<span class="chip ${knockOn(i) ? "warn" : ""}" title="정상 중심 거리 r(유격 반복·하중 대비 고주파) ≥ 2 이고 2위/1위 사건 ≥ 0.7이면 무조건 고장 (EXP-025, 2-12)">유격 규칙 ${knockOn(i) ? "<b>켜짐</b>" : "꺼짐"} · r ${k.r[i]} · 2위/1위 ${k.k3[i]}</span>`);
   return chips.join(" ");
 }
 const segH = (id, opts, cur) => `<span class="seg" id="${id}">${opts.map(([v, l]) => `<button data-v="${v}" class="${String(cur) === String(v) ? "on" : ""}">${l}</button>`).join("")}</span>`;
@@ -512,14 +571,14 @@ function renderFive() {
 function renderTable() {
   const ks = D.feat.filter(f => f.group !== "band").map(f => f.key);
   const grpName = k => (GRP[FEAT[k].group] || { label: "요약" }).label;
-  const head = `<tr><th data-k="name" class="${S.sort === "name" ? "s" : ""}">파일</th><th>태그</th>${D.model_order.map(m => `<th title="${esc(D.models[m].name)}">${D.models[m].short}</th>`).join("")}<th title="8.3k 규칙 (돌출 ≥ 0.75 & 폭 ≥ 150 Hz)">8.3k</th>${ks.map((k, j) => `<th data-k="${k}" class="${S.sort === k ? "s" : ""}" title="[${grpName(k)}] ${esc(FEAT[k].desc)}" style="${j && FEAT[k].group !== FEAT[ks[j - 1]].group ? "border-left:2px solid var(--border)" : ""}">${FEAT[k].label}${S.sort === k ? (S.dir > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}</tr>`;
+  const head = `<tr><th data-k="name" class="${S.sort === "name" ? "s" : ""}">파일</th><th>태그</th>${D.model_order.map(m => `<th title="${esc(D.models[m].name)}">${D.models[m].short}</th>`).join("")}<th title="8.3k 규칙 (돌출 ≥ 0.75 & 폭 ≥ 150 Hz)">8.3k</th><th title="유격 반복 규칙 (r ≥ 2 & 2위/1위 ≥ 0.7)">유격</th>${ks.map((k, j) => `<th data-k="${k}" class="${S.sort === k ? "s" : ""}" title="[${grpName(k)}] ${esc(FEAT[k].desc)}" style="${j && FEAT[k].group !== FEAT[ks[j - 1]].group ? "border-left:2px solid var(--border)" : ""}">${FEAT[k].label}${S.sort === k ? (S.dir > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}</tr>`;
   let lastG = null;
   const rows = S.list.map(i => {
-    const g = groupOf(i), gr = S.group !== "none" && g !== lastG ? `<tr><td colspan="${ks.length + 3 + D.model_order.length}" style="text-align:left;font-weight:700;background:var(--surface-2)">${g}</td></tr>` : ""; lastG = g;
+    const g = groupOf(i), gr = S.group !== "none" && g !== lastG ? `<tr><td colspan="${ks.length + 4 + D.model_order.length}" style="text-align:left;font-weight:700;background:var(--surface-2)">${g}</td></tr>` : ""; lastG = g;
     const mt = m => { const c = mcount(m, i), t = D.y[i] ? (c.miss ? `미탐 ${c.miss}` : "") : (c.fp ? `오경보 ${c.fp}` : "");
       return `<td class="${bad(m, i) ? "o" : ""}"${m === "fin" ? ' style="font-weight:700"' : ""}>${t}</td>`; };
     return gr + `<tr data-i="${i}" style="cursor:pointer"><td><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</td>
-      <td style="text-align:left">${D.ftags[i].map(t => TAG[t].label).join(", ")}</td>${D.model_order.map(mt).join("")}<td>${ruleOn(i) ? "켜짐" : ""}</td>
+      <td style="text-align:left">${D.ftags[i].map(t => TAG[t].label).join(", ")}</td>${D.model_order.map(mt).join("")}<td>${ruleOn(i) ? "켜짐" : ""}</td><td>${knockOn(i) ? "켜짐" : ""}</td>
       ${ks.map(k => { const p = D.pct[k][i], o = p !== null && (p < 5 || p > 95); return `<td class="${o ? "o" : ""}" title="정상 중 ${p === null ? "—" : Math.round(p) + "%"}">${fmt(D.val[k][i], k)}${o ? (p > 95 ? " ▲" : " ▼") : ""}</td>`; }).join("")}</tr>`;
   }).join("");
   main.innerHTML = `<p class="help">노란 칸 = 정상 5–95% 밖 (▲ 위, ▼ 아래). 칸에 마우스 = 정상 중 백분위. 머리글 클릭 = 정렬, 행 클릭 = 한 개씩 보기.</p>
@@ -532,7 +591,7 @@ function renderScatter() {
   main.innerHTML = `<div class="card"><div class="bar">
     <span class="ctl">x <select id="sx">${featOptions()}</select> <label><input type="checkbox" id="lx"> 로그</label></span>
     <span class="ctl">y <select id="sy2">${featOptions()}</select> <label><input type="checkbox" id="ly"> 로그</label></span>
-    <span class="legend"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span><span>검은 테두리 = 최종 모델(EXP-021)이 틀린 파일 · 음영 = 정상 5–95%</span></span>
+    <span class="legend"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span><span>검은 테두리 = 최종 모델(EXP-025)이 틀린 파일 · 음영 = 정상 5–95%</span></span>
     <span class="help">점 클릭 = 한 개씩 보기. 지금 필터에 맞는 파일만 진하게</span></div><div id="sc" style="margin-top:8px"></div></div>
     <div class="card" id="scnote"></div>`;
   const sx = document.getElementById("sx"), sy = document.getElementById("sy2"), lx = document.getElementById("lx"), ly = document.getElementById("ly");
@@ -576,6 +635,291 @@ function renderScatter() {
     bindConceptLinks(sn);
   }
 }
+// ---------- 경계: 유의미 실험별 로지스틱 경계 (두 전문가 z 평면, OOF seed 0) ----------
+function renderLR() {
+  const E = D.lr.exps, ex = E[Math.min(S.lrExp, E.length - 1)], Z = D.lr.z;
+  const dec = i => ex.w[0] * Math.max(-3, Math.min(4.5, Z[i][0])) + ex.w[1] * Math.max(-3, Math.min(4.5, Z[i][1])) + ex.b;
+  const r83 = i => ex.rules.includes("r83") && !!D.rule83.on[i], kn = i => ex.rules.includes("knock") && !!D.knock.on[i];
+  const ruleOf = i => [r83(i) ? "8.3k 규칙" : "", kn(i) ? "유격 규칙" : ""].filter(Boolean).join(" · ");
+  const errOf = i => D.y[i] ? ex.miss[i] : ex.fp[i];
+  const errTxt = i => errOf(i) ? `${D.y[i] ? "미탐" : "오경보"} ${errOf(i)}/5` : "";
+  const band = +S.lrBand;
+  const nearI = [...Array(N).keys()].filter(i => Math.abs(dec(i)) <= band || errOf(i) >= 1).sort((a, b) => dec(a) - dec(b));
+  main.innerHTML = `<div class="card"><div class="bar">
+      <span class="ctl">실험 <select id="lrExp">${E.map((e, k) => `<option value="${k}">${esc(e.label)}</option>`).join("")}</select></span>
+      <span class="ctl">경계 근처 = |결정값| ≤ <select id="lrBand">${[0.5, 1, 1.5, 2].map(v => `<option value="${v}">${v}</option>`).join("")}</select></span>
+      <span class="help">F2 ${ex.f2} ± ${ex.f2_sd} · 재현율 ${ex.recall} · 오경보율 ${ex.fpr}</span></div>
+      <div class="legend" style="margin:6px 0"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span>
+      <span>실선 = 결정값 0 · 점선 = ±1 · 주황 바탕 = 고장 쪽</span><span style="color:#7a3db8">◇ 8.3k 규칙</span><span style="color:#1a9e5a">○ 유격 규칙</span>
+      <span>✕ 이 실험이 틀림 (굵게 = 3/5 이상)</span><span>이름 = 경계 근처 또는 틀린 파일</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:10px">
+        <div id="lrPlot"></div>
+        <div><div class="help" style="margin-bottom:4px">경계 근처·틀린 파일 ${nearI.length}개 (결정값 순, 클릭 = 정보)</div>
+          <div class="tbl-wrap" style="max-height:560px"><table class="big"><thead><tr><th>파일</th><th>결정값</th><th>이 실험 결과</th><th>규칙</th></tr></thead><tbody>
+          ${nearI.map(i => `<tr data-i="${i}" style="cursor:pointer${S.lrSel === i ? ";outline:2px solid var(--text)" : ""}"><td style="text-align:left"><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</td><td>${dec(i).toFixed(2)}</td><td class="${errOf(i) >= 3 ? "o" : ""}">${errTxt(i)}</td><td>${ruleOf(i)}</td></tr>`).join("")}
+          </tbody></table></div></div>
+      </div></div><div class="card" id="lrInfo"></div>`;
+  const se = document.getElementById("lrExp"), sb = document.getElementById("lrBand");
+  se.value = String(Math.min(S.lrExp, E.length - 1)); sb.value = String(band);
+  se.onchange = () => { S.lrExp = +se.value; render(); }; sb.onchange = () => { S.lrBand = +sb.value; render(); };
+  const c = canvas(600); document.getElementById("lrPlot").append(c);
+  const [g, w, h] = ctx2d(c), P = { l: 46, r: 12, t: 10, b: 34 }, lo = -3, hi = 4.5;
+  const X = v => P.l + (v - lo) / (hi - lo) * (w - P.l - P.r), Y = v => P.t + (1 - (v - lo) / (hi - lo)) * (h - P.t - P.b);
+  const cl = v => Math.max(lo, Math.min(hi, v));
+  // 바탕: 고장 쪽(결정값 ≥ 0) = 그림 사각형을 경계 반평면으로 자른 다각형 하나
+  const f = (x, yv) => ex.w[0] * x + ex.w[1] * yv + ex.b, rect = [[lo, lo], [hi, lo], [hi, hi], [lo, hi]], poly = [];
+  rect.forEach((p, k) => { const q = rect[(k + 1) % 4], fp = f(...p), fq = f(...q);
+    if (fp >= 0) poly.push(p);
+    if ((fp >= 0) !== (fq >= 0)) { const t = fp / (fp - fq); poly.push([p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])]); } });
+  if (poly.length) { g.beginPath(); poly.forEach(([a, b], k) => k ? g.lineTo(X(a), Y(b)) : g.moveTo(X(a), Y(b))); g.closePath();
+    g.globalAlpha = .16; g.fillStyle = css("--abn"); g.fill(); g.globalAlpha = 1; }
+  const tk = niceTicks(lo, hi, 6);
+  frame(g, w, h, P, tk.map(v => [v, X(v), String(v)]), tk.map(v => [v, Y(v), String(v)]), "AE z (스펙트럼 모양 이상)", "");
+  g.fillStyle = css("--text-3"); g.textAlign = "left"; g.fillText("ET z (충격 피처 이상)", P.l + 4, P.t + 6);
+  // 경계선·여백: w0 x + w1 y + b = k
+  g.save(); g.beginPath(); g.rect(P.l, P.t, w - P.l - P.r, h - P.t - P.b); g.clip();
+  const seg = (k, dash, lw) => { g.beginPath(); g.setLineDash(dash); g.lineWidth = lw; g.strokeStyle = css("--text");
+    if (Math.abs(ex.w[1]) < 1e-9) { const x = (k - ex.b) / ex.w[0]; g.moveTo(X(x), Y(lo)); g.lineTo(X(x), Y(hi)); }
+    else { const yv = x => (k - ex.b - ex.w[0] * x) / ex.w[1]; g.moveTo(X(lo), Y(yv(lo))); g.lineTo(X(hi), Y(yv(hi))); }
+    g.stroke(); };
+  seg(0, [], 1.8); seg(1, [5, 4], 1); seg(-1, [5, 4], 1); g.setLineDash([]);
+  // 점
+  const pt = i => [X(cl(Z[i][0])), Y(cl(Z[i][1]))];
+  const order = [...Array(N).keys()].sort((a, b) => D.y[a] - D.y[b]);
+  for (const i of order) { const [x, yv] = pt(i);
+    g.beginPath(); if (D.y[i]) g.arc(x, yv, 4.5, 0, 7); else g.rect(x - 4, yv - 4, 8, 8);
+    g.fillStyle = col(i); g.globalAlpha = .85; g.fill(); g.globalAlpha = 1;
+    if (r83(i)) { g.beginPath(); g.moveTo(x, yv - 10); g.lineTo(x + 10, yv); g.lineTo(x, yv + 10); g.lineTo(x - 10, yv); g.closePath(); g.lineWidth = 1.5; g.strokeStyle = "#7a3db8"; g.stroke(); }
+    if (kn(i)) { g.beginPath(); g.arc(x, yv, 8, 0, 7); g.lineWidth = 1.8; g.strokeStyle = "#1a9e5a"; g.stroke(); }
+    if (errOf(i)) { const s = errOf(i) >= 3 ? 7 : 5; g.beginPath(); g.moveTo(x - s, yv - s); g.lineTo(x + s, yv + s); g.moveTo(x + s, yv - s); g.lineTo(x - s, yv + s);
+      g.lineWidth = errOf(i) >= 3 ? 2.2 : 1; g.strokeStyle = css("--text"); g.stroke(); }
+    if (i === S.lrSel) { g.beginPath(); g.arc(x, yv, 13, 0, 7); g.lineWidth = 2.5; g.strokeStyle = css("--text"); g.stroke(); }
+  }
+  // 이름: 경계 근처·틀린 파일. 겹치면 위·아래·오른쪽·왼쪽 순으로 비켜 놓고, 그래도 겹치면 생략(목록에 있음)
+  g.font = "11px Malgun Gothic, sans-serif"; const boxes = [];
+  const hit = b => boxes.some(o => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
+  for (const i of [...nearI].sort((a, b) => errOf(b) - errOf(a))) { const [x, yv] = pt(i), t = D.names[i].replace("abn_", "A").replace("nor_", "N"), tw = g.measureText(t).width;
+    for (const [dx, dy] of [[8, -8], [8, 10], [-tw - 8, -8], [-tw - 8, 10], [8, -20], [-tw - 8, 20]]) {
+      const b = [x + dx, yv + dy - 9, x + dx + tw, yv + dy + 3]; if (hit(b)) continue; boxes.push(b);
+      g.fillStyle = css("--surface"); g.globalAlpha = .8; g.fillRect(b[0] - 1, b[1], tw + 2, 12); g.globalAlpha = 1;
+      g.fillStyle = col(i); g.textAlign = "left"; g.fillText(t, x + dx, yv + dy - 3); break; } }
+  g.restore();
+  const near = (mx, my) => { let best = null, bd = 120; for (let i = 0; i < N; i++) { const [x, yv] = pt(i), d = (x - mx) ** 2 + (yv - my) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
+  hover(c, (mx, my) => { const i = near(mx, my); if (i === null) return null;
+    return `${D.names[i]} (${D.y[i] ? "고장" : "정상"}) · 결정값 ${dec(i).toFixed(2)} · AE z ${Z[i][0].toFixed(2)} · ET z ${Z[i][1].toFixed(2)}${errTxt(i) ? " · " + errTxt(i) : ""}${ruleOf(i) ? " · " + ruleOf(i) : ""}`; });
+  const select = i => { S.lrSel = i; render(); };
+  c.onclick = e => { const r = c.getBoundingClientRect(), i = near(e.clientX - r.left, e.clientY - r.top); if (i !== null) select(i); };
+  main.querySelectorAll("tr[data-i]").forEach(tr => tr.onclick = () => select(+tr.dataset.i));
+  // 정보 카드
+  const info = document.getElementById("lrInfo"), i = S.lrSel;
+  if (i === null || i === undefined) { info.innerHTML = `<span class="help">점이나 오른쪽 목록을 누르면 여기에 그 파일 정보가 뜹니다. 그림의 경계는 설명용(결정값 0)이고, 실제 판정 임계값은 fold마다 안쪽 CV로 고릅니다. 규칙이 켜진 파일은 경계와 무관하게 고장입니다.</span>`; return; }
+  const side = dec(i) >= 0 ? "고장 쪽" : "정상 쪽", ok = D.y[i] ? (ex.miss[i] === 0) : (ex.fp[i] === 0);
+  info.innerHTML = `<div class="bar"><b style="font-size:15px"><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</b> <span>${D.y[i] ? "고장" : "정상"}</span>
+    <span class="chip">결정값 ${dec(i).toFixed(2)} (${side})</span><span class="chip">AE z ${Z[i][0].toFixed(2)}</span><span class="chip">ET z ${Z[i][1].toFixed(2)}</span>
+    <span class="chip ${ok ? "" : "warn"}">${ex.id}: ${ok ? "5번 모두 맞힘" : errTxt(i)}</span>
+    ${ex.rules.length ? `<span class="chip ${ruleOf(i) ? "warn" : ""}">규칙: ${ruleOf(i) || "꺼짐"}</span>` : ""}
+    <button class="navbtn" id="lrOpen">한 개씩 보기로 열기 →</button></div>
+    <div style="margin-top:6px">${modelBadges(i)}</div><div style="margin-top:4px">${tagChips(i)}</div>
+    <div class="help" style="margin-top:6px">실험별 결과: ${E.map(e => { const v = D.y[i] ? e.miss[i] : e.fp[i]; return `${e.id} ${v ? (D.y[i] ? "미탐 " : "오경보 ") + v + "/5" : "맞힘"}`; }).join(" · ")}</div>`;
+  document.getElementById("lrOpen").onclick = () => { if (!S.list.includes(i)) { S.lab = "all"; S.model = "all"; S.tag = null; S.q = ""; syncCtl(); rebuild(i); } else S.pos = S.list.indexOf(i); setMode("one"); };
+}
+// ---------- 공용: 파일 열기 · 정보 카드 · 점 그림 ----------
+const shortN = n => n.replace("abn_", "A").replace("nor_", "N");
+function openFile(i) {
+  if (!S.list.includes(i)) { S.lab = "all"; S.model = "all"; S.tag = null; S.q = ""; syncCtl(); rebuild(i); } else S.pos = S.list.indexOf(i);
+  setMode("one");
+}
+const finErr = i => D.y[i] ? D.models.fin.miss[i] : D.models.fin.fp[i];
+const finTxt = i => finErr(i) ? `${D.y[i] ? "미탐" : "오경보"} ${finErr(i)}/5` : "5번 모두 맞힘";
+const LR0 = () => D.lr.exps[0];                                       // EXP-025 평면
+const decOf = (ex, i) => { const z = D.lr.z[i], c = v => Math.max(-3, Math.min(4.5, v)); return ex.w[0] * c(z[0]) + ex.w[1] * c(z[1]) + ex.b; };
+function infoCard(el, i, chips) {
+  if (i === null || i === undefined) { el.innerHTML = `<span class="help">점이나 표의 행을 누르면 여기에 그 파일 정보가 뜹니다.</span>`; return; }
+  el.innerHTML = `<div class="bar"><b style="font-size:16px"><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</b>
+    <span class="chip ${D.y[i] ? "lab-a" : "lab-n"}">${D.y[i] ? "고장" : "정상"}</span>${chips.map(c => `<span class="chip">${c}</span>`).join("")}
+    <span class="sp"></span><button class="navbtn pri" id="infoOpen">한 개씩 보기로 열기 →</button></div>
+    <div style="margin-top:8px">${modelBadges(i)}</div><div style="margin-top:4px">${tagChips(i)}</div>`;
+  document.getElementById("infoOpen").onclick = () => openFile(i);
+}
+function docFigs(key, doc) {
+  const F = (D.docfigs || {})[key] || []; if (!F.length) return "";
+  return `<div class="card"><details class="docs"><summary>문서 그림 — ${esc(doc)} (정적 PNG, 그 조각의 run.py 출력)</summary>
+    ${F.map(f => `<figure style="margin:0"><img src="${f.src}" alt="${esc(f.cap)}" loading="lazy"><figcaption>${esc(f.cap)}</figcaption></figure>`).join("")}</details></div>`;
+}
+const tableRows = (rows, sel) => rows.map(r => `<tr data-i="${r.i}" style="cursor:pointer" class="${sel === r.i ? "sel" : ""}">${r.cells.map((c, k) => k === 0
+  ? `<td style="text-align:left"><span class="dot ${D.y[r.i] ? "a" : "n"}"></span> ${D.names[r.i]}</td>` : `<td class="${c.o ? "o" : ""}">${c.t ?? c}</td>`).join("")}</tr>`).join("");
+// x·y 배열 점 그림. 정상 = 네모, 고장 = 원, 초록 원 = 유격 규칙 켜짐, ✕ = 최종 모델이 틀림(굵게 3/5 이상), 큰 고리 = 고른 파일
+function pointPlot(c, o) {
+  const [g, w, h] = ctx2d(c), P = { l: 50, r: 14, t: 16, b: 36 };
+  const X = v => P.l + (v - o.xlo) / (o.xhi - o.xlo) * (w - P.l - P.r), Y = v => P.t + (1 - (v - o.ylo) / (o.yhi - o.ylo)) * (h - P.t - P.b);
+  const cx = v => Math.max(o.xlo, Math.min(o.xhi, v)), cy = v => Math.max(o.ylo, Math.min(o.yhi, v));
+  const tf = v => Math.abs(v) >= 10 ? v.toFixed(0) : +v.toFixed(2) + "";
+  frame(g, w, h, P, niceTicks(o.xlo, o.xhi, 6).map(v => [v, X(v), tf(v)]), niceTicks(o.ylo, o.yhi, 5).map(v => [v, Y(v), tf(v)]), o.xl, "");
+  g.fillStyle = css("--text-3"); g.textAlign = "left"; g.textBaseline = "middle"; g.fillText(o.yl, P.l + 4, P.t - 6);
+  g.save(); g.beginPath(); g.rect(P.l, P.t, w - P.l - P.r, h - P.t - P.b); g.clip();
+  if (o.deco) o.deco(g, X, Y);
+  const inList = new Set(S.list), pt = i => [X(cx(o.x[i])), Y(cy(o.y[i]))];
+  for (const i of [...Array(N).keys()].sort((a, b) => D.y[a] - D.y[b])) {
+    if (o.x[i] === null || o.y[i] === null) continue;
+    const [x, yv] = pt(i), s = o.size ? o.size(i) : 4.5;
+    g.globalAlpha = inList.has(i) ? .9 : .15; g.beginPath(); if (D.y[i]) g.arc(x, yv, s, 0, 7); else g.rect(x - s * .9, yv - s * .9, s * 1.8, s * 1.8);
+    g.fillStyle = col(i); g.fill(); g.lineWidth = 1; g.strokeStyle = css("--surface"); g.stroke(); g.globalAlpha = 1;
+    if (!inList.has(i)) continue;
+    if (o.knockRing && knockOn(i)) { g.beginPath(); g.arc(x, yv, s + 4, 0, 7); g.lineWidth = 1.8; g.strokeStyle = css("--knock"); g.stroke(); }
+    const e = finErr(i);
+    if (e) { const k = e >= 3 ? 6 : 4; g.beginPath(); g.moveTo(x - k, yv - k); g.lineTo(x + k, yv + k); g.moveTo(x + k, yv - k); g.lineTo(x - k, yv + k); g.lineWidth = e >= 3 ? 2.2 : 1; g.strokeStyle = css("--text"); g.stroke(); }
+    if (i === o.sel) { g.beginPath(); g.arc(x, yv, s + 9, 0, 7); g.lineWidth = 2.5; g.strokeStyle = css("--text"); g.stroke(); }
+  }
+  g.font = "11px Pretendard, Malgun Gothic, sans-serif"; const boxes = [];
+  const hit = b => boxes.some(q => b[0] < q[2] && b[2] > q[0] && b[1] < q[3] && b[3] > q[1]);
+  for (const i of o.labels || []) { if (o.x[i] === null || !inList.has(i)) continue; const [x, yv] = pt(i), t = shortN(D.names[i]), tw = g.measureText(t).width;
+    for (const [dx, dy] of [[9, -8], [9, 10], [-tw - 9, -8], [-tw - 9, 10], [9, -20], [-tw - 9, 20]]) {
+      const b = [x + dx, yv + dy - 9, x + dx + tw, yv + dy + 3]; if (hit(b)) continue; boxes.push(b);
+      g.fillStyle = css("--surface"); g.globalAlpha = .85; g.fillRect(b[0] - 1, b[1], tw + 2, 12); g.globalAlpha = 1;
+      g.fillStyle = col(i); g.textAlign = "left"; g.fillText(t, x + dx, yv + dy - 3); break; } }
+  g.restore();
+  const near = (mx, my) => { let best = null, bd = 140; for (let i = 0; i < N; i++) { if (o.x[i] === null) continue; const [x, yv] = pt(i), d = (x - mx) ** 2 + (yv - my) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
+  hover(c, (mx, my) => { const i = near(mx, my); return i === null ? null : o.tipf(i); });
+  c.onclick = e => { const r = c.getBoundingClientRect(), i = near(e.clientX - r.left, e.clientY - r.top); if (i !== null) o.onPick(i); };
+  return { X, Y };
+}
+const legendPts = `<span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span>
+  <span style="color:var(--knock)">○ 유격 규칙 켜짐</span><span>✕ 최종(EXP-025)이 틀림 (굵게 = 3/5 이상)</span><span>흐린 점 = 머리줄 필터 밖</span>`;
+
+// ---------- 분석 조각: 2-12 유격 반복 · 하중 대비 고주파 ----------
+function renderKnock() {
+  const K = D.knock2, ex = LR0(), dec = i => decOf(ex, i), idx = [...Array(N).keys()];
+  const nor = idx.filter(i => !D.y[i]), abn = idx.filter(i => D.y[i]);
+  const out = idx.filter(i => K.r[i] >= 2), fpN = nor.filter(i => D.models.fin.fp[i] >= 3), fp1 = nor.filter(i => D.models.fin.fp[i] >= 1);
+  // "큰 사건 한 번"형 오경보(2-11 N-A) = 자주 오경보 정상 중 R < 0.3 (설명용 구분, N-B형 059는 R이 높아 빠짐)
+  const fpA = fpN.filter(i => K.R[i] < .3), fpB = fpN.filter(i => K.R[i] >= .3);
+  const Rmax = fpA.length ? Math.max(...fpA.map(i => K.R[i])) : 0, dmin = fpA.length ? Math.min(...fpA.map(dec)) : 0;
+  const comps = abn.filter(i => K.R[i] <= Rmax + 1e-9 && dec(i) >= dmin).sort((a, b) => K.R[a] - K.R[b]);
+  const kOn = idx.filter(knockOn);
+  main.innerHTML = `<div class="vhead"><h2>유격 반복 · 하중 대비 고주파</h2><span class="crumb">분석 조각 2-12 저에너지 고장 · 최종 모델 EXP-025의 유격 반복 규칙</span></div>
+  <div class="note"><b>축 (라벨 무관 정의)</b> · D1 유격 반복 = log10(두 번째로 큰 사건 / σ) · D6 하중 대비 고주파 = log10(20 Hz 미만 RMS / σ) ·
+    r = 정상 중심 거리 √((z1² + z6²)/2) (정상 120개 중앙값·MAD 기준 z) · <b>R = 2위/1위 사건 높이</b> (1에 가까우면 같은 크기 타격 반복, 0이면 큰 사건 한 번).
+    σ = 200 Hz 고역통과의 1.4826·MAD, 사건 = |h| > 8σ, 10 ms 안은 한 사건. 규칙 = r ≥ 2 이고 R ≥ 0.7 (사후 문턱, 고정)</div>
+  <div class="stats">
+    <div class="stat"><div class="k">r ≥ 2 바깥 파일</div><div class="v">${out.length}</div><div class="s">고장 ${out.filter(i => D.y[i]).length} · 정상 ${out.filter(i => !D.y[i]).length}</div></div>
+    <div class="stat"><div class="k">유격 규칙 켜짐</div><div class="v">${kOn.length}</div><div class="s">고장 ${kOn.filter(i => D.y[i]).length} · 정상 ${kOn.filter(i => !D.y[i]).length}</div></div>
+    <div class="stat"><div class="k">자주 오경보 정상 (3/5 이상)</div><div class="v">${fpN.length}</div><div class="s">큰 사건 한 번형 (R &lt; 0.3): ${fpA.map(i => `${shortN(D.names[i])} ${K.R[i].toFixed(2)}`).join(" · ") || "없음"}<br>그 밖: ${fpB.map(i => `${shortN(D.names[i])} ${K.R[i].toFixed(2)}`).join(" · ") || "없음"}</div></div>
+    <div class="stat"><div class="k">R ≤ ${Rmax.toFixed(2)} 이고 결정값 ≥ ${dmin.toFixed(2)}인 고장 (R로 내리면 함께 내려갈 고장)</div><div class="v">${comps.length}</div><div class="s">${comps.map(i => `${shortN(D.names[i])} R ${K.R[i].toFixed(2)} · 결정값 ${dec(i).toFixed(1)}`).join("<br>") || "없음"}</div></div>
+  </div>
+  <div class="card"><h4>① 정상 중심에서 먼 파일이 고장인가 — D6 × D1 지도 <span class="legend">${legendPts}<span>점 크기 = R</span></span></h4>
+    <div class="rowside"><div id="knA"></div>
+      <div><div class="help" style="margin-bottom:4px">r ≥ 2 파일 (r 큰 순, 클릭 = 정보)</div><div class="tbl-wrap" style="max-height:520px"><table class="big">
+        <thead><tr><th>파일</th><th>r</th><th>R</th><th>사건</th><th>최종</th></tr></thead><tbody>
+        ${tableRows(out.sort((a, b) => K.r[b] - K.r[a]).map(i => ({ i, cells: [0, K.r[i].toFixed(2), { t: K.R[i].toFixed(2), o: K.R[i] >= .7 }, K.nev[i], { t: finErr(i) ? finTxt(i) : "", o: finErr(i) >= 3 }] })), S.knSel)}
+        </tbody></table></div></div></div></div>
+  <div class="card"><h4>② 오경보를 "유격 반복"으로 가를 수 있나 — R × 결합 결정값 <span class="legend">${legendPts}</span></h4>
+    <div class="help" style="margin-bottom:6px">y = EXP-025 평면(AE z · ET z, OOF seed 0)의 로지스틱 결정값(설명용, 실선 0). x = R. 오경보 정상이 왼쪽(큰 사건 한 번)에 몰리고 같은 높이의 고장이 오른쪽에 있으면 R이 가르는 축이 된다. 왼쪽에 고장도 있으면 그 고장을 잃는다. 점선 = 유격 규칙 문턱 R 0.7</div>
+    <div class="rowside"><div id="knB"></div>
+      <div><div class="help" style="margin-bottom:4px">오경보 정상(1/5 이상)과 비교 대상 고장</div><div class="tbl-wrap" style="max-height:520px"><table class="big">
+        <thead><tr><th>파일</th><th>결정값</th><th>R</th><th>사건</th><th>최종</th></tr></thead><tbody>
+        ${tableRows([...fp1.sort((a, b) => D.models.fin.fp[b] - D.models.fin.fp[a] || dec(b) - dec(a)), ...comps].map(i => ({ i, cells: [0, dec(i).toFixed(2), K.R[i].toFixed(2), K.nev[i], { t: finTxt(i), o: finErr(i) >= 3 }] })), S.knSel)}
+        </tbody></table></div></div></div></div>
+  <div class="card" id="knInfo"></div>${docFigs("knock", "2-12_저에너지고장.md")}`;
+  const pick = i => { S.knSel = i; render(); };
+  const tip = i => `${D.names[i]} (${D.y[i] ? "고장" : "정상"}) · r ${K.r[i].toFixed(2)} · R ${K.R[i].toFixed(2)} · 사건 ${K.nev[i]} · z1 ${K.z1[i].toFixed(2)} · z6 ${K.z6[i].toFixed(2)} · 결정값 ${dec(i).toFixed(2)} · ${finTxt(i)}`;
+  const ext = (a, pad) => { const v = a.filter(x => x !== null); return [Math.min(...v) - pad, Math.max(...v) + pad]; };
+  const [xlo, xhi] = ext(K.z6, .6), [ylo, yhi] = ext(K.z1, .6);
+  const cA = canvas(540); document.getElementById("knA").append(cA);
+  pointPlot(cA, { x: K.z6, y: K.z1, xlo, xhi, ylo, yhi, xl: "D6 하중 대비 고주파 (z) → 오른쪽: 하중은 큰데 고주파 바탕은 조용", yl: "↑ D1 유격 반복 (z): 큰 타격이 두 번 이상",
+    size: i => 3 + 5 * K.R[i], knockRing: true, sel: S.knSel, onPick: pick, tipf: tip,
+    labels: idx.filter(i => K.r[i] >= 2 || D.models.fin.fp[i] >= 3 || finErr(i) >= 3),
+    deco: (g, X, Y) => { for (const rr of [1, 2]) { g.beginPath(); for (let k = 0; k <= 120; k++) { const t = k / 120 * 2 * Math.PI, R = rr * Math.SQRT2; const x = X(R * Math.cos(t)), y = Y(R * Math.sin(t)); k ? g.lineTo(x, y) : g.moveTo(x, y); }
+        g.setLineDash([5, 4]); g.lineWidth = 1; g.strokeStyle = css("--text-2"); g.stroke(); g.setLineDash([]);
+        g.fillStyle = css("--text-3"); g.textAlign = "left"; g.fillText(`r = ${rr}`, X(rr * Math.SQRT2 * .72) + 3, Y(-rr * Math.SQRT2 * .72) + 8); }
+      g.strokeStyle = css("--axis"); g.lineWidth = 1; g.beginPath(); g.moveTo(X(0), Y(ylo)); g.lineTo(X(0), Y(yhi)); g.moveTo(X(xlo), Y(0)); g.lineTo(X(xhi), Y(0)); g.stroke(); } });
+  const D0 = idx.map(dec), [dlo, dhi] = ext(D0, .5);
+  const cB = canvas(480); document.getElementById("knB").append(cB);
+  pointPlot(cB, { x: K.R, y: D0, xlo: -.04, xhi: 1.04, ylo: Math.max(dlo, -8), yhi: Math.min(dhi, 10), xl: "R = 2위/1위 사건 높이 → 1: 같은 크기 타격 반복 · 0: 큰 사건 한 번", yl: "↑ 결합 결정값 (EXP-025 평면, 0 = 설명용 경계)",
+    knockRing: true, sel: S.knSel, onPick: pick, tipf: tip, labels: [...fp1, ...comps],
+    deco: (g, X, Y) => { g.fillStyle = css("--abn"); g.globalAlpha = .07; g.fillRect(X(-.04), Y(10), X(1.04) - X(-.04), Y(0) - Y(10)); g.globalAlpha = 1;
+      g.strokeStyle = css("--text"); g.lineWidth = 1.5; g.beginPath(); g.moveTo(X(-.04), Y(0)); g.lineTo(X(1.04), Y(0)); g.stroke();
+      g.setLineDash([5, 4]); g.strokeStyle = css("--knock"); g.beginPath(); g.moveTo(X(.7), Y(-8)); g.lineTo(X(.7), Y(10)); g.stroke(); g.setLineDash([]); } });
+  main.querySelectorAll("tr[data-i]").forEach(tr => tr.onclick = () => pick(+tr.dataset.i));
+  const i = S.knSel;
+  infoCard(document.getElementById("knInfo"), i, i === null || i === undefined ? [] : [`r ${K.r[i].toFixed(2)}`, `R ${K.R[i].toFixed(2)}`, `사건 ${K.nev[i]}`, `D1 z ${K.z1[i].toFixed(2)}`, `D6 z ${K.z6[i].toFixed(2)}`,
+    `σ ${K.sig[i]} mg`, `하중 ${K.load[i]} mg`, `미세 틱 ${K.d2[i]}/s`, `결정값 ${dec(i).toFixed(2)}`]);
+}
+
+// ---------- 분석 조각: 2-13 주기 잠금 충격 ----------
+function renderLock() {
+  const L = D.lock, idx = [...Array(N).keys()], nor = idx.filter(i => !D.y[i]);
+  const sN = nor.map(i => L.S[i]).sort((a, b) => a - b), q = p => sN[Math.min(sN.length - 1, Math.floor(p * (sN.length - 1) + .5))];
+  const s95 = q(.95), sMax = sN[sN.length - 1], iMax = nor.find(i => L.S[i] === sMax), zero = nor.filter(i => L.S[i] === 0).length;
+  const above = idx.filter(i => L.S[i] > sMax), rank = [...idx].sort((a, b) => L.S[b] - L.S[a]).slice(0, 25);
+  main.innerHTML = `<div class="vhead"><h2>주기 잠금 충격</h2><span class="crumb">분석 조각 2-13 · EXP-025가 유일하게 놓치는 abn_022 (H4 하중 반전 시 유격 충격)</span></div>
+  <div class="note"><b>축 (라벨 무관 정의)</b> · T = 30 Hz 저역 신호를 τ만큼 민 자기 자신과의 상관이 최대인 τ (0.3–1.2 s) · r_LP = 그 최대 상관 (느린 파형이 똑같이 반복되는 정도) ·
+    hit = 8σ 사건 중 T ± 3% 떨어진 곳에 다른 사건이 있는 비율 (충격이 그 주기에 잠김) · <b>S = r_LP × hit</b> (둘 다 있어야 높음). 아직 모델에 넣지 않은 EDA 축 (EXP-026 후보)</div>
+  <div class="stats">
+    <div class="stat"><div class="k">정상 최대를 넘는 파일</div><div class="v">${above.length}</div><div class="s">${above.map(i => shortN(D.names[i])).join(" ")} (모두 ${above.every(i => D.y[i]) ? "고장" : "고장 아님 포함"})</div></div>
+    <div class="stat"><div class="k">정상 S 최대</div><div class="v">${sMax.toFixed(2)}</div><div class="s">${D.names[iMax]} · 정상 95% ${s95.toFixed(2)}</div></div>
+    <div class="stat"><div class="k">S = 0 인 정상</div><div class="v">${zero}</div><div class="s">정상 ${nor.length}개 중 (주기 짝 충격 없음)</div></div>
+    <div class="stat"><div class="k">abn_022</div><div class="v">${L.S[D.names.indexOf("abn_022")].toFixed(2)}</div><div class="s">T ${L.T[D.names.indexOf("abn_022")]} s · 최종 ${finTxt(D.names.indexOf("abn_022"))}</div></div>
+  </div>
+  <div class="card"><h4>느린 파형 반복 × 충격 주기 잠금 <span class="legend">${legendPts}<span>곡선 = S 같은 선 (정상 95% · 정상 최대)</span></span></h4>
+    <div class="rowside"><div id="lkA"></div>
+      <div><div class="help" style="margin-bottom:4px">S 상위 25 (클릭 = 정보)</div><div class="tbl-wrap" style="max-height:540px"><table class="big">
+        <thead><tr><th>파일</th><th>S</th><th>r_LP</th><th>hit</th><th>T s</th><th>사건</th><th>최종</th></tr></thead><tbody>
+        ${tableRows(rank.map(i => ({ i, cells: [0, { t: L.S[i].toFixed(2), o: L.S[i] > sMax }, L.rlp[i].toFixed(2), L.hit[i].toFixed(2), L.T[i], L.nev[i], { t: finErr(i) ? finTxt(i) : "", o: finErr(i) >= 3 }] })), S.lkSel)}
+        </tbody></table></div></div></div></div>
+  <div class="card" id="lkInfo"></div>${docFigs("lock", "2-13_주기잠금충격_022.md")}`;
+  const pick = i => { S.lkSel = i; render(); };
+  const c = canvas(540); document.getElementById("lkA").append(c);
+  pointPlot(c, { x: L.rlp, y: L.hit, xlo: -.02, xhi: 1.02, ylo: -.04, yhi: 1.06, xl: "r_LP 느린 파형이 같은 모양으로 반복되는 정도 →", yl: "↑ hit 충격이 그 주기만큼 떨어진 짝을 가진 비율",
+    size: i => 3.5 + 4 * L.S[i], knockRing: true, sel: S.lkSel, onPick: pick,
+    tipf: i => `${D.names[i]} (${D.y[i] ? "고장" : "정상"}) · S ${L.S[i].toFixed(2)} · r_LP ${L.rlp[i].toFixed(2)} · hit ${L.hit[i].toFixed(2)} · T ${L.T[i]} s · 사건 ${L.nev[i]} · ${finTxt(i)}`,
+    labels: idx.filter(i => L.S[i] > s95 || finErr(i) >= 3),
+    deco: (g, X, Y) => { for (const [s, lab, dash] of [[s95, "정상 95%", [5, 4]], [sMax, "정상 최대", []]]) {
+        g.beginPath(); let first = true; for (let k = 0; k <= 100; k++) { const r = s + (1.02 - s) * k / 100, hv = s / r; if (hv > 1.06) continue; first ? g.moveTo(X(r), Y(hv)) : g.lineTo(X(r), Y(hv)); first = false; }
+        g.setLineDash(dash); g.lineWidth = 1.2; g.strokeStyle = css("--text-2"); g.stroke(); g.setLineDash([]);
+        g.fillStyle = css("--text-3"); g.textAlign = "right"; g.fillText(`S = ${s.toFixed(2)} (${lab})`, X(1.0), Y(s / 1.0) - 7); } } });
+  main.querySelectorAll("tr[data-i]").forEach(tr => tr.onclick = () => pick(+tr.dataset.i));
+  const i = S.lkSel;
+  infoCard(document.getElementById("lkInfo"), i, i === null || i === undefined ? [] : [`S ${L.S[i].toFixed(2)}`, `r_LP ${L.rlp[i].toFixed(2)}`, `hit ${L.hit[i].toFixed(2)}`, `T ${L.T[i]} s`, `사건 ${L.nev[i]}`]);
+}
+
+// ---------- 왼쪽 메뉴 ----------
+const IC = {
+  one: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M9.5 16l2-3 2 4 2-2.5"/>',
+  five: '<rect x="4" y="4" width="16" height="4" rx="1"/><rect x="4" y="10" width="16" height="4" rx="1"/><rect x="4" y="16" width="16" height="4" rx="1"/>',
+  table: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M9 4.5v15"/>',
+  scatter: '<path d="M4 4v16h16"/><circle cx="9" cy="14" r="1.3"/><circle cx="13" cy="9" r="1.3"/><circle cx="17" cy="12" r="1.3"/><circle cx="11" cy="17" r="1.3"/>',
+  lr: '<path d="M4 4v16h16"/><path d="M6.5 18.5L19 6"/><circle cx="9" cy="9" r="1.3"/><circle cx="16" cy="15" r="1.3"/>',
+  knock: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5" stroke-dasharray="2 2.2"/><circle cx="12" cy="12" r="1.2"/>',
+  lock: '<path d="M3 14c2-6 4-6 6 0s4 6 6 0 4-6 6 0"/><path d="M9 4.5v3M15 4.5v3"/>',
+  concept: '<path d="M5 4.5h9a3 3 0 013 3V20H8a3 3 0 01-3-3z"/><path d="M5 17a3 3 0 013-3h9"/>',
+  mini: '<path d="M14.5 6l-6 6 6 6"/>', wide: '<path d="M9.5 6l6 6-6 6"/>',
+};
+const NAV = [
+  ["EDA", [["one", "한 개씩 보기", "← →"], ["five", "5개씩 보기", ""], ["table", "지표 표", "52"], ["scatter", "산점도", ""]]],
+  ["모델", [["lr", "로지스틱 경계", "EXP-025"]]],
+  ["분석 조각", [["knock", "유격 반복 · 저에너지", "2-12"], ["lock", "주기 잠금 충격", "2-13"]]],
+  ["참고", [["concept", "개념 사전", ""]]],
+];
+const MODES = NAV.flatMap(s => s[1].map(v => v[0]));
+const FILE_MODES = ["one", "five", "table", "scatter"];
+const VNAME = Object.fromEntries(NAV.flatMap(([sec, it]) => it.map(([k, l]) => [k, [sec, l]])));
+const svg = k => `<svg viewBox="0 0 24 24">${IC[k]}</svg>`;
+function renderNav() {
+  const el = document.getElementById("nav");
+  el.innerHTML = `<div class="brand"><span class="logo">9</span><div><b>텐션암 이상감지</b><span>9조 · EDA 뷰어</span></div></div>` +
+    NAV.map(([sec, it]) => `<div class="nsec"><h5>${sec}</h5>${it.map(([k, l, h]) => `<div class="nitem ${S.mode === k ? "on" : ""}" data-m="${k}" title="${l}">${svg(k)}<span class="nl">${l}</span>${h ? `<span class="nh">${h}</span>` : ""}</div>`).join("")}</div>`).join("") +
+    `<div class="nfoot"><div class="nitem" id="navMini" title="${S.navMini ? "메뉴 펼치기" : "메뉴 접기"}">${svg(S.navMini ? "wide" : "mini")}<span class="nl">메뉴 접기</span></div></div>`;
+  el.querySelectorAll("[data-m]").forEach(d => d.onclick = () => setMode(d.dataset.m));
+  document.getElementById("navMini").onclick = () => { S.navMini = !S.navMini; applyChrome(); render(); };
+}
+const THEMES = { auto: "◐ 시스템", light: "☀ 밝게", dark: "☾ 어둡게" };
+function applyChrome() {
+  document.getElementById("app").classList.toggle("mini", !!S.navMini);
+  if (S.theme === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = S.theme;
+  document.getElementById("theme").textContent = THEMES[S.theme] || THEMES.auto;
+}
+document.getElementById("theme").onclick = () => { const k = Object.keys(THEMES); S.theme = k[(k.indexOf(S.theme) + 1) % k.length]; applyChrome(); render(); };
+
 function renderConcept() {
   const q = S.cq.trim().toLowerCase(), hit = c => !q || (c.title + c.body + c.key).toLowerCase().includes(q);
   main.innerHTML = `<div class="note"><b>개념 사전은 정답이 아니라 선택지 목록입니다.</b> 노션 "도메인 지식·파이프라인" 정리를 옮기고, 항목마다
@@ -626,12 +970,16 @@ function step(d) { if (!S.list.length) return; S.pos = Math.max(0, Math.min(S.li
 function update() { rebuild(); render(); }
 function render() {
   save(); tip.style.display = "none";
-  ({ one: renderOne, five: renderFive, table: renderTable, scatter: renderScatter, concept: renderConcept })[S.mode]();
+  document.getElementById("layout").classList.toggle("noside", !FILE_MODES.includes(S.mode));
+  const [sec, vn] = VNAME[S.mode] || ["", ""];
+  document.getElementById("vtitle").innerHTML = `${vn} <small>${sec}</small>`;
+  document.title = `${vn} · 텐션암 EDA 뷰어`;
+  renderNav();
+  ({ one: renderOne, five: renderFive, table: renderTable, scatter: renderScatter, lr: renderLR, knock: renderKnock, lock: renderLock, concept: renderConcept })[S.mode]();
   renderSide();
   document.getElementById("status").innerHTML = S.mode === "one" ? `<span class="kbd">←</span> <span class="kbd">→</span> 파일 이동` : S.mode === "five" ? `<span class="kbd">←</span> <span class="kbd">→</span> 5개씩 이동` : "";
 }
 document.getElementById("sortKey").innerHTML = `<option value="name">파일 이름</option>` + featOptions();
-segBind("mode", v => setMode(v));
 segBind("sortDir", v => { S.dir = +v; syncCtl(); update(); });
 segBind("sig", v => { useSig(v); if (S.tag && !TAG[S.tag]) S.tag = null; syncCtl(); rebuild(); render(); });
 document.getElementById("fLab").onchange = e => { S.lab = e.target.value; update(); };
@@ -650,8 +998,10 @@ let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(ren
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
 if (S.sort !== "name" && !FEAT[S.sort]) S.sort = "name";
 if (!FEAT[S.sx]) S.sx = "std"; if (!FEAT[S.sy]) S.sy = "prot"; if (!CON[S.ckey]) S.ckey = D.concepts[0].key;
-const hm = location.hash.slice(1); if (["one", "five", "table", "scatter", "concept"].includes(hm)) S.mode = hm;
-syncCtl(); rebuild(); render();
+if (!MODES.includes(S.mode)) S.mode = "one";
+if (!THEMES[S.theme]) S.theme = "auto";
+const hm = location.hash.slice(1); if (MODES.includes(hm)) S.mode = hm;
+applyChrome(); syncCtl(); rebuild(); render();
 </script>
 </body>
 </html>
