@@ -65,7 +65,7 @@ else:
     _, LP = segment_logpsd(X); np.savez(p, f=_, LP=LP)
 
 # 잔향 비 (2-6, 탐색용): 가장 큰 충격 뒤 5–20 ms 포락선 중앙값 / 최고값. 파일마다 라벨 없이 계산된 값
-dur = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "2-6_1114_충격지속시간", "figs", "duration_per_file.csv"))
+dur = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "참고", "2-6_1114_충격지속시간", "figs", "duration_per_file.csv"))
 RV = np.log10(dur.set_index("name").loc[names, "big_rv"].values + 1e-4)
 print(f"잔향 비 결측 {np.isnan(RV).sum()}개 → 전체 중앙값으로 채움 (라벨 안 씀)", flush=True)
 RV = np.where(np.isnan(RV), np.nanmedian(RV), RV)
