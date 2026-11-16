@@ -12,7 +12,7 @@
   --nor: #2a78d6; --abn: #eb6834; --nor-band: rgba(42,120,214,.15);
   --grid: #ebeae5; --axis: #b9b8b1; --hl: #fff1c2; --accent: #2a78d6; --accent-soft: rgba(42,120,214,.10);
   --ov1: rgba(98,80,214,.10); --ov2: rgba(27,175,122,.12);
-  --r83: #7a3db8; --knock: #1a9e5a; --lock: #b8860b; --cap: #6b7280;
+  --r83: #7a3db8; --knock: #1a9e5a; --lock: #b8860b; --cap: #6b7280; --res83: #c2185b; --body: #0e7490;
   --nav-bg: #1f2328; --nav-2: #2a2f36; --nav-text: #c9ced6; --nav-text-2: #7d8590; --nav-on: #ffffff;
   --shadow: 0 1px 2px rgba(20,20,20,.04), 0 2px 8px rgba(20,20,20,.05);
   --navw: 212px; --hdr: 52px;
@@ -25,7 +25,7 @@
     --nor: #3987e5; --abn: #e0652f; --nor-band: rgba(57,135,229,.22);
     --grid: #262624; --axis: #55544f; --hl: #4a3f17; --accent: #4a94ec; --accent-soft: rgba(74,148,236,.16);
     --ov1: rgba(144,133,233,.14); --ov2: rgba(25,158,112,.16);
-    --r83: #b38ae6; --knock: #3fc283; --lock: #e0b84a; --cap: #9ca3af;
+    --r83: #b38ae6; --knock: #3fc283; --lock: #e0b84a; --cap: #9ca3af; --res83: #f06292; --body: #22b8cf;
     --nav-bg: #0b0c0e; --nav-2: #1b1e23; --nav-text: #c9ced6; --nav-text-2: #6e7681; --nav-on: #ffffff;
     --shadow: 0 1px 2px rgba(0,0,0,.3);
   }
@@ -37,7 +37,7 @@
   --nor: #3987e5; --abn: #e0652f; --nor-band: rgba(57,135,229,.22);
   --grid: #262624; --axis: #55544f; --hl: #4a3f17; --accent: #4a94ec; --accent-soft: rgba(74,148,236,.16);
   --ov1: rgba(144,133,233,.14); --ov2: rgba(25,158,112,.16);
-  --r83: #b38ae6; --knock: #3fc283; --lock: #e0b84a; --cap: #9ca3af;
+  --r83: #b38ae6; --knock: #3fc283; --lock: #e0b84a; --cap: #9ca3af; --res83: #f06292; --body: #22b8cf;
   --nav-bg: #0b0c0e; --nav-2: #1b1e23; --nav-text: #c9ced6; --nav-text-2: #6e7681; --nav-on: #ffffff;
   --shadow: 0 1px 2px rgba(0,0,0,.3);
 }
@@ -754,6 +754,8 @@ const RULE_MARK = {
   knock: { sym: "○", draw: (g, x, y) => { g.beginPath(); g.arc(x, y, 8, 0, 7); g.lineWidth = 1.8; g.strokeStyle = css("--knock"); g.stroke(); } },
   lock: { sym: "□", draw: (g, x, y) => { g.lineWidth = 1.8; g.strokeStyle = css("--lock"); g.strokeRect(x - 9, y - 9, 18, 18); } },
   cap: { sym: "◌", draw: (g, x, y) => { g.beginPath(); g.setLineDash([2, 2]); g.arc(x, y, 11, 0, 7); g.lineWidth = 1.2; g.strokeStyle = css("--cap"); g.stroke(); g.setLineDash([]); } },
+  res83: { sym: "△", draw: (g, x, y) => { g.beginPath(); g.moveTo(x, y - 11); g.lineTo(x + 10, y + 7); g.lineTo(x - 10, y + 7); g.closePath(); g.lineWidth = 1.6; g.strokeStyle = css("--res83"); g.stroke(); } },
+  body: { sym: "⬚", draw: (g, x, y) => { g.setLineDash([3, 2]); g.lineWidth = 1.4; g.strokeStyle = css("--body"); g.strokeRect(x - 12, y - 12, 24, 24); g.setLineDash([]); } },
 };
 function infoCard(el, i, chips) {
   if (i === null || i === undefined) { el.innerHTML = `<span class="help">점이나 표의 행을 누르면 여기에 그 파일 정보가 뜹니다.</span>`; return; }

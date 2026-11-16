@@ -260,7 +260,19 @@ EXP_SPEC = {
     "EXP-025": dict(short="+유격 규칙", rules=["r83", "knock"]),
     "EXP-029": dict(short="+잠금·감점", rules=["r83", "knock", "lock", "cap"], et_extra=HIT_COLS + EV_COLS,
                     note="ET z가 다른 실험과 달라 평면을 따로 계산"),
+    "EXP-030": dict(short="최종 고정(=025)", rules=["r83", "knock"]),
+    "EXP-034": dict(short="+공진·본체 내림", rules=["r83", "knock", "res83", "body"], et_extra=["RING_24", "RING_BODY"],
+                    note="ET 입력 = ext150 + 울림 2열(2-16)이라 평면을 따로 계산. 본체 모드 내림은 평면 위치를 바꾸지 않고 판정만 내림"),
 }
+# %% 2-16 충격 울림 (EXP-034): 충격마다 울림 주파수 f · 감쇠비 ζ · 맞춤 fit → 파일별 울림 비율 · 공진 fit
+import pandas as pd
+_IM = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "유의미", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
+_key = [os.path.splitext(os.path.basename(str(n)))[0] for n in names]
+_cnt = _IM.groupby("file").size().reindex(_key).fillna(0).values
+_frac = lambda lo, hi: np.nan_to_num(_IM.assign(b=(_IM.f >= lo) & (_IM.f < hi)).groupby("file").b.mean().reindex(_key).values.astype(float), nan=-1.0)
+RING = dict(RING_24=_frac(2125, 4125), RING_BODY=_frac(5500, 7750))
+_RES = _IM[(_IM.f >= 8000) & (_IM.f < 8700) & (_IM.zeta <= 0.02)].groupby("file").fit.max().reindex(_key).fillna(0).values
+_BODY = (RING["RING_BODY"] >= 0.9) & (_cnt >= 3)
 WARN = []
 
 
@@ -312,6 +324,12 @@ RULES = [
     dict(key="cap", label="단일 타격 감점", kind="cap", since="EXP-029", n=(5 * (_n20 == 1)).tolist(),
          desc="큰 타격(≥ 20σ)이 정확히 1개면 점수를 학습 정상 OOF 중앙값 이하로 누름 (2-14). 규칙으로 켜진 파일은 제외",
          info=[f"큰 타격 {v}개" for v in _n20]),
+    dict(key="res83", label="8.3k 공진 규칙", kind="up", since="EXP-034", n=(5 * (_RES >= 0.7)).tolist(),
+         desc="8.0–8.7 kHz로 울린 충격 중 감쇠비 ζ ≤ 0.02 이고 감쇠 사인파 맞춤 fit ≥ 0.7인 충격이 하나라도 있으면 무조건 고장 (2-16). 8.3k 규칙과 OR",
+         info=[f"공진 fit {_f(v)}" if v > 0 else "8 kHz 깨끗한 공진 없음" for v in _RES]),
+    dict(key="body", label="본체 모드 내림", kind="cap", since="EXP-034", n=(5 * _BODY).tolist(),
+         desc="충격 3개 이상이고 그중 5.5–7.75 kHz(본체 모드)로 울린 비율 ≥ 0.9면 점수를 학습 정상 OOF 중앙값 이하로 누름 (2-16). 규칙으로 켜진 파일은 제외",
+         info=[f"본체 울림 {_f(r) if r >= 0 else '-'} · 충격 {int(c)}개" for r, c in zip(RING["RING_BODY"], _cnt)]),
 ]
 
 # %% 분석 조각 화면 (11-14): 2-12 유격 반복 지도 · 2-13 주기 잠금 점수. 각 조각 run.py가 남긴 파일별 값 표를 그대로 읽는다
@@ -337,10 +355,23 @@ from src.experts import ScoreStack, ae_mean, et_logit
 from sklearn.linear_model import LogisticRegression
 _F = _g[:, None]
 PLANES, PLANE_LABEL = {}, {}
+from src.exp import make_et, cached_table as _ct
+from src.features import feature_table_ext
+_EXT = _ct("ext", feature_table_ext, X).values
+
+
+class _ETRing:
+    """EXP-034의 ET[ext+r2]와 같은 정의: ext150 + 울림 열 → ET logit"""
+    def __init__(self, cols): self.cols = cols
+    def __call__(self, tr, te):
+        M = np.hstack([_EXT] + [RING[c][:, None] for c in self.cols]); tr, te = np.array(tr), np.array(te)
+        p = np.clip(make_et(seed=0)().fit(M[tr], y[tr]).predict_proba(M[te])[:, 1], 1 / 600, 1 - 1 / 600)
+        return np.log(p / (1 - p))[:, None]
 for m in MODELS:
     ex_ = tuple(m.pop("et_extra")); key = "ext150" + "".join("+" + c for c in ex_)
     if key not in PLANES:
-        Z = np.empty((len(names), 2)); et = ETLogitX(ex_) if ex_ else et_logit
+        Z = np.empty((len(names), 2))
+        et = _ETRing(ex_) if ex_ and all(c in RING for c in ex_) else ETLogitX(ex_) if ex_ else et_logit
         for _tr, _te in StratifiedGroupKFold(5, shuffle=True, random_state=0).split(_g, y, _g):
             Z[_te] = ScoreStack(experts=(ae_mean, et), combine="lr").fit(_F[_tr], y[_tr]).zscores(_F[_te])[:, :2]
         PLANES[key] = Z; PLANE_LABEL[key] = "ET 입력 = ext150" + (f" + {len(ex_)}열 (" + ", ".join(ex_) + ")" if ex_ else "")
