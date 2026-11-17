@@ -272,9 +272,10 @@ class ScoreStack(BaseEstimator):
     combine: 'lr' 'svm_lin' 'svm_rbf' (학습), 'mean' 'max' (학습 0개), 'col0' (첫 열 그대로)
     고차원 전문가(ae_bins·et_trees)는 norm=False, blocks=[열 수 …]로 블록 같은 비중 표준화"""
     def __init__(self, experts=(), combine="lr", norm=True, blocks=None, k=4, seed=0, add_max=False,
-                 lr_cols=None, or_cols=(), q=95):
+                 lr_cols=None, or_cols=(), q=95, add_min=False):
         self.experts, self.combine, self.norm, self.blocks, self.k, self.seed = experts, combine, norm, blocks, k, seed
         self.add_max, self.lr_cols, self.or_cols, self.q = add_max, lr_cols, or_cols, q
+        self.add_min = add_min
 
     # combine="strong" (EXP-017): 강한 증거 묶음. 로지스틱(lr_cols) 점수와 or_cols 축마다
     #   e = (s − 정상 중앙값) / (정상 q% − 정상 중앙값)  (학습 정상 OOF 기준 → 1 = 정상 q%선)
@@ -302,6 +303,10 @@ class ScoreStack(BaseEstimator):
         Z = (S - self.med_) / self.sc_ if self.norm else S
         if self.add_max:                                      # D: 처음 두 전문가 z 중 큰 값을 한 열 더 (강한 한쪽 증거)
             Z = np.column_stack([Z, Z[:, :2].max(1)])
+        if self.add_min == "only":                            # EXP-036: 처음 두 전문가 z 중 작은 값 하나만 (둘 다 높아야 고장)
+            Z = Z[:, :2].min(1)[:, None]
+        elif self.add_min:                                    # EXP-036: 작은 값을 한 열 더 (스펙트럼·충격이 함께 이상한가)
+            Z = np.column_stack([Z, Z[:, :2].min(1)])
         return Z
 
     def fit(self, F, yy):
