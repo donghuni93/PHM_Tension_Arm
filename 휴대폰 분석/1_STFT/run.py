@@ -17,6 +17,11 @@ sys.path.insert(0, _d)
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib import font_manager as _fm
+for _f in ("Malgun Gothic", "NanumGothic", "AppleGothic", "WenQuanYi Zen Hei"):      # 한글 글꼴 (있는 첫 번째)
+    if any(_f == x.name for x in _fm.fontManager.ttflist):
+        plt.rcParams["font.family"] = _f; break
+plt.rcParams["axes.unicode_minus"] = False
 from scipy.signal import stft
 from src.data import load_dataset
 

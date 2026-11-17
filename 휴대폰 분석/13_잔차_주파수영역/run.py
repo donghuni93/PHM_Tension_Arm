@@ -20,6 +20,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
 from src.experts import X, y, names, LP, F_PSD, ae_segerr     # LP: (150, 8구간, 1025) log10 PSD, 200 Hz 고역통과
+from matplotlib import font_manager as _fm  # src.viz가 글꼴을 바꾸므로 임포트 뒤에 설정
+for _f in ("Malgun Gothic", "NanumGothic", "AppleGothic", "WenQuanYi Zen Hei"):      # 한글 글꼴 (있는 첫 번째)
+    if any(_f == x.name for x in _fm.fontManager.ttflist):
+        plt.rcParams["font.family"] = _f; break
+plt.rcParams["axes.unicode_minus"] = False
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FIG = os.path.join(HERE, "figs"); os.makedirs(FIG, exist_ok=True)
@@ -36,7 +41,8 @@ IDX_FN = [find(n, 1) for n in FN_FAULT]
 GEN_N = np.array([i for i in np.where(y == 0)[0] if i not in IDX_FP])      # 일반 정상
 OTH_F = np.array([i for i in np.where(y == 1)[0] if i not in IDX_FN])      # 일반 고장
 f = F_PSD
-BANDS = {"2–4k": (2000, 4000), "5.5–7.75k": (5500, 7750), "8.0–8.7k": (8000, 8700)}
+BANDS = {"2–4k": (2000, 4000), "5.5–7.75k": (5500, 7750), "8.0–8.7k": (8000, 8700),
+         "9–10k(사후 추가)": (9000, 10000)}   # 9–10 kHz는 첫 실행의 그림을 본 뒤 추가한 탐색용 대역 (2-16에서 9.5–10 kHz 울림은 고장 근거 아님으로 기록됨)
 
 # %% 행렬 5개 만들기
 Lm = LP.mean(1)                                    # (150, 1025) log10 PSD (구간 평균)

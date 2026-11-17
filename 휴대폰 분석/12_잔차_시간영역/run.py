@@ -18,6 +18,11 @@ sys.path.insert(0, _d)
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib import font_manager as _fm
+for _f in ("Malgun Gothic", "NanumGothic", "AppleGothic", "WenQuanYi Zen Hei"):      # 한글 글꼴 (있는 첫 번째)
+    if any(_f == x.name for x in _fm.fontManager.ttflist):
+        plt.rcParams["font.family"] = _f; break
+plt.rcParams["axes.unicode_minus"] = False
 from scipy.signal import butter, sosfiltfilt, lfilter, find_peaks, stft
 from scipy.stats import kurtosis
 from src.data import load_dataset
@@ -64,14 +69,18 @@ def acf_peak(env):
     v = env - env.mean()
     n = len(v); F = np.fft.rfft(v, 2 * n); ac = np.fft.irfft(F * np.conj(F))[:5001]
     ac = ac / (ac[0] + 1e-12)
-    k = np.argmax(ac[125:]) + 125
+    pk, _ = find_peaks(ac[125:], prominence=0.05)      # 중심 로브가 줄어드는 경계가 아니라 진짜 극대만
+    if len(pk) == 0: return ac, np.nan, np.nan
+    k = pk[np.argmax(ac[125:][pk])] + 125
     return ac, ac[k], k / FS * 1000
 rows = []
 ACS = {}
+PKT = {}
 for i in range(len(y)):
     e = E[i]; env = Le[i]
     pk, _ = find_peaks(env, height=6 * np.median(env), distance=125)
     iv = np.diff(pk) / FS * 1000
+    PKT[i] = pk / FS + P / FS
     ac, ach, lag = acf_peak(env)
     ACS[i] = ac
     rows.append({"파일": names[i], "코호트": cohort(i), "잔차 첨도": kurtosis(e), "잔차/원신호 RMS": e.std() / Xa[i].std(),
@@ -134,9 +143,17 @@ for a, (xc, yc, sc) in zip(ax, pairs):
 ax[0].legend(fontsize=8)
 fig.savefig(os.path.join(FIG, "residual_scatter.png"), dpi=130, bbox_inches="tight"); plt.close(fig)
 
+# %% 그림 5: 충격 시각 히스토그램 (파일 시작 시각이 가진 위상과 연동돼 있는가? 코호트별 충격이 몰리는 시각)
+fig, ax = plt.subplots(4, 1, figsize=(13, 9), sharex=True)
+for a, (g, idx) in zip(ax, (("일반 정상", GEN_N), ("일반 고장", OTH_F), ("오탐 경계 정상", IDX_FP), ("미탐 경계 고장", IDX_FN))):
+    allt = np.concatenate([PKT[i] for i in idx]); a.hist(allt, bins=np.arange(0, 2.05, 0.05), color=COLOR[g])
+    a.set_ylabel(f"{g} (파일 {len(idx)}개)\n충격 수", fontsize=8)
+ax[-1].set_xlabel("충격 시각 (s), 빈 50 ms")
+fig.savefig(os.path.join(FIG, "impact_time_hist.png"), dpi=120, bbox_inches="tight"); plt.close(fig)
+
 # %% 합본 (휴대폰용): 그림 5장을 세로로
 import matplotlib.image as mpimg
-parts = ["residual_time.png", "residual_stft.png", "residual_acf.png", "residual_scatter.png"]
+parts = ["residual_time.png", "residual_stft.png", "residual_acf.png", "residual_scatter.png", "impact_time_hist.png"]
 imgs = [mpimg.imread(os.path.join(FIG, p))[..., :3] for p in parts]
 Wd = max(im.shape[1] for im in imgs)
 big = np.concatenate([np.pad(im, ((0, 0), ((Wd - im.shape[1]) // 2, Wd - im.shape[1] - (Wd - im.shape[1]) // 2), (0, 0)), constant_values=1.0) for im in imgs])
