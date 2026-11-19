@@ -40,7 +40,7 @@ X, y, names = load_train(); names = [str(n) for n in names]
 g = np.arange(len(y)); F = g[:, None]; nor = y == 0
 short = lambda n: n.replace("abn_", "A").replace("nor_", "N")
 E = cached_table("ext", feature_table_ext, X).values
-IM = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "유의미", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
+IM = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "8kHz공진", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
 key = [os.path.splitext(os.path.basename(n))[0] for n in names]
 cnt = IM.groupby("file").size().reindex(key).fillna(0).values
 

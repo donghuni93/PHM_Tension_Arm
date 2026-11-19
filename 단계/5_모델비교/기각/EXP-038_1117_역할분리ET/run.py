@@ -60,7 +60,7 @@ def who(m):
 
 # %% 입력: EXP-034 c와 같은 표 (2-16 충격 울림)
 E = cached_table("ext", feature_table_ext, X).values
-IM = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "유의미", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
+IM = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "8kHz공진", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
 cnt = IM.groupby("file").size().reindex(key).fillna(0).values
 frac = lambda lo, hi: np.nan_to_num(IM.assign(b=(IM.f >= lo) & (IM.f < hi)).groupby("file").b.mean().reindex(key).values.astype(float), nan=-1.0)
 R24, RBODY = frac(2125, 4125), frac(5500, 7750)

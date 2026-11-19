@@ -3,7 +3,7 @@
 # - 지표: 개념 사전(단계/개념사전.md)의 방법 중 계산 가능한 것. 묶음 8개 (기본 크기 · 형상 · 충격·비정상성 · 저주파 ·
 #   스펙트럼 모양 · 물리 대역 · 포락선 · 1 kHz 대역). 정상 대비 백분위, 설명용 태그
 # - 그림 데이터: 파형 포락(2초), 최대 충격 ±20 ms, 창별 RMS·첨도, PSD, 스펙트럼 첨도, 포락선 스펙트럼, 스펙트로그램
-# - 모델 결과: 유의미 실험 전부(단계/5_모델비교/유의미/)의 seed 5번 중 미탐·오경보 횟수 + 규칙 켜짐. 뷰어에서 기준 모델을 고른다
+# - 모델 결과: 유의미 실험 전부(단계/5_모델비교/base/)의 seed 5번 중 미탐·오경보 횟수 + 규칙 켜짐. 뷰어에서 기준 모델을 고른다
 # - 라벨은 백분위 기준(정상 분포)과 색에만 쓴다. EDA용 기술 통계이고 모델 선택에 쓰지 않는다
 # 실행: conda run -n qe-phm python "단계/2_EDA/2-4_EDA뷰어/build_viewer.py"  → 같은 폴더 EDA뷰어.html
 
@@ -244,12 +244,12 @@ ckeys = {c["key"] for c in CONCEPTS}
 missing = sorted({c for *_, c in FEAT if c not in ckeys} | {c for *_, c in GROUPS if c not in ckeys})
 assert not missing, f"개념사전에 없는 키: {missing}"
 
-# %% 모델 결과 (seed 5번 중 횟수) — 단계/5_모델비교/유의미/의 실험을 모두 읽는다
+# %% 모델 결과 (seed 5번 중 횟수) — 단계/5_모델비교/base/의 실험을 모두 읽는다
 #   뷰어 머리줄 "모델"에서 하나를 고르면 필터·묶기·배지·표·✕·경계·분석 조각이 모두 그 모델 기준 (11-16)
 from src.experts import peak83_table, Rule83, KnockRule, LockRule, ETLogitX, HIT_COLS, EV_COLS, _hits
 from src.features import feature_table_knock
 from sklearn.model_selection import StratifiedGroupKFold
-_SIG = os.path.join(ROOT, "단계", "5_모델비교", "유의미")
+_SIG = os.path.join(ROOT, "단계", "5_모델비교", "base")
 # result.json에 없는 정보: 짧은 이름 · 판정에 쓰는 규칙(RULES 키) · 평면(ae = AE z 한 축) · ET 입력 추가 열 · 메모
 # 새 유의미 실험은 여기 한 줄 추가. 없으면 규칙 없음 · AE×ET(ext150) 평면으로 표시하고 build_log.txt에 경고
 EXP_SPEC = {
@@ -266,7 +266,7 @@ EXP_SPEC = {
 }
 # %% 2-16 충격 울림 (EXP-034): 충격마다 울림 주파수 f · 감쇠비 ζ · 맞춤 fit → 파일별 울림 비율 · 공진 fit
 import pandas as pd
-_IM = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "유의미", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
+_IM = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "8kHz공진", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
 _key = [os.path.splitext(os.path.basename(str(n)))[0] for n in names]
 _cnt = _IM.groupby("file").size().reindex(_key).fillna(0).values
 _frac = lambda lo, hi: np.nan_to_num(_IM.assign(b=(_IM.f >= lo) & (_IM.f < hi)).groupby("file").b.mean().reindex(_key).values.astype(float), nan=-1.0)
@@ -335,8 +335,8 @@ RULES = [
 # %% 분석 조각 화면 (11-14): 2-12 유격 반복 지도 · 2-13 주기 잠금 점수. 각 조각 run.py가 남긴 파일별 값 표를 그대로 읽는다
 import pandas as pd
 _EDA = os.path.join(ROOT, "단계", "2_EDA")
-_F12 = pd.read_csv(os.path.join(_EDA, "유의미/2-12_1114_저에너지고장", "figs", "features.csv"), index_col=0, encoding="utf-8-sig").loc[list(names)]
-_F13 = pd.read_csv(os.path.join(_EDA, "유의미/2-13_1114_주기잠금충격_022", "figs", "lock_score.csv"), index_col=0, encoding="utf-8-sig").loc[list(names)]
+_F12 = pd.read_csv(os.path.join(_EDA, "유격·반복충격/2-12_1114_저에너지고장", "figs", "features.csv"), index_col=0, encoding="utf-8-sig").loc[list(names)]
+_F13 = pd.read_csv(os.path.join(_EDA, "유격·반복충격/2-13_1114_주기잠금충격_022", "figs", "lock_score.csv"), index_col=0, encoding="utf-8-sig").loc[list(names)]
 assert (_F12.y.values == y).all() and (_F13.y.values == y).all()
 _r = lambda s, nd=3: [round(float(v), nd) for v in s]
 KNOCK2 = dict(z1=_r(_F12.z1), z6=_r(_F12.z6), r=_r(_F12.r), R=_r(_F12.R), d1=_r(_F12.D1), d6=_r(_F12.D6),
@@ -344,9 +344,9 @@ KNOCK2 = dict(z1=_r(_F12.z1), z6=_r(_F12.z6), r=_r(_F12.r), R=_r(_F12.R), d1=_r(
 LOCK = dict(rlp=_r(_F13.r_LP), T=_r(_F13["T"]), hit=_r(_F13.hit), nev=_F13.n_ev.astype(int).tolist(), S=_r(_F13.S))
 _png = lambda p: "data:image/png;base64," + base64.b64encode(open(os.path.join(_EDA, p), "rb").read()).decode()
 DOCFIGS = dict(
-    knock=[dict(src=_png("유의미/2-12_1114_저에너지고장/figs/2_left_waves.png"), cap="왼쪽 무리(하중은 작은데 타격 반복) 파형 — 색 = 200 Hz 고역통과, 검은 선 = 20 Hz 저역(하중)")],
-    lock=[dict(src=_png("유의미/2-13_1114_주기잠금충격_022/figs/1_022_wave.png"), cap="abn_022 — 느린 파형이 0.94 s마다 같은 모양으로 반복되고 충격이 그 주기에 잠김"),
-          dict(src=_png("유의미/2-13_1114_주기잠금충격_022/figs/5_022_014_001.png"), cap="같은 유형 비교 — 022 · 014(약함) · 001(부분)")])
+    knock=[dict(src=_png("유격·반복충격/2-12_1114_저에너지고장/figs/2_left_waves.png"), cap="왼쪽 무리(하중은 작은데 타격 반복) 파형 — 색 = 200 Hz 고역통과, 검은 선 = 20 Hz 저역(하중)")],
+    lock=[dict(src=_png("유격·반복충격/2-13_1114_주기잠금충격_022/figs/1_022_wave.png"), cap="abn_022 — 느린 파형이 0.94 s마다 같은 모양으로 반복되고 충격이 그 주기에 잠김"),
+          dict(src=_png("유격·반복충격/2-13_1114_주기잠금충격_022/figs/5_022_014_001.png"), cap="같은 유형 비교 — 022 · 014(약함) · 001(부분)")])
 
 # %% 로지스틱 경계 (11-14 → 11-16 모든 유의미 실험): 두 전문가 z 평면(AE z, ET z, OOF seed 0) + 실험별 경계
 #   단계/5_모델비교/fig_logistic_plane.py와 같은 정의. 경계 = 그 평면에 맞춘 로지스틱 결정값 0 (설명용, 실제 임계값은 fold마다)

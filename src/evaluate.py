@@ -2,7 +2,7 @@
 
 - 바깥 fold: 점수를 내는 파일. 학습(스케일러·모델·임계값)에 쓰지 않는다
 - 안쪽 fold: 바깥 학습 파일 안에서 다시 CV → OOF 점수로 F₂ 최대 임계값 선택
-규칙 근거: 단계/1_기준·기록/1-2_평가설계.md · 결정.md "평가" (폴드 안에서 fit, 임계값, 평가·보고)
+규칙 근거: 단계/1_기준·기록/기준_논의/1-2_평가설계.md · 결정.md "평가" (폴드 안에서 fit, 임계값, 평가·보고)
 """
 import numpy as np
 from joblib import Parallel, delayed, parallel_config
