@@ -53,4 +53,4 @@ for seed in range(3):
     miss = J[(t == 1) & (p == 0)]["원래 이름"].tolist(); fa = J[(t == 0) & (p == 1)]["원래 이름"].tolist()
     lines.append(f"seed {seed}: F2 {fbeta_score(t, p, beta=2):.3f} · 고장 8개 중 {int(((t == 1) & (p == 1)).sum())}개 탐지 · 오경보 {len(fa)}/32 · 임계값 {m.thr_:.2f} "
                  f"(seed별 {np.round(m.thr_all_, 2).tolist()}) · 놓침 {miss or '없음'} · 오경보 {fa or '없음'} · 경계 표시 {int(D.borderline.sum())}개")
-open(os.path.join(HERE, "리허설_결과.txt"), "w", encoding="utf-8").write("\n".join(lines) + "\n")
+open(os.path.join(HERE, "결과", "리허설_결과.txt"), "w", encoding="utf-8").write("\n".join(lines) + "\n")

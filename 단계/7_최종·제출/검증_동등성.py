@@ -31,7 +31,7 @@ R83, KN, LK = Rule83(0.75, 150), KnockRule(2.0, 0.7), LockRule(0.1)
 import pandas as pd
 from sklearn.base import BaseEstimator
 from src.exp import make_et, cached_table, feature_table_ext
-IM = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "유의미", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
+IM = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "8kHz공진", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
 key = [os.path.splitext(os.path.basename(str(n)))[0] for n in names]
 cnt = IM.groupby("file").size().reindex(key).fillna(0).values
 frac = lambda lo, hi: np.nan_to_num(IM.assign(b=(IM.f >= lo) & (IM.f < hi)).groupby("file").b.mean().reindex(key).values.astype(float), nan=-1.0)
@@ -78,5 +78,5 @@ for k, (tr, te) in enumerate(splits):
         lines.append(f"fold {k} · {lab:22s} 점수 차이 최댓값 {np.abs(a - b).max():.2e} (시험 파일 {len(te)}개, 점수 범위 {a.min():.2f} ~ {a.max():.2f})")
 ok = all(float(l.split("최댓값 ")[1].split(" ")[0]) < 1e-6 for l in lines if l.startswith("fold"))
 lines.append("결과: " + ("같다 (차이 < 1e-6)" if ok else "다르다 — 원인을 찾기 전에는 제출 코드를 쓰지 않는다"))
-open(os.path.join(HERE, "검증_동등성.txt"), "w", encoding="utf-8").write("\n".join(lines) + "\n")
+open(os.path.join(HERE, "결과", "검증_동등성.txt"), "w", encoding="utf-8").write("\n".join(lines) + "\n")
 sys.exit(0 if ok else 1)

@@ -51,4 +51,4 @@ L += ["", "[재대입 확인] 학습한 150개를 그대로 다시 판정 (모�
       f"  유격 반복 규칙 켜짐: {' '.join(short(n) for n in D.file[D.knock])}",
       f"  규칙이 켜진 정상: {' '.join(short(n) for n in D.file[(D.rule83 | D.knock) & (y == 0)]) or '없음'}",
       f"  [관찰] 주기 잠금 문턱 이상: {' '.join(short(n) for n in D.file[D.lock_obs]) or '없음'} · 큰 타격 1개: 정상 {int((D.single_hit_obs & (y == 0)).sum())} · 고장 {int((D.single_hit_obs & (y == 1)).sum())}"]
-open(os.path.join(HERE, "학습요약.txt"), "w", encoding="utf-8").write("\n".join(L) + "\n")
+open(os.path.join(HERE, "결과", "학습요약.txt"), "w", encoding="utf-8").write("\n".join(L) + "\n")
