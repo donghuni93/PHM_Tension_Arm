@@ -27,7 +27,7 @@ os.makedirs(CACHE, exist_ok=True)
 
 __all__ = ["ROOT", "CACHE", "np", "pd", "viz", "nested_cv", "load_train", "cached_table",
            "feature_table", "feature_table_ext", "feature_table_phys",
-           "make_et", "ColModel", "RankAvg", "CollinearityFilter", "vif", "Experiment"]
+           "make_et", "ColModel", "RankAvg", "CollinearityFilter", "vif", "Experiment", "md_table", "error_md_table"]
 
 
 # ---------- 데이터 ----------
@@ -143,14 +143,14 @@ class Experiment:
     자동으로 끼워 넣고(<!-- key-figs --> 표시), 다시 읽을 때는 빼서 손으로 쓴 해석만 보존한다"""
 
     def __init__(self, run_file, exp_id, title, hypotheses=(), member="", model="", changes="",
-                 focus=("abn_002", "abn_022", "abn_029")):
+                 focus=("abn_002", "abn_022", "abn_029"), key_changes=()):
         self.dir = os.path.dirname(os.path.abspath(run_file))
         self.figs = os.path.join(self.dir, "figs"); os.makedirs(self.figs, exist_ok=True)
         self.id, self.title, self.hyp, self.focus = exp_id, title, list(hypotheses), list(focus)
         self.json = os.path.join(self.dir, "result.json")
         self.res = json.load(open(self.json, encoding="utf-8")) if os.path.exists(self.json) else {}
         self.res.update(id=exp_id, title=title, hypotheses=self.hyp, member=member, model=model,
-                        changes=changes, git=_git_hash(),
+                        changes=changes, key_changes=list(key_changes), git=_git_hash(),
                         date=datetime.date.today().isoformat())
         self.res.setdefault("configs", {}); self.res.setdefault("figs", {})
         self._write()
@@ -169,17 +169,21 @@ class Experiment:
             plt.close(fig)
         return fig
 
+    def save_md(self, name, text):
+        """실험 폴더에 {name}.md 저장 (오류 분석 표 · val 판정 등 표 문서). csv · 별도 json은 만들지 않는다 (11-22 사용자)"""
+        p = os.path.join(self.dir, f"{name}.md"); open(p, "w", encoding="utf-8").write(text); return p
+
     def note(self, key, text):
         """result.json에 남길 짧은 수치 메모 (예: 피처 AUC 표). README에는 쓰지 않는다 — 필요한 수치는 해석에 옮겨 쓴다"""
         self.res.setdefault("notes", {})[key] = text
         self._write()
 
-    def record(self, name, r, names, main=False):
+    def record(self, name, r, names, main=False, mid=False):
         """nested_cv 결과 한 구성을 기록하고 한 줄 출력. main=True면 노션 카드의 F2 점수로 쓴다"""
         miss = [names[i] for i in np.flatnonzero(r["miss_counts"] >= 3)]
         row = dict(f2=round(float(r["f2"].mean()), 3), f2_sd=round(float(r["f2"].std()), 3),
                    recall=round(float(r["recall"].mean()), 3), precision=round(float(r["precision"].mean()), 3),
-                   fpr=round(float(r["fpr"].mean()), 3), fpr_sd=round(float(r["fpr"].std()), 3),
+                   mid=bool(mid), fpr=round(float(r["fpr"].mean()), 3), fpr_sd=round(float(r["fpr"].std()), 3),
                    f2_p10=round(_f2_at(r["recall"].mean(), r["fpr"].mean(), 0.1), 3),
                    f2_p40=round(_f2_at(r["recall"].mean(), r["fpr"].mean(), 0.4), 3),
                    missed=[m.replace("abn_", "") for m in miss], fp3=int((r["fp_counts"] >= 3).sum()),
@@ -237,23 +241,59 @@ class Experiment:
         s = [f"# {r['id']} {r['title']}\n",
              "노션 카드 (실험 DB에 그대로 옮긴다)\n",
              "| 팀원 | 모델 | F2 점수 | 변경 사항 | 메모 |", "|---|---|---|---|---|",
-             f"| {r.get('member', '')} | {r.get('model', '')} | {f2} | {r.get('changes', '')}{hyp} | {first} |\n",
-             f"- 가설: {', '.join(r['hypotheses']) or '—'} ([물리가설]({notes}))",
+             f"| {r.get('member', '')} | {r.get('model', '')} | {f2} | {r.get('changes', '')}{hyp} | {first} |\n"]
+        if r.get("key_changes"):
+            s += ["## 주요 변경점 (기준 실험 대비)\n"] + [f"- {c}" for c in r["key_changes"]] + [""]
+        s += [f"- 가설: {', '.join(r['hypotheses']) or '—'} ([물리가설]({notes}))",
              f"- 실행: {r['date']} · git `{r['git']}` · 코드 [run.py](run.py)"]
         if r["configs"]:
             s += ["- 평가: 중첩 CV (바깥 5 × 안쪽 4, seed 5개). 자주 놓침 = seed 5번 중 3번 이상\n",
                   "## 결과\n", "| 구성 | F2 | 재현율 | 오경보율 | 정밀도 | F2 (고장 10%·40%) | 자주 놓침 | 오경보 3회+ |", "|---|---|---|---|---|---|---|---|"]
+        def _row(k, v):
+            return (f"| {k.replace('|', chr(92) + '|')} | {v['f2']:.3f} ± {v['f2_sd']:.3f} | {v['recall']:.3f} | {v.get('fpr', float('nan')):.3f} | {v['precision']:.3f} "
+                    f"| {v.get('f2_p10', float('nan')):.3f} · {v.get('f2_p40', float('nan')):.3f} "
+                    f"| {' '.join(v['missed']) or '—'} | {v['fp3']} |")
+        mid = [(k, v) for k, v in r["configs"].items() if v.get("mid")]          # 중간 단계 결과(비교 · 절제 · 이전 값)는 README 맨 아래로 (11-22 사용자)
         for k, v in r["configs"].items():
-            s.append(f"| {k.replace('|', chr(92) + '|')} | {v['f2']:.3f} ± {v['f2_sd']:.3f} | {v['recall']:.3f} | {v.get('fpr', float('nan')):.3f} | {v['precision']:.3f} "
-                     f"| {v.get('f2_p10', float('nan')):.3f} · {v.get('f2_p40', float('nan')):.3f} "
-                     f"| {' '.join(v['missed']) or '—'} | {v['fp3']} |")
+            if not v.get("mid"):
+                s.append(_row(k, v))
         keys = [k for k in r.get("key_figs", []) if k in r["figs"]]
         block = "\n".join([KEY_OPEN] + [f"![{k}](figs/{k}.png)\n\n*{k}* — {r['figs'][k]}\n" for k in keys] + [KEY_CLOSE]) if keys else ""
         body = self._with_key_figs(interp, block)
         if body:
             s.append("\n## 해석\n\n" + body + "\n")
-        s.append("\n## 그림\n")
         figs = sorted([kv for kv in r["figs"].items() if kv[0] not in keys], key=lambda kv: kv[0].startswith("psd"))   # psd 그림은 맨 끝
+        s.append("\n## 그림\n")
         for k, cap in figs:
             s.append(f"### {k}\n{cap}\n\n![{k}](figs/{k}.png)\n")
+        if mid:
+            s += ["\n## 중간 단계 결과 (비교 · 절제 · 이전 실험 값)\n", "| 구성 | F2 | 재현율 | 오경보율 | 정밀도 | F2 (고장 10%·40%) | 자주 놓침 | 오경보 3회+ |", "|---|---|---|---|---|---|---|---|"]
+            s += [_row(k, v) for k, v in mid]
         open(readme, "w", encoding="utf-8").write("\n".join(s))
+
+
+def md_table(df):
+    """DataFrame → 마크다운 표 문자열 (tabulate 없이)"""
+    cols = [str(c) for c in df.columns]
+    rows = ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
+    for r in df.itertuples(index=False):
+        rows.append("| " + " | ".join(str(v).replace("|", chr(92) + "|") for v in r) + " |")
+    return chr(10).join(rows)
+
+
+def error_md_table(names, y, pos_counts, files, n_seeds=5, extra=None):
+    """오류 분석 표 (11-22 사용자 형식, 가로 배치): 열 = 파일, 행 = 우리 판단(정답 라벨) · 모델 판단(seed 5번 중 고장/정상 횟수) · 결과 · 모델 근거.
+    pos_counts[i] = 파일 i를 고장으로 판정한 횟수 (nested_cv의 miss_counts · fp_counts에서: 고장 = n − miss, 정상 = fp)
+    extra = {행 이름: {파일: 값}} 모델 근거(ET · AE · 규칙 켜짐 등). 문자열 표를 돌려준다"""
+    cols = {}
+    for f in files:
+        i = list(names).index(f); k = int(pos_counts[i]); fault = bool(y[i]); ok = (k > n_seeds / 2) == fault
+        c = {"우리 판단 (정답 라벨)": "고장" if fault else "정상", "모델 판단 (seed 5번 중)": f"고장 {k} · 정상 {n_seeds - k}",
+             "결과": ("맞음" if ok else "틀림") + f" ({k if fault else n_seeds - k}/{n_seeds} 정답)"}
+        for row, d in (extra or {}).items():
+            c[row] = d.get(f, "—")
+        cols[f] = c
+    rows = list(next(iter(cols.values())).keys())
+    out = ["| | " + " | ".join(files) + " |", "|---|" + "---|" * len(files)]
+    out += [f"| {r} | " + " | ".join(str(cols[f][r]) for f in files) + " |" for r in rows]
+    return chr(10).join(out)

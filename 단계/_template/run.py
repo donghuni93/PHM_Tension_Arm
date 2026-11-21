@@ -6,6 +6,7 @@
 #   conda run -n qe-phm python 단계/5_모델비교/EXP-nnn_이름/run.py
 # 결과가 나오면 폴더를 5_모델비교/base/ 또는 기각/ 으로 내린다 (루트는 위로 올라가며 src/를 찾으므로 깊이와 무관)
 # 기록 후에는 이 파일을 고치지 않는다. 바꾸려면 새 EXP 폴더.
+# 규칙 (11-22 사용자): 코드 · 출력은 이 파일 하나, json은 result.json 하나. psd_missed · hard_files 없음. 텍스트(README · 해석)는 최소로.
 
 # %% 설정
 import os, sys
@@ -15,31 +16,30 @@ while not os.path.isdir(os.path.join(_d, "src")) and os.path.dirname(_d) != _d:
 sys.path.insert(0, _d)
 from src.exp import *
 
-# member·model·changes = 노션 카드 속성 (팀원·모델·변경 사항). F2 점수는 main=True 구성에서 자동
+# member·model·changes = 노션 카드 속성. key_changes = README '주요 변경점'(기준 실험 대비 바뀐 것, 짧게). F2 점수는 main=True 구성에서 자동
 ex = Experiment(__file__, "EXP-nnn", "제목", ["H?"],
-                member="이동훈", model="ExtraTrees", changes="이전 대비 바꾼 것 한 줄")
+                member="이동훈", model="ExtraTrees", changes="이전 대비 바꾼 것 한 줄",
+                key_changes=["기준 실험 대비 바뀐 것 1", "바뀐 것 2"])
 X, y, names = load_train()
 E = cached_table("ext", feature_table_ext, X)
 g = np.arange(len(y))
 
-# %% 그림 1: 놓친 파일 vs 정상 5–95% (매 실험 기본)
-f, L = viz.log_psd(X)
-ex.save_fig(viz.psd_band(f, L, y, names, ex.focus), "psd_focus",
-            "놓친 고장의 PSD가 정상 범위(파란 띠) 밖으로 나가는 주파수가 있는가")
-
-# %% 그림 2: t-SNE (매 실험 기본). 이 실험이 쓰는 입력 공간마다 패널 하나. score= 를 주면 이상 점수 색 줄 추가
-fig, _ = viz.tsne({"ext150 피처": E.values}, y, names, mark=ex.focus)
-ex.save_fig(fig, "tsne", "입력 공간에서 고장이 정상과 따로 모이는가, 놓친 파일은 어디에 있는가")
-
-# %% 그림 3: 핵심 그림 (key=True)
-# README에서 해석 첫 문단(결론 요약) 바로 아래에 자동으로 놓인다. 그 아래에 '그림 읽는 법' → 상세 설명을 손으로 쓴다
-# 결합 모델 실험은 logistic_plane이 필수 핵심 그림 (결정.md 기본 그림, 11-16):
-#   AE z × ET z 평면(OOF seed 0) + 로지스틱 경계(0 실선, ±1 점선), 기준 | 새 구성 나란히, × = 자주 틀린 파일
-#   규칙으로 잡힌 고장은 이 평면에서 뺀다(뺀 목록은 상자로 표시), 규칙이 켜진 정상은 남긴다. t-SNE에만 모든 파일
-#   예시 코드: 단계/5_모델비교/base/EXP-029_1116_큰타격수·사건울림·주기잠금/figs_기본.py
-# 그 밖의 기본 그림: hard_files(어려운 파일 위험도, 열 = 구성) · psd_missed(맨 끝)
-# fig = ...; ex.save_fig(fig, "이름", "무엇을 보는 그림인지", key=True)
-
-# %% 중첩 CV
+# %% 중첩 CV. 대표 구성만 main=True, 비교 · 절제 · 이전 값은 mid=True → README 맨 아래 '중간 단계 결과'로
 et = make_et()
 ex.record("기준 ext150", nested_cv(E.values, y, g, et), names, main=True)
+# ex.record("비교 구성", nested_cv(...), names, mid=True)
+
+# %% 핵심 그림 (key=True, 필수): 결합 모델 실험 = logistic_plane (ET × AE 평면, OOF seed 0, 데이터 범위로 크롭)
+#   ① ET 단독 경계(세로선: 학습 OOF ET logit에서 F2 최대 문턱) ② 결합 경계 ③ 최종 판정으로 색(고장을 잡은 부품 구분)
+#   예시 코드: 단계/5_모델비교/EXP-044_1122_AE추가/run.py
+# ex.save_fig(fig, "logistic_plane", "한 줄 설명", key=True)
+
+# %% 오류 분석 표 (md, 가로): 우리 판단(정답 라벨) · 모델 판단(seed 5번 중 고장/정상 횟수) · 결과 · 근거
+# cnt = 파일별 고장 판정 횟수 (고장 = 5 − miss, 정상 = fp)
+# ex.save_md("오류분석_표", error_md_table(names, y, cnt, files, extra={"ET 점수": {...}}))
+
+# %% val 판정 (제출 파일 아님): val_판정.md(표) + figs/val_판정.png(ET 단독 경계 포함). csv 만들지 않음
+# ex.save_fig(fig, "val_판정", "..."); ex.save_md("val_판정", md_table(V))
+
+# %% t-SNE (라벨 색, README 그림 1장, 필요할 때만)
+# ex.save_fig(fig, "tsne_라벨", "라벨로 색을 입힌 t-SNE")
