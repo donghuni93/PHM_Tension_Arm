@@ -12,7 +12,7 @@
   --nor: #2a78d6; --abn: #eb6834; --nor-band: rgba(42,120,214,.15);
   --grid: #ebeae5; --axis: #b9b8b1; --hl: #fff1c2; --accent: #2a78d6; --accent-soft: rgba(42,120,214,.10);
   --ov1: rgba(98,80,214,.10); --ov2: rgba(27,175,122,.12);
-  --r83: #7a3db8; --knock: #1a9e5a; --lock: #b8860b; --cap: #6b7280; --res83: #c2185b; --body: #0e7490;
+  --val: #8a63d2; --r83: #7a3db8; --knock: #1a9e5a; --lock: #b8860b; --cap: #6b7280; --res83: #c2185b; --body: #0e7490; --e2: #e8590c;
   --nav-bg: #1f2328; --nav-2: #2a2f36; --nav-text: #c9ced6; --nav-text-2: #7d8590; --nav-on: #ffffff;
   --shadow: 0 1px 2px rgba(20,20,20,.04), 0 2px 8px rgba(20,20,20,.05);
   --navw: 212px; --hdr: 52px;
@@ -25,7 +25,7 @@
     --nor: #3987e5; --abn: #e0652f; --nor-band: rgba(57,135,229,.22);
     --grid: #262624; --axis: #55544f; --hl: #4a3f17; --accent: #4a94ec; --accent-soft: rgba(74,148,236,.16);
     --ov1: rgba(144,133,233,.14); --ov2: rgba(25,158,112,.16);
-    --r83: #b38ae6; --knock: #3fc283; --lock: #e0b84a; --cap: #9ca3af; --res83: #f06292; --body: #22b8cf;
+    --val: #a98bef; --r83: #b38ae6; --knock: #3fc283; --lock: #e0b84a; --cap: #9ca3af; --res83: #f06292; --body: #22b8cf; --e2: #ff922b;
     --nav-bg: #0b0c0e; --nav-2: #1b1e23; --nav-text: #c9ced6; --nav-text-2: #6e7681; --nav-on: #ffffff;
     --shadow: 0 1px 2px rgba(0,0,0,.3);
   }
@@ -37,7 +37,7 @@
   --nor: #3987e5; --abn: #e0652f; --nor-band: rgba(57,135,229,.22);
   --grid: #262624; --axis: #55544f; --hl: #4a3f17; --accent: #4a94ec; --accent-soft: rgba(74,148,236,.16);
   --ov1: rgba(144,133,233,.14); --ov2: rgba(25,158,112,.16);
-  --r83: #b38ae6; --knock: #3fc283; --lock: #e0b84a; --cap: #9ca3af; --res83: #f06292; --body: #22b8cf;
+  --val: #a98bef; --r83: #b38ae6; --knock: #3fc283; --lock: #e0b84a; --cap: #9ca3af; --res83: #f06292; --body: #22b8cf; --e2: #ff922b;
   --nav-bg: #0b0c0e; --nav-2: #1b1e23; --nav-text: #c9ced6; --nav-text-2: #6e7681; --nav-on: #ffffff;
   --shadow: 0 1px 2px rgba(0,0,0,.3);
 }
@@ -94,7 +94,7 @@ aside h3 { font-size: 10.5px; letter-spacing: .06em; color: var(--text-3); margi
 .flist div.cur, .clist div.cur { background: var(--accent-soft); font-weight: 700; box-shadow: inset 2px 0 0 var(--accent); }
 .flist .gh, .clist .gh { cursor: default; color: var(--text-2); font-weight: 700; margin-top: 8px; font-size: 11.5px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; }
-.dot.n { background: var(--nor); border-radius: 2px; } .dot.a { background: var(--abn); }
+.dot.n { background: var(--nor); border-radius: 2px; } .dot.a { background: var(--abn); } .dot.v { background: transparent; border: 2px solid var(--val); }
 .flist .badge { margin-left: auto; color: var(--text-3); font-size: 11px; }
 main { padding: 16px 20px 48px; min-width: 0; }
 .vhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; }
@@ -106,6 +106,7 @@ main { padding: 16px 20px 48px; min-width: 0; }
 .title .nm { font-size: 19px; font-weight: 800; letter-spacing: -.01em; }
 .chip { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 11.5px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
 .chip.lab-n { border-color: var(--nor); color: var(--nor); background: var(--accent-soft); font-weight: 700; } .chip.lab-a { border-color: var(--abn); color: var(--abn); background: color-mix(in srgb, var(--abn) 10%, transparent); font-weight: 700; }
+.chip.lab-v { border-color: var(--val); color: var(--val); background: color-mix(in srgb, var(--val) 10%, transparent); font-weight: 700; }
 .chip.warn { background: var(--hl); color: var(--text); border-color: color-mix(in srgb, var(--hl) 60%, var(--border-2)); }
 canvas { display: block; width: 100%; }
 .row2 { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; }
@@ -117,6 +118,7 @@ canvas { display: block; width: 100%; }
 .ftable td.v { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ftable td.p { width: 110px; }
 .ftable tr.out td { background: var(--hl); }
+table.big tr.zmax td, table.big tr.zmax td:first-child { background: var(--hl); font-weight: 700; }
 .lnk { cursor: pointer; text-decoration: underline dotted var(--text-3); text-underline-offset: 3px; }
 .lnk:hover { color: var(--accent); }
 .track { position: relative; height: 12px; background: var(--surface-2); border-radius: 6px; }
@@ -127,7 +129,9 @@ canvas { display: block; width: 100%; }
 .ftable td.o2 { color: var(--text-3); font-size: 11px; }
 .sigbar { font-weight: 600; color: var(--text); }
 .pv { font-size: 11px; color: var(--text-3); width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
-.five .fcard { display: grid; grid-template-columns: 200px 1.4fr 1fr; gap: 10px; align-items: start; }
+.fivegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); gap: 14px; align-items: start; }
+.fivegrid .fcard { margin: 0; min-width: 0; overflow: hidden; }
+.fivegrid .fcard > div { min-width: 0; }
 .five .meta { font-size: 12px; }
 .five .meta .nm { font-weight: 800; font-size: 14px; cursor: pointer; }
 .five .meta table { border-collapse: collapse; margin-top: 4px; }
@@ -187,7 +191,7 @@ details.docs figcaption { font-size: 12px; color: var(--text-3); margin: 2px 0 1
   .app, .app.mini { grid-template-columns: 1fr; }
   nav.act { position: static; height: auto; flex-direction: row; flex-wrap: wrap; } .nsec { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px; } .nsec h5, .nfoot, .brand span { display: none; }
   .layout { grid-template-columns: 1fr; } aside { position: static; max-height: 240px; border-right: 0; border-bottom: 1px solid var(--border); }
-  .row2, .row2e, .five .fcard, .cgrid { grid-template-columns: 1fr; } .feats { grid-template-columns: 1fr; }
+  .row2, .row2e, .cgrid { grid-template-columns: 1fr; } .feats { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -198,8 +202,8 @@ details.docs figcaption { font-size: 12px; color: var(--text-3); margin: 2px 0 1
 <header>
   <div class="bar">
     <h1 id="vtitle">텐션암 EDA 뷰어</h1>
-    <span class="ctl sigbar" title="모든 그림·지표·태그·정상 백분위를 이 신호로 계산한 값으로 바꾼다">신호 <span class="seg" id="sig"><button data-v="raw">평균 제거</button><button data-v="hp">200 Hz 고역통과</button></span></span>
-    <span class="ctl">라벨 <select id="fLab"><option value="all">전체</option><option value="0">정상</option><option value="1">고장</option></select></span>
+    <span class="ctl sigbar" title="고주파 탭의 그림(파형·확대·스펙트로그램·PSD)과 5개씩 보기 그림을 이 신호로 바꾼다. 저주파·충격·박자 탭은 고정 신호. 지표·태그·정상 백분위는 평균 제거(20 Hz는 raw)·200 Hz(1 kHz·1.5 kHz는 hp) 두 벌만 계산돼 있다">신호 <span class="seg" id="sig"><button data-v="raw">평균 제거</button><button data-v="hp20">20 Hz 고역</button><button data-v="hp">200 Hz 고역</button><button data-v="hp1k">1 kHz 고역</button><button data-v="hp15">1.5 kHz 고역</button></span></span>
+    <span class="ctl">라벨 <select id="fLab"><option value="tr">train (정상+고장)</option><option value="0">정상</option><option value="1">고장</option><option value="val">val (라벨 없음)</option><option value="all">전체 (train+val)</option></select></span>
     <span class="ctl" title="유의미 실험(단계/5_모델비교/유의미/) 중 하나. 필터·묶기·배지·표·✕·경계·분석 조각이 모두 이 모델 기준">모델 <select id="fRef"></select></span>
     <span class="ctl">모델 결과 <select id="fModel"></select></span>
     <span class="ctl">정렬 <select id="sortKey"></select>
@@ -227,43 +231,60 @@ const D = JSON.parse(document.getElementById("data").textContent);
 const N = D.names.length;
 const bytes = s => { const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
 const i16 = s => new Int16Array(bytes(s).buffer);
-const ENV = i16(D.env);
 const NB = D.nb, NZ = D.nz, NF = D.nf, [SF, ST] = D.spec_shape;
+let SPEC2BASE = null;                               // 256점 스펙트로그램 (200 Hz 고역통과 64줄, 처음 그릴 때 해독)
 const FEAT = Object.fromEntries(D.feat.map(f => [f.key, f]));
 const CON = Object.fromEntries(D.concepts.map(c => [c.key, c]));
 const GRP = Object.fromEntries(D.groups.map(g => [g.key, g]));
 
 // ---------- 상태 ----------
-const S = { mode: "one", lab: "all", model: "all", tag: null, sort: "name", dir: 1, group: "label", q: "", sig: "raw",
+const S = { mode: "one", lab: "tr", model: "all", tag: null, sort: "name", dir: 1, group: "label", q: "", sig: "raw",
             list: [], pos: 0, psdLog: true, shareY: false, sx: "std", sy: "prot", lx: true, ly: true,
-            ovP: false, ovG: false, ckey: "tension-arm", cq: "", ref: null, lrSel: null, lrBand: 1, lrRule: false,
+            ovP: false, tab: "hi", ckey: "tension-arm", cq: "", ref: null, lrSel: null, lrBand: 1, lrRule: false,
             navMini: false, theme: "auto", knSel: null, lkSel: null };
-try { Object.assign(S, JSON.parse(localStorage.getItem("eda-viewer3") || "{}"), { list: [] }); } catch (e) {}
-const save = () => { try { const { list, ...k } = S; localStorage.setItem("eda-viewer3", JSON.stringify(k)); } catch (e) {} };
+try { Object.assign(S, JSON.parse(localStorage.getItem("eda-viewer4") || "{}"), { list: [] }); } catch (e) {}
+const save = () => { try { const { list, ...k } = S; localStorage.setItem("eda-viewer4", JSON.stringify(k)); } catch (e) {} };
 
-// ---------- 신호 전환: 평균 제거(raw) / 200 Hz 고역통과(hp). 지표·태그·그림 데이터 한 벌씩 미리 계산돼 있다 ----------
-let ZOOM, PSD, SKA, ENVS, WIN, SPEC, TAG;
+// ---------- 신호 전환 (11-21): 평균 제거 · 20 Hz · 200 Hz · 1 kHz · 1.5 kHz 고역통과. 그림 배열은 5개 모두 있고,
+// 지표·태그·백분위·충격 눈금은 raw·hp 두 벌뿐이라 새 신호는 가까운 벌(D.sig_fallback)을 빌려 쓴다 ----------
+let ZOOM, PSD, SPEC, WAVE, TAG;
 const DEC = {};
 function useSig(s) {
-  if (!D.sets[s]) s = "raw";
-  S.sig = s; const set = D.sets[s];
-  if (!DEC[s]) DEC[s] = { zoom: i16(set.bin.zoom), psd: i16(set.bin.psd), sk: i16(set.bin.sk), envs: i16(set.bin.envs), win: i16(set.bin.win), spec: bytes(set.bin.spec) };
-  ({ zoom: ZOOM, psd: PSD, sk: SKA, envs: ENVS, win: WIN, spec: SPEC } = DEC[s]);
-  for (const k of ["val", "pct", "ref", "tags", "ftags", "events", "psdref", "skref", "envref", "wref", "zoom_start"]) D[k] = set[k];
+  if (!D.plots[s]) s = "raw";
+  S.sig = s; const P = D.plots[s], ms = D.sets[s] ? s : D.sig_fallback[s]; S.msig = ms; const set = D.sets[ms];
+  if (!DEC[s]) DEC[s] = { zoom: i16(P.bin.zoom), psd: i16(P.bin.psd), spec: bytes(P.bin.spec), env: i16(P.bin.env), spec2: null };
+  ({ zoom: ZOOM, psd: PSD, spec: SPEC, env: WAVE } = DEC[s]);
+  for (const k of ["val", "pct", "ref", "tags", "ftags", "events"]) D[k] = set[k];
+  D.psdref = P.psdref; D.zoom_start = P.zoom_start;
   TAG = Object.fromEntries(D.tags.map(t => [t.key, t]));
 }
-const otherSig = () => S.sig === "hp" ? "raw" : "hp";
+// 256점 스펙트로그램: 200 Hz 고역통과 64줄 + (다른 신호는) 맨 아래 spec2_nlo줄을 그 신호 값으로 덮는다
+function spec2Of(s) {
+  if (!SPEC2BASE) SPEC2BASE = bytes(D.spec2);
+  const d = DEC[s]; if (d.spec2) return d.spec2;
+  const lo = D.plots[s].bin.spec2lo; if (!lo) return d.spec2 = SPEC2BASE;
+  const a = SPEC2BASE.slice(), b = bytes(lo), T = D.spec2_shape[1], nl = D.spec2_nlo, R = D.spec2_shape[0];
+  for (let i = 0; i < N; i++) a.set(b.subarray(i * nl * T, (i + 1) * nl * T), i * R * T);
+  return d.spec2 = a;
+}
 const sigName = s => D.sig_names[s || S.sig];
 useSig(S.sig);
 
 // ---------- 공용 ----------
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const col = i => D.y[i] ? css("--abn") : css("--nor");
+// 집단: 0 정상 · 1 고장 · 2 val(라벨 없음) · 3 test(라벨 없음). D.y는 train 고장 여부(0/1)만, 기준값은 train 정상·고장으로만 계산돼 있다
+const G = D.grp, NTR = D.ntr, GN = ["정상", "고장", "val", "test"];
+const isN = i => G[i] === 0, isU = i => G[i] >= 2;
+const labTxt = i => isU(i) ? `${GN[G[i]]} (라벨 없음)` : GN[G[i]];
+const labCls = i => G[i] === 1 ? "lab-a" : isU(i) ? "lab-v" : "lab-n";
+const dotCls = i => G[i] === 1 ? "a" : isU(i) ? "v" : "n";
+const col = i => G[i] === 1 ? css("--abn") : isU(i) ? css("--val") : css("--nor");
+const visPt = i => isU(i) ? (S.lab !== "0" && S.lab !== "1") : new Set(S.list).has(i);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const fmt = (v, k) => {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
   const a = Math.abs(v);
-  if (k === "n_imp" || k === "n_out") return String(Math.round(v));
+  if (k === "n_imp" || k === "n_out" || k === "n_ring") return String(Math.round(v));
   if (a !== 0 && (a < 0.001 || a >= 1e5)) return v.toExponential(2);
   if (a >= 100) return v.toFixed(0);
   if (a >= 10) return v.toFixed(1);
@@ -276,9 +297,9 @@ const RULE = Object.fromEntries(D.rules.map(r => [r.key, r]));
 if (!MID[S.ref]) S.ref = MODELS[0].id;
 const M = () => MID[S.ref];
 const prevModel = () => MODELS[MODELS.indexOf(M()) + 1] || null;          // 바로 이전 번호의 유의미 실험
-const errN = (m, i) => D.y[i] ? m.miss[i] : m.fp[i];                      // seed 5번 중 틀린 횟수
+const errN = (m, i) => isU(i) ? 0 : D.y[i] ? m.miss[i] : m.fp[i];                      // seed 5번 중 틀린 횟수
 const bad = (m, i) => errN(m, i) >= 3;                                    // 3/5 이상 틀림
-const errTxt = (m, i) => errN(m, i) ? `${D.y[i] ? "미탐" : "오경보"} ${errN(m, i)}/5` : "5번 모두 맞힘";
+const errTxt = (m, i) => isU(i) ? "— (val·test는 채점 안 함)" : errN(m, i) ? `${D.y[i] ? "미탐" : "오경보"} ${errN(m, i)}/5` : "5번 모두 맞힘";
 const ruleN = (k, i) => RULE[k].n[i];                                     // 그 규칙이 켜진 횟수 /5
 const ruleWord = (k, i) => { const n = ruleN(k, i); return n ? (RULE[k].kind === "cap" ? "대상" : "켜짐") + (n < 5 ? ` ${n}/5` : "") : ""; };
 const rulesOn = (m, i) => m.rules.filter(k => ruleN(k, i));
@@ -286,8 +307,8 @@ const modelLabel = m => `${m.id} ${m.short} · F2 ${m.f2}`;
 function modelPass(i) {
   const m = M(), e = errN(m, i), v = S.model;
   if (v === "err") return e >= 3;
-  if (v === "miss") return !!D.y[i] && e >= 3;
-  if (v === "fp") return !D.y[i] && e >= 3;
+  if (v === "miss") return !isN(i) && e >= 3;
+  if (v === "fp") return isN(i) && e >= 3;
   if (v === "any") return e >= 1;
   if (v === "rule_any") return rulesOn(m, i).length > 0;
   if (v.startsWith("rule:")) return !!ruleN(v.slice(5), i);
@@ -302,6 +323,7 @@ function modelOptions() {
     (p ? `<optgroup label="비교"><option value="changed">${p.id} 대비 판정이 바뀜 (3/5 기준)</option></optgroup>` : "");
 }
 function groupOf(i) {
+  if (isU(i)) return `${GN[G[i]]}: 라벨 없음 (채점 안 함)`;
   if (S.group === "label") return D.y[i] ? "고장" : "정상";
   if (S.group === "model") {                                     // 고른 모델 기준
     const m = M(), up = rulesOn(m, i).filter(k => RULE[k].kind === "up");
@@ -313,7 +335,7 @@ function groupOf(i) {
 function rebuild(keepFile) {
   const cur = S.list[S.pos], L = [];
   for (let i = 0; i < N; i++) {
-    if (S.lab !== "all" && String(D.y[i]) !== S.lab) continue;
+    if (S.lab === "tr" ? isU(i) : S.lab === "val" ? !isU(i) : S.lab !== "all" && (isU(i) || String(D.y[i]) !== S.lab)) continue;
     if (!modelPass(i)) continue;
     if (S.tag && !D.ftags[i].includes(S.tag)) continue;
     if (S.q && !D.names[i].includes(S.q)) continue;
@@ -363,42 +385,41 @@ function specPlot(c, i, o) {
   for (let k = k0; k < n; k++) g.lineTo(X(fx(k)), Y(Math.min(yhi, ref.p95[k]))); for (let k = n - 1; k >= k0; k--) g.lineTo(X(fx(k)), Y(Math.max(ylo, ref.p5[k]))); g.fill();
   line(k => ref.p50[k], css("--nor"), [4, 3], 1); line(k => ref.f50[k], css("--abn"), [4, 3], 1);
   line(k => arr[i * n + k] / 1000, col(i), [], 1.5);
+  if (o.after) o.after(g, X, Y, P);
   hover(c, mx => { const r = (mx - P.l) / (w - P.l - P.r); if (r < 0 || r > 1) return null;
     const f = logx ? 10 ** (Math.log10(fmin) + r * (Math.log10(fmax) - Math.log10(fmin))) : fmin + r * (fmax - fmin);
     const k = Math.max(0, Math.min(n - 1, Math.round((f - x0) / dx))); return tipf(k, fx(k), arr[i * n + k] / 1000); });
   return X;
 }
 function drawPSD(c, i, small) {
-  const ov = small ? [] : [S.ovP && { bands: D.pbands, color: "--ov1", row: 0 }, S.ovG && { bands: D.gbands, color: "--ov2", row: 1 }].filter(Boolean);
+  const ov = small ? [] : [S.ovP && { bands: D.pbands, color: "--ov1", row: 0 }].filter(Boolean);
   const R = D.psdref, X = specPlot(c, i, { n: NF, x0: 0, dx: D.df, arr: PSD, ref: R, ylo: -13, yhi: -2, logx: S.psdLog,
     xt: S.psdLog ? [10, 100, 1000, 10000] : [0, 2500, 5000, 7500, 10000, 12500], xl: "Hz", yl: "log PSD", overlays: ov,
     tipf: (k, f, v) => `${f.toFixed(0)} Hz · 이 파일 ${v.toFixed(2)} · 정상 중앙 ${R.p50[k].toFixed(2)} (5–95% ${R.p5[k].toFixed(2)}~${R.p95[k].toFixed(2)}) · 고장 중앙 ${R.f50[k].toFixed(2)}` });
 }
-function drawSK(c, i) {
-  const R = D.skref;
-  specPlot(c, i, { n: D.sk_nf, x0: 0, dx: D.sk_df, arr: SKA, ref: R, ylo: 0, yhi: 3, logx: false, xt: [0, 2500, 5000, 7500, 10000, 12500], xl: "Hz", yl: "log10(1+SK)",
-    tipf: (k, f, v) => `${f.toFixed(0)} Hz · 스펙트럼 첨도 ${(10 ** v - 1).toFixed(1)} · 정상 중앙 ${(10 ** R.p50[k] - 1).toFixed(1)} (95% ${(10 ** R.p95[k] - 1).toFixed(1)})` });
-}
+// 포락선 스펙트럼: 충격·박자 탭 (1 kHz 고역통과 신호의 Hilbert 포락선, 고정 신호)
+let ENVS1 = null;
 function drawEnvSpec(c, i) {
-  const R = D.envref; let lo = Infinity, hi = -Infinity;
-  for (let k = 0; k < D.env_nf; k++) { lo = Math.min(lo, R.p5[k], ENVS[i * D.env_nf + k] / 1000); hi = Math.max(hi, R.p95[k], ENVS[i * D.env_nf + k] / 1000); }
-  specPlot(c, i, { n: D.env_nf, x0: D.env_f0, dx: D.env_df, arr: ENVS, ref: R, ylo: Math.floor(lo), yhi: Math.ceil(hi), logx: true, xt: [1, 10, 100], xl: "Hz (반복 주파수)", yl: "log 포락선 PSD",
-    tipf: (k, f, v) => `${f.toFixed(1)} Hz (주기 ${(1 / f).toFixed(3)} s) · 이 파일 ${v.toFixed(2)} · 정상 중앙 ${R.p50[k].toFixed(2)}` });
+  if (!ENVS1) ENVS1 = i16(D.rhy.envs);
+  const Q = D.rhy, R = Q.envref; let lo = Infinity, hi = -Infinity;
+  for (let k = 0; k < Q.env_nf; k++) { lo = Math.min(lo, R.p5[k], ENVS1[i * Q.env_nf + k] / 1000); hi = Math.max(hi, R.p95[k], ENVS1[i * Q.env_nf + k] / 1000); }
+  specPlot(c, i, { n: Q.env_nf, x0: Q.env_f0, dx: Q.env_df, arr: ENVS1, ref: R, ylo: Math.floor(lo), yhi: Math.ceil(hi), logx: true, xt: [1, 10, 100], xl: "Hz (반복 주파수)", yl: "log 포락선 PSD",
+    tipf: (k, f, v) => `${f.toFixed(1)} Hz (주기 ${(1 / f).toFixed(3)} s) · 이 파일 ${v.toFixed(2)} · 정상 중앙 ${R.p50[k].toFixed(2)} (5–95% ${R.p5[k].toFixed(2)}~${R.p95[k].toFixed(2)}) · 고장 중앙 ${R.f50[k].toFixed(2)}` });
 }
 // 파형
 function drawWave(c, i, opt = {}) {
   const [g, w, h] = ctx2d(c), P = { l: 46, r: 10, t: 6, b: 18 };
-  const hp = S.sig === "hp", sc = D.sc[S.sig][i], ym = opt.ymax || sc, base = i * 4 * NB + (hp ? 2 : 0) * NB;
+  const sc = D.sc[S.sig][i], ym = opt.ymax || sc, base = i * 2 * NB;
   const X = t => P.l + t / 2 * (w - P.l - P.r), Y = v => P.t + (1 - (v / ym + 1) / 2) * (h - P.t - P.b);
   frame(g, w, h, P, [0, .5, 1, 1.5, 2].map(t => [t, X(t), t + "s"]), niceTicks(-ym, ym, 4).map(v => [v, Y(v), fmt(v)]), "", "g");
   if (opt.zoomMark) { const zs = D.zoom_start[i] / D.fs; g.fillStyle = css("--nor-band"); g.fillRect(X(zs), P.t, X(zs + NZ / D.fs) - X(zs), h - P.t - P.b); }
   g.fillStyle = col(i); const bw = Math.max(1, (w - P.l - P.r) / NB);
-  for (let b = 0; b < NB; b++) { const lo = ENV[base + b] / 32767 * sc, hi = ENV[base + NB + b] / 32767 * sc;
+  for (let b = 0; b < NB; b++) { const lo = WAVE[base + b] / 32767 * sc, hi = WAVE[base + NB + b] / 32767 * sc;
     const y1 = Y(Math.min(hi, ym)), y2 = Y(Math.max(lo, -ym)); g.fillRect(X(b / NB * 2), y1, bw, Math.max(1, y2 - y1)); }
   g.strokeStyle = css("--text-2"); g.lineWidth = 1;
   for (const t of D.events[i]) { const x = X(t); g.beginPath(); g.moveTo(x, P.t); g.lineTo(x, P.t + 5); g.stroke(); }
   hover(c, mx => { const t = (mx - P.l) / (w - P.l - P.r) * 2; if (t < 0 || t > 2) return null; const b = Math.min(NB - 1, Math.floor(t / 2 * NB));
-    return `${t.toFixed(3)} s · ${fmt(ENV[base + b] / 32767 * sc)} ~ ${fmt(ENV[base + NB + b] / 32767 * sc)} g`; });
+    return `${t.toFixed(3)} s · ${fmt(WAVE[base + b] / 32767 * sc)} ~ ${fmt(WAVE[base + NB + b] / 32767 * sc)} g`; });
 }
 function drawZoom(c, i) {
   const [g, w, h] = ctx2d(c), P = { l: 46, r: 22, t: 6, b: 18 };
@@ -408,21 +429,6 @@ function drawZoom(c, i) {
   frame(g, w, h, P, [0, 250, 500, 750, 999].map(k => [k, X(k), ((t0 + k / D.fs) * 1000).toFixed(0) + "ms"]), niceTicks(-ym, ym, 4).map(v => [v, Y(v), fmt(v)]), "", "g");
   g.strokeStyle = col(i); g.lineWidth = 1.2; g.beginPath();
   for (let k = 0; k < NZ; k++) { const v = ZOOM[base + k] / 32767 * sc; k ? g.lineTo(X(k), Y(v)) : g.moveTo(X(k), Y(v)); } g.stroke();
-}
-// 창별 RMS·첨도 (50 ms × 40)
-function drawWin(c, i, which) {
-  const [g, w, h] = ctx2d(c), P = { l: 44, r: 10, t: 8, b: 18 }, nw = D.nw, base = i * 2 * nw + which * nw;
-  const vals = Array.from({ length: nw }, (_, k) => WIN[base + k] / 1000);
-  const ref = which ? D.wref.kurt_p95 : D.wref.rms_p95;
-  let lo = which ? 0 : Math.min(...vals, ref) - .2, hi = Math.max(...vals, ref) + .1; if (which) hi = Math.max(hi, 1);
-  const X = k => P.l + k / nw * (w - P.l - P.r), Y = v => P.t + (1 - (v - lo) / (hi - lo)) * (h - P.t - P.b);
-  const lab = v => which ? fmt(10 ** v - 1) : fmt(10 ** v);
-  frame(g, w, h, P, [0, .5, 1, 1.5, 2].map(t => [t, X(t / D.win_s), t + "s"]), niceTicks(lo, hi, 4).map(v => [v, Y(v), lab(v)]), "", which ? "첨도" : "RMS g");
-  const bw = (w - P.l - P.r) / nw;
-  vals.forEach((v, k) => { g.fillStyle = col(i); g.globalAlpha = v > ref ? 1 : .45; g.fillRect(X(k) + 1, Y(v), Math.max(1, bw - 2), Y(lo) - Y(v)); });
-  g.globalAlpha = 1; g.strokeStyle = css("--nor"); g.setLineDash([4, 3]); g.beginPath(); g.moveTo(P.l, Y(ref)); g.lineTo(w - P.r, Y(ref)); g.stroke(); g.setLineDash([]);
-  hover(c, mx => { const k = Math.floor((mx - P.l) / bw); if (k < 0 || k >= nw) return null;
-    return `${(k * D.win_s).toFixed(2)}–${((k + 1) * D.win_s).toFixed(2)} s · ${which ? "첨도" : "RMS"} ${lab(vals[k])} · 정상 창 95% ${lab(ref)}`; });
 }
 // 스펙트로그램
 const RAMP_L = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"];
@@ -434,18 +440,19 @@ function rampLUT() {
     for (let ch = 0; ch < 3; ch++) lut[v * 3 + ch] = stops[a][ch] * (1 - u) + stops[b][ch] * u; }
   return lut;
 }
-function drawSpec(c, i) {
+function drawSpec(c, i, o = { arr: SPEC, sf: SF, st: ST, fmax: D.spec_fmax, ev: D.events }) {
+  const { arr, sf: SF, st: ST, fmax, ev } = o;
   const [g, w, h] = ctx2d(c), P = { l: 40, r: 10, t: 6, b: 18 }, lut = rampLUT(), img = new ImageData(ST, SF);
-  for (let r = 0; r < SF; r++) for (let t = 0; t < ST; t++) { const v = SPEC[i * SF * ST + r * ST + t], o = ((SF - 1 - r) * ST + t) * 4;
+  for (let r = 0; r < SF; r++) for (let t = 0; t < ST; t++) { const v = arr[i * SF * ST + r * ST + t], o = ((SF - 1 - r) * ST + t) * 4;
     img.data[o] = lut[v * 3]; img.data[o + 1] = lut[v * 3 + 1]; img.data[o + 2] = lut[v * 3 + 2]; img.data[o + 3] = 255; }
   const off = document.createElement("canvas"); off.width = ST; off.height = SF; off.getContext("2d").putImageData(img, 0, 0);
   g.imageSmoothingEnabled = false; g.drawImage(off, P.l, P.t, w - P.l - P.r, h - P.t - P.b);
-  const Y = f => P.t + (1 - f / D.spec_fmax) * (h - P.t - P.b), X = t => P.l + t / 2 * (w - P.l - P.r);
+  const Y = f => P.t + (1 - f / fmax) * (h - P.t - P.b), X = t => P.l + t / 2 * (w - P.l - P.r);
   g.fillStyle = css("--text-3"); g.textBaseline = "middle";
   [0, 4000, 8000, 12000].forEach(f => { g.textAlign = "right"; g.fillText(f / 1000 + "k", P.l - 4, Y(f)); });
   [0, .5, 1, 1.5, 2].forEach(t => { g.textAlign = "center"; g.fillText(t + "s", X(t), h - P.b + 10); });
   g.strokeStyle = css("--abn"); g.lineWidth = 1;
-  for (const t of D.events[i]) { g.beginPath(); g.moveTo(X(t), h - P.b); g.lineTo(X(t), h - P.b + 4); g.stroke(); }
+  for (const t of ev[i]) { g.beginPath(); g.moveTo(X(t), h - P.b); g.lineTo(X(t), h - P.b + 4); g.stroke(); }
 }
 const tip = document.getElementById("tip");
 function hover(c, fn) {
@@ -485,31 +492,12 @@ document.getElementById("dx").onclick = closeDrawer;
 const cLink = (key, label) => `<span class="lnk" data-c="${key}" title="개념 보기">${label}</span>`;
 function bindConceptLinks(root) { root.querySelectorAll("[data-c]").forEach(el => el.onclick = () => openConcept(el.dataset.c)); }
 
-// ---------- 지표 표 ----------
-function featRows(i, group) {
-  const O = D.sets[otherSig()];
-  return D.feat.filter(f => f.group === group).map(f => {
-    const v = D.val[f.key][i], p = D.pct[f.key][i], r = D.ref[f.key], out = p !== null && (p < 5 || p > 95);
-    const ov = O.val[f.key][i], op = O.pct[f.key][i];
-    const mk = p === null ? "" : `<span class="mk" style="left:${p}%;background:${col(i)}"></span>`;
-    const omk = op === null ? "" : `<span class="mk ghost" style="left:${op}%"></span>`;
-    return `<tr class="${out ? "out" : ""}" title="${esc(f.desc)}\n[${sigName()}] 정상 5–95%: ${fmt(r.p5, f.key)} ~ ${fmt(r.p95, f.key)} · 정상 중앙 ${fmt(r.p50, f.key)} · 고장 중앙 ${fmt(r.f50, f.key)}\n[${sigName(otherSig())}] 이 파일 ${fmt(ov, f.key)} (정상 중 ${op === null ? "—" : Math.round(op) + "%"})">
-      <td>${cLink(f.concept, esc(f.label))}</td><td class="v">${fmt(v, f.key)} <span class="help">${f.unit}</span></td>
-      <td class="v o2">${fmt(ov, f.key)}</td>
-      <td class="p"><div class="track"><span class="band"></span><span class="mid"></span>${omk}${mk}</div></td><td class="pv">${p === null ? "" : Math.round(p) + "%"}</td></tr>`;
-  }).join("");
-}
-function bandBars(i) {
-  const ks = D.feat.filter(f => f.group === "band");
-  return `<div class="bands">${ks.map(f => { const p = D.pct[f.key][i] ?? 0, out = p < 5 || p > 95;
-    return `<div title="${f.label}: 정상 중 ${Math.round(p)}%"><span style="height:${Math.max(2, p)}%;background:${col(i)};opacity:${out ? 1 : .45}"></span></div>`; }).join("")}</div>
-    <div class="bands-x">${ks.map((f, k) => `<span>${k}</span>`).join("")}</div>`;
-}
 const tagChips = i => D.ftags[i].map(t => `<span class="chip" title="${esc(TAG[t].desc)}">${TAG[t].label}</span>`).join(" ");
 const modelTitle = m => esc(`${m.id} ${m.title}\n구성: ${m.cfg}\nF2 ${m.f2} ± ${m.f2_sd} · 재현율 ${m.recall} · 오경보율 ${m.fpr}`);
 const ruleChip = (k, i) => { const r = RULE[k], w = ruleWord(k, i);
   return `<span class="chip ${w ? "warn" : ""}" title="${esc(r.desc + " (" + r.since + "부터)")}">${r.label} ${w ? `<b>${w}</b>` : "꺼짐"} · ${r.info[i]}</span>`; };
 function modelBadges(i) {
+  if (isU(i)) return `<span class="chip lab-v" title="val·test는 라벨이 없고, 최종 모델로 채점하지 않는다 (val 사용 규칙은 아직 정하지 않음)">${GN[G[i]]} · 라벨 없음 · 모델 채점 안 함</span>`;
   const m = M(), e = errN(m, i);
   const chips = [`<span class="chip ${bad(m, i) ? "warn" : ""}" style="font-weight:700" title="${modelTitle(m)}">${m.id} ${m.short} · ${D.y[i] ? "미탐" : "오경보"} <b>${e}</b>/5</span>`, ...m.rules.map(k => ruleChip(k, i))];
   const others = MODELS.filter(o => o !== m).map(o => { const v = errN(o, i); return v >= 3 ? `<b>${o.id} ${v}/5</b>` : `${o.id} ${v ? v + "/5" : "✓"}`; }).join(" · ");
@@ -520,65 +508,207 @@ const segH = (id, opts, cur) => `<span class="seg" id="${id}">${opts.map(([v, l]
 // ---------- 화면 ----------
 const main = document.getElementById("main");
 const empty = () => { main.innerHTML = `<p class="help">조건에 맞는 파일이 없습니다.</p>`; };
+// ---------- 한 개씩 보기 (11-21 개편): 머리줄 + 탭 3개 [고주파] [저주파] [충격·박자] ----------
+const TABS = [["hi", "고주파"], ["lo", "저주파"], ["imp", "충격·박자"]];
+const put = (id, h) => { const c = canvas(h); document.getElementById(id).append(c); return c; };
+const legendBand = i => `<span class="legend"><span><i class="bandsw"></i>정상 5–95%</span><span><i style="background:var(--nor)"></i>정상 중앙</span><span><i style="background:var(--abn)"></i>고장 중앙</span><span><i style="background:${col(i)}"></i>${D.names[i]}</span></span>`;
+// 맥락 숫자 표: 값 + 정상 120개 중 백분위 + 정상 5–95% 막대 (노란 줄 = 정상 범위 밖)
+function ctxTable(i, rows) {
+  return `<table class="ftable">${rows.map(r => {
+    const v = r.val[i], p = r.pct[i], rf = r.ref, out = p !== null && (p < 5 || p > 95);
+    const mk = p === null ? "" : `<span class="mk" style="left:${p}%;background:${col(i)}"></span>`;
+    return `<tr class="${out ? "out" : ""}" title="${esc(r.desc)}\n정상 5–95%: ${fmt(rf.p5, r.key)} ~ ${fmt(rf.p95, r.key)} · 정상 중앙 ${fmt(rf.p50, r.key)} · 고장 중앙 ${fmt(rf.f50, r.key)}">
+      <td>${cLink(r.concept, esc(r.label))}</td><td class="v">${fmt(v, r.key)} <span class="help">${r.unit}</span></td>
+      <td class="v o2">정상 ${fmt(rf.p5, r.key)} ~ ${fmt(rf.p95, r.key)}</td>
+      <td class="p"><div class="track"><span class="band"></span><span class="mid"></span>${mk}</div></td><td class="pv">${p === null ? "" : Math.round(p) + "%"}</td></tr>`;
+  }).join("")}</table>`;
+}
 function renderOne() {
   if (!S.list.length) return empty();
-  const i = S.list[S.pos], lg = `<span class="legend"><span><i class="bandsw"></i>정상 5–95%</span><span><i style="background:var(--nor)"></i>정상 중앙</span><span><i style="background:var(--abn)"></i>고장 중앙</span><span><i style="background:${col(i)}"></i>${D.names[i]}</span></span>`;
+  if (!TABS.some(t => t[0] === S.tab)) S.tab = "hi";
+  const i = S.list[S.pos];
   main.innerHTML = `
   <div class="card"><div class="title">
     <button class="navbtn" id="prev">←</button><span class="nm">${D.names[i]}</span><button class="navbtn" id="next">→</button>
-    <span class="chip ${D.y[i] ? "lab-a" : "lab-n"}">${D.y[i] ? "고장" : "정상"}</span>
+    <span class="chip ${labCls(i)}">${labTxt(i)}</span>
     <span class="help">${S.pos + 1} / ${S.list.length}${S.group !== "none" ? " · " + groupOf(i) : ""}</span>${modelBadges(i)}</div>
-    <div style="margin-top:6px">${tagChips(i) || '<span class="help">태그 없음</span>'} <span class="help">· 정상 범위 밖 지표 ${D.val.n_out[i]}개 (정상의 95%는 ${fmt(D.ref.n_out.p95, "n_out")}개 이하)</span></div></div>
-  <div class="card"><h4>파형 2초 <span class="chip">${sigName()}</span>
-    <span class="help">위 눈금 = 감지된 ${cLink("impulse-count", "충격")} (|신호| > ${D.imp_k}σ) · 음영 = 아래 확대 구간 · 개념: ${cLink("mean-removal", "평균 제거")} · ${cLink("bandpass", "고역통과")} · 아래 그림·지표 모두 이 신호 기준 (머리줄 "신호"로 전환)</span></h4><div id="cw"></div></div>
-  <div class="row2">
-    <div class="card"><h4>최대 |진폭| ±20 ms 확대</h4><div id="cz"></div></div>
-    <div class="card"><h4>${cLink("stft", "스펙트로그램")} <span class="help">0–12.5 kHz, 진할수록 에너지 큼 (색 범위는 두 신호 공통), 주황 눈금 = 충격</span></h4><div id="cs"></div></div>
-  </div>
-  <div class="row2e">
-    <div class="card"><h4>${cLink("window-stats", "창별 RMS")} <span class="help">50 ms × 40창. 점선 = 정상 모든 창의 95%, 진한 막대 = 그 위</span></h4><div id="cwr"></div></div>
-    <div class="card"><h4>${cLink("window-stats", "창별 첨도")} <span class="help">같은 창. 한 창만 튀면 단발, 여러 창이면 반복</span></h4><div id="cwk"></div></div>
-  </div>
-  <div class="card"><h4>${cLink("psd", "PSD")} ${segH("px", [[1, "로그 x"], [0, "선형 x"]], +S.psdLog)}
-    ${segH("ovp", [[1, "물리 대역"]], S.ovP ? 1 : -1)} ${segH("ovg", [[1, "추정 대역 (미확인)"]], S.ovG ? 1 : -1)} ${lg}</h4><div id="cp"></div>
-    <div class="help">물리 대역 = 노션 예시 분할(${cLink("band-split", "개념")}), 추정 대역 = Gemini 추정 공진 위치(${cLink("sdof", "개념")}, 우리 데이터로 확인 안 됨)</div></div>
-  <div class="row2e">
-    <div class="card"><h4>${cLink("spectral-kurtosis", "스펙트럼 첨도")} <span class="help">주파수 칸마다 시간 방향 첨도. 높은 대역 = 충격이 실리는 대역</span></h4><div id="csk"></div></div>
-    <div class="card"><h4>${cLink("envelope-spectrum", "포락선 스펙트럼")} <span class="help">포락선의 반복 주파수. 피크 = 충격이 일정 간격으로 반복</span></h4><div id="cev"></div></div>
-  </div>
-  <p class="help">지표 이름 클릭 = 개념 설명. 막대: 정상 분포에서의 위치 (띠 = 5–95%, 선 = 중앙값, 속 빈 원 = ${sigName(otherSig())}일 때 위치). 회색 숫자 = ${sigName(otherSig())} 값. 노란 줄 = 정상 범위 밖.</p>
-  <div class="feats">${D.groups.filter(g => g.key !== "band").map(g => `<div class="card"><h4>${cLink(g.concept, esc(g.label))}</h4><table class="ftable">${featRows(i, g.key)}</table></div>`).join("")}
-    <div class="card"><h4>${cLink("band-energy", "1 kHz 대역 에너지")} <span class="help">정상 중 백분위, 진한 막대 = 정상 5–95% 밖</span></h4>${bandBars(i)}<div class="help">x = kHz 대역 시작 (0 = 0–1 kHz … 12 = 12–12.5 kHz)</div></div></div>`;
-  const put = (id, h) => { const c = canvas(h); document.getElementById(id).append(c); return c; };
-  drawWave(put("cw", 170), i, { zoomMark: true }); drawZoom(put("cz", 170), i); drawSpec(put("cs", 170), i);
-  drawWin(put("cwr", 130), i, 0); drawWin(put("cwk", 130), i, 1); drawPSD(put("cp", 250), i);
-  drawSK(put("csk", 170), i); drawEnvSpec(put("cev", 170), i);
+    <div style="margin-top:6px">${tagChips(i) || '<span class="help">태그 없음</span>'} <span class="help">· 정상 범위 밖 지표 ${D.val.n_out[i]}개 (정상의 95%는 ${fmt(D.ref.n_out.p95, "n_out")}개 이하)${S.msig !== S.sig ? ` · 태그·지표는 ${sigName(S.msig)} 기준 (이 신호는 지표를 따로 계산하지 않음)` : ""}</span></div></div>
+  <div style="margin:0 0 12px">${segH("otab", TABS, S.tab)} <span class="help">${S.tab === "hi" ? "신호는 머리줄 \"신호\"를 따름" : S.tab === "lo" ? "신호 고정 = 평균만 뺀 원신호" : "신호 고정 = 1 kHz 고역통과 (충격 검출과 같은 신호)"}</span></div>
+  <div id="tabbody"></div>`;
+  ({ hi: oneHigh, lo: oneLow, imp: oneImp })[S.tab](i);
   document.getElementById("prev").onclick = () => step(-1); document.getElementById("next").onclick = () => step(1);
-  segBind("px", v => { S.psdLog = v === "1"; render(); });
-  segBind("ovp", () => { S.ovP = !S.ovP; render(); }); segBind("ovg", () => { S.ovG = !S.ovG; render(); });
+  segBind("otab", v => { S.tab = v; render(); });
   bindConceptLinks(main);
 }
-const FIVE_KEYS = ["std", "kurt", "n_imp", "win_kurt_max", "s20", "centroid", "hi_ratio", "sk_max", "env_prom"];
+// --- 고주파 탭 ---
+function oneHigh(i) {
+  document.getElementById("tabbody").innerHTML = `
+  <div class="card"><h4>파형 2초 <span class="chip">${sigName()}</span>
+    <span class="help">위 눈금 = 감지된 ${cLink("impulse-count", "충격")} (|신호| > ${D.imp_k}σ${S.msig !== S.sig ? `, ${sigName(S.msig)}에서 감지` : ""}) · 음영 = 아래 확대 구간 · 개념: ${cLink("mean-removal", "평균 제거")} · ${cLink("bandpass", "고역통과")} · 아래 그림 모두 이 신호 기준 (머리줄 "신호"로 전환)</span></h4><div id="cw"></div></div>
+  <div class="row2">
+    <div class="card"><h4>최대 |진폭| ±20 ms 확대</h4><div id="cz"></div></div>
+    <div class="card"><h4>${cLink("stft", "스펙트로그램")} <span class="help">0–12.5 kHz, 진할수록 에너지 큼 (색 범위는 모든 신호 공통), 주황 눈금 = 충격</span></h4><div id="cs"></div></div>
+  </div>
+  <div class="card"><h4>${cLink("stft", "짧은 창 스펙트로그램")} <span class="chip">${sigName()}</span>
+    <span class="help">256점 = 10 ms 창, 5.1 ms 간격 · 98 Hz 칸 2개씩 묶어 195 Hz. 충격 하나의 울림 주파수를 보는 용도 (위 1024점 = 41 ms 창은 8 ms 울림이 번짐). 색 범위는 위와 따로. 3.1 kHz 아래는 이 신호로 계산, 그 위는 200 Hz 고역통과 값을 공유(차이 1% 안쪽). 주황 눈금 = 충격</span></h4><div id="cs2"></div></div>
+  <div class="card"><h4>${cLink("psd", "PSD")} <span class="chip">${sigName()}</span> ${segH("px", [[1, "로그 x"], [0, "선형 x"]], +S.psdLog)}
+    ${segH("ovp", [[1, "물리 대역"]], S.ovP ? 1 : -1)} ${legendBand(i)}</h4><div id="cp"></div>
+    <div class="help">물리 대역 = 노션 예시 분할(${cLink("band-split", "개념")}). 띠 = 정상 120개의 5–95%</div></div>`;
+  drawWave(put("cw", 170), i, { zoomMark: true }); drawZoom(put("cz", 170), i); drawSpec(put("cs", 170), i);
+  drawSpec(put("cs2", 200), i, { arr: spec2Of(S.sig), sf: D.spec2_shape[0], st: D.spec2_shape[1], fmax: D.spec2_fmax, ev: D.events });
+  drawPSD(put("cp", 250), i);
+  segBind("px", v => { S.psdLog = v === "1"; render(); });
+  segBind("ovp", () => { S.ovP = !S.ovP; render(); });
+}
+// --- 저주파 탭 (평균만 뺀 원신호 고정) ---
+let LOWPSD = null, LP200 = null, LP20 = null;
+function lowData() { if (!LOWPSD) { LOWPSD = i16(D.low.psd); LP200 = i16(D.low.lp200); LP20 = i16(D.low.lp20); } }
+function drawLowPSD(c, i) {
+  const L = D.low, R = L.ref; let lo = Infinity, hi = -Infinity;
+  for (let k = 0; k < L.nf; k++) { lo = Math.min(lo, R.p5[k], LOWPSD[i * L.nf + k] / 1000); hi = Math.max(hi, R.p95[k], LOWPSD[i * L.nf + k] / 1000); }
+  const pk = L.peak[i];
+  specPlot(c, i, { n: L.nf, x0: 0, dx: L.df, arr: LOWPSD, ref: R, ylo: Math.floor(lo), yhi: Math.ceil(hi), logx: false, xt: [0, 25, 50, 75, 100, 125, 150, 175, 200], xl: "Hz", yl: "log10 PSD",
+    overlays: [{ bands: [{ lo: 0, hi: 20, label: "0–20 Hz 출렁임" }], color: "--ov1", row: 0 }],
+    after: (g, X, Y, P) => { if (pk === null) return; g.save(); g.setLineDash([2, 3]); g.strokeStyle = css("--text-2"); g.beginPath(); g.moveTo(X(pk), P.t); g.lineTo(X(pk), c.clientHeight - P.b); g.stroke(); g.restore();
+      g.fillStyle = css("--text-2"); g.textAlign = "left"; g.textBaseline = "top"; g.fillText(`최대 봉우리 ${pk.toFixed(1)} Hz`, X(pk) + 4, P.t + 16); },
+    tipf: (k, f, v) => `${f.toFixed(1)} Hz · 이 파일 ${v.toFixed(2)} · 정상 중앙 ${R.p50[k].toFixed(2)} (5–95% ${R.p5[k].toFixed(2)}~${R.p95[k].toFixed(2)}) · 고장 중앙 ${R.f50[k].toFixed(2)}` });
+}
+function drawLowWave(c, i) {
+  const L = D.low, n = L.nlp, [g, w, h] = ctx2d(c), P = { l: 46, r: 10, t: 12, b: 18 }, sc = L.sc[i] / 32767, base = i * n;
+  let ym = 0; for (let k = 0; k < n; k++) ym = Math.max(ym, Math.abs(LP200[base + k]), Math.abs(LP20[base + k])); ym = ym * sc * 1.08 || 1e-6;
+  const X = t => P.l + t / 2 * (w - P.l - P.r), Y = v => P.t + (1 - (v / ym + 1) / 2) * (h - P.t - P.b);
+  frame(g, w, h, P, [0, .5, 1, 1.5, 2].map(t => [t, X(t), t + "s"]), niceTicks(-ym, ym, 4).map(v => [v, Y(v), fmt(v)]), "", "g");
+  const line = (arr, cl, lw) => { g.strokeStyle = cl; g.lineWidth = lw; g.beginPath(); for (let k = 0; k < n; k++) { const x = X(k / L.fs_lp), y = Y(arr[base + k] * sc); k ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); };
+  line(LP200, col(i), 1.1); line(LP20, css("--r83"), 2.2);
+  g.strokeStyle = css("--text-2"); g.lineWidth = 1;
+  for (const t of D.sets.hp.events[i]) { const x = X(t); g.beginPath(); g.moveTo(x, P.t); g.lineTo(x, P.t + 6); g.stroke(); }
+  hover(c, mx => { const t = (mx - P.l) / (w - P.l - P.r) * 2; if (t < 0 || t > 2) return null; const k = Math.min(n - 1, Math.round(t * L.fs_lp));
+    return `${t.toFixed(3)} s · 200 Hz 저역 ${fmt(LP200[base + k] * sc)} g · 20 Hz 저역 ${fmt(LP20[base + k] * sc)} g`; });
+}
+function oneLow(i) {
+  lowData(); const L = D.low;
+  document.getElementById("tabbody").innerHTML = `
+  <div class="card"><h4>${cLink("psd", "0–200 Hz PSD")} <span class="chip">평균 제거 원신호</span> ${legendBand(i)}
+    <span class="help">Welch 8192점 (3.05 Hz 칸) · 50% 겹침 · Hann · detrend 없음 · 선형 x · 점선 = 이 파일 최대 봉우리 ${L.peak[i] === null ? "—" : L.peak[i].toFixed(1) + " Hz"} (0 Hz 칸 제외, 양옆보다 높은 칸 중 최대)</span></h4><div id="clp"></div></div>
+  <div class="card"><h4>저역 파형 2초 <span class="chip">평균 제거 원신호</span>
+    <span class="legend"><span><i style="background:${col(i)}"></i>200 Hz 저역</span><span><i style="background:var(--r83)"></i>20 Hz 저역 (출렁임)</span></span>
+    <span class="help">${cLink("bandpass", "4차 버터워스 저역")} · 위 눈금 = 200 Hz 고역통과 신호의 8σ 충격</span></h4><div id="clw"></div></div>
+  <div class="card"><h4>맥락 숫자 3개 <span class="help">값 · 정상 120개 중 백분위 · 정상 5–95% 막대 (노란 줄 = 범위 밖). 모두 평균 제거 원신호 기준</span></h4>${ctxTable(i, L.ctx)}</div>`;
+  drawLowPSD(put("clp", 250), i); drawLowWave(put("clw", 200), i);
+}
+// --- 충격·박자 탭 (1 kHz 고역통과 고정) ---
+let ENVW = null, LOCK30 = null;
+function drawImpEnv(c, i) {
+  const Q = D.rhy, n = Q.nwave, [g, w, h] = ctx2d(c), P = { l: 50, r: 10, t: 10, b: 18 }, mx = Q.wave_max[i], med = Q.wave_med[i], base = i * n, ym = mx * 1.08;
+  const X = t => P.l + t / 2 * (w - P.l - P.r), Y = v => P.t + (1 - v / ym) * (h - P.t - P.b), val = k => ENVW[base + k] / 65535 * mx;
+  frame(g, w, h, P, [0, .5, 1, 1.5, 2].map(t => [t, X(t), t + "s"]), niceTicks(0, ym, 4).map(v => [v, Y(v), fmt(v)]), "", "포락선 g");
+  g.beginPath(); for (let k = 0; k < n; k++) { const x = X((k + .5) / n * 2), y = Y(val(k)); k ? g.lineTo(x, y) : g.moveTo(x, y); }
+  g.strokeStyle = col(i); g.lineWidth = 1.2; g.stroke();
+  g.lineTo(X(2), Y(0)); g.lineTo(X(0), Y(0)); g.closePath(); g.globalAlpha = .12; g.fillStyle = col(i); g.fill(); g.globalAlpha = 1;
+  g.setLineDash([5, 4]); g.strokeStyle = css("--text-2"); g.lineWidth = 1; g.beginPath(); g.moveTo(P.l, Y(4.5 * med)); g.lineTo(w - P.r, Y(4.5 * med)); g.stroke(); g.setLineDash([]);
+  g.fillStyle = css("--text-3"); g.textAlign = "right"; g.textBaseline = "bottom"; g.fillText("4.5 × 바탕 중앙값 (참고선, 실제 문턱 = 이동 바탕 × 4.5)", w - P.r - 2, Y(4.5 * med) - 2);
+  const nok = Q.imp_n[i];
+  Q.imp_t[i].forEach((t, j) => { const k = Math.min(n - 1, Math.round(t / 2 * n)), x = X(t), y = Y(val(k)) - 5;
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x - 4, y - 7); g.lineTo(x + 4, y - 7); g.closePath();
+    if (j < nok) { g.fillStyle = css("--abn"); g.fill(); } else { g.lineWidth = 1; g.strokeStyle = css("--text-3"); g.stroke(); } });
+  hover(c, mx2 => { const t = (mx2 - P.l) / (w - P.l - P.r) * 2; if (t < 0 || t > 2) return null; const k = Math.min(n - 1, Math.floor(t / 2 * n));
+    return `${t.toFixed(3)} s · 포락선 ${fmt(val(k))} g (참고선 ${fmt(4.5 * med)} g)`; });
+}
+function drawLock(c, i) {
+  const Q = D.rhy, L = D.lock, n = Q.nlock, [g, w, h] = ctx2d(c), P = { l: 46, r: 10, t: 34, b: 18 }, sc = Q.lock30_sc[i] / 32767, T = L.T[i], base = i * n;
+  let ym = 0; for (let k = 0; k < n; k++) ym = Math.max(ym, Math.abs(LOCK30[base + k])); ym = ym * sc * 1.1 || 1e-6;
+  const X = t => P.l + t / 2 * (w - P.l - P.r), Y = v => P.t + (1 - (v / ym + 1) / 2) * (h - P.t - P.b), val = t => LOCK30[base + Math.max(0, Math.min(n - 1, Math.round(t * Q.lock_fs)))] * sc;
+  frame(g, w, h, P, [0, .5, 1, 1.5, 2].map(t => [t, X(t), t + "s"]), niceTicks(-ym, ym, 4).map(v => [v, Y(v), fmt(v)]), "", "g");
+  const line = (get, t0, cl, lw, dash) => { g.save(); g.beginPath(); g.rect(P.l, 0, w - P.l - P.r, h); g.clip(); g.setLineDash(dash); g.strokeStyle = cl; g.lineWidth = lw; g.beginPath();
+    for (let k = 0; k < n; k++) { const x = X(k / Q.lock_fs + t0), y = Y(get(k)); k ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); g.restore(); };
+  line(k => LOCK30[base + k] * sc, T, css("--r83"), 1.3, [5, 4]);          // 느린 파형을 T만큼 민 것
+  line(k => LOCK30[base + k] * sc, 0, col(i), 2, []);
+  const ev = D.rhy.imp_t[i], paired = ev.map(a => ev.some(b => b !== a && Math.abs(Math.abs(b - a) - T) <= .03 * T));
+  g.lineWidth = 1.6; g.strokeStyle = css("--lock");                          // 짝 연결: 충격 사이가 T ± 3%
+  for (let a = 0; a < ev.length; a++) for (let b = a + 1; b < ev.length; b++) if (Math.abs(ev[b] - ev[a] - T) <= .03 * T) {
+    const x1 = X(ev[a]), x2 = X(ev[b]), up = 8 + 14 * (ev[b] - ev[a]) / 2; g.beginPath(); g.moveTo(x1, P.t - 4); g.quadraticCurveTo((x1 + x2) / 2, P.t - 4 - 2 * up, x2, P.t - 4); g.stroke(); }
+  ev.forEach((t, k) => { const x = X(t), y = Y(val(t)); g.beginPath(); g.arc(x, y, 3.8, 0, 7);
+    if (paired[k]) { g.fillStyle = css("--lock"); g.fill(); } else { g.lineWidth = 1.2; g.strokeStyle = css("--text-3"); g.stroke(); } });
+  const first = ev.findIndex((t, k) => paired[k]), t0 = first >= 0 ? ev[first] : 0, yb = h - P.b - 8;       // 주기 T 표시
+  g.strokeStyle = css("--text"); g.lineWidth = 1.2; g.beginPath(); g.moveTo(X(t0), yb); g.lineTo(X(Math.min(2, t0 + T)), yb); g.moveTo(X(t0), yb - 4); g.lineTo(X(t0), yb + 4);
+  g.moveTo(X(Math.min(2, t0 + T)), yb - 4); g.lineTo(X(Math.min(2, t0 + T)), yb + 4); g.stroke();
+  g.fillStyle = css("--text"); g.textAlign = "center"; g.textBaseline = "bottom"; g.fillText(`T = ${T} s`, X(t0 + T / 2), yb - 3);
+  hover(c, mx => { const t = (mx - P.l) / (w - P.l - P.r) * 2; if (t < 0 || t > 2) return null; return `${t.toFixed(3)} s · 30 Hz 저역 ${fmt(val(t))} g`; });
+}
+function impTable(i) {
+  const Q = D.rhy, rows = Q.imp_top[i], n = Q.imp_n[i], all = Q.imp_t[i].length;
+  if (!n) return `<p class="help">충격 없음 (새 정의 11-21: 바탕의 4.5배를 넘는 봉우리 없음)${all ? ` · 검출 ${all}개는 끝에 가까워 제외` : ""}</p>`;
+  return `<div class="help" style="margin-bottom:4px">총 ${n}개${n > rows.length ? ` · fit 내림차순 상위 ${rows.length}개만 표시` : " · fit 내림차순"}${all > n ? ` · 끝에 가까워 8 ms 창이 안 들어간 ${all - n}개는 제외 (포락선 그림에 속 빈 삼각형)` : ""}</div>
+    <div class="tbl-wrap" style="max-height:420px"><table class="big"><thead><tr><th>시점 s</th><th>울림 kHz</th><th>ζ</th><th>fit</th></tr></thead><tbody>
+    ${rows.map(r => `<tr class="${r[2] >= .08 ? "zmax" : ""}"><td style="text-align:left">${r[0].toFixed(3)}</td><td>${r[1].toFixed(2)}</td><td>${r[2].toFixed(2)}</td><td>${r[3].toFixed(3)}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="help" style="margin-top:6px">노란 행 = ζ 0.08. ζ 후보는 0.01 · 0.02 · 0.04 · 0.08 네 칸이고, 0.08 = 0.08 이상 또는 깨끗한 울림 아님(사전의 최댓값). fit = 충격 뒤 8 ms가 가장 닮은 감쇠 사인파와 얼마나 같은 모양인가 (1 = 완전히 같음). 충격 정의 = <code>src/impacts.py</code> (새 정의 11-21), 울림 사전 = <code>src/final.py</code> <code>_ring_atoms</code> (2-16)</div>`;
+}
+function oneImp(i) {
+  const Q = D.rhy, L = D.lock; if (!ENVW) { ENVW = new Uint16Array(bytes(Q.wave).buffer); LOCK30 = i16(Q.lock30); }
+  document.getElementById("tabbody").innerHTML = `
+  <div class="card"><h4>${cLink("envelope", "포락선")} 2초 <span class="chip">1 kHz 고역통과</span>
+    <span class="help">새 정의(11-21): |hilbert| → 1000 Hz 저역(4차). 충격 = 포락선이 100 ms 이동 중앙값 바탕의 4.5배 이상인 봉우리(6.75 ms 간격, 앞뒤 10 ms 제외). 점선 = 바탕 중앙값의 4.5배(참고), 주황 삼각형 = 충격 ${Q.imp_n[i]}개</span></h4><div id="cie"></div></div>
+  <div class="card"><h4>${cLink("envelope-spectrum", "포락선 스펙트럼")} <span class="chip">1 kHz 고역통과의 포락선</span> ${legendBand(i)}
+    <span class="help">포락선의 반복 주파수. 피크 = 충격이 일정 간격으로 반복 (2.5 kHz로 줄여 0.5–300 Hz)</span></h4><div id="cev"></div></div>
+  <div class="card"><h4>주기 잠금 <span class="chip">30 Hz 저역 파형</span>
+    <span class="chip warn">S = r_LP × hit = ${L.S[i].toFixed(2)}</span><span class="chip">r_LP ${L.rlp[i].toFixed(2)}</span><span class="chip">hit ${L.hit[i].toFixed(2)}</span><span class="chip">T ${L.T[i]} s</span><span class="chip">사건 ${L.nev[i]}개</span>
+    <span class="help">정의 = 2-13 + 충격 시점은 새 정의(11-21): T = 30 Hz 저역을 τ만큼 민 자기 자신과의 상관이 최대인 τ (0.3–1.2 s), 충격 = 새 정의 충격(1 kHz 고역, 이동 바탕 4.5배). 보라 점선 = 파형을 T만큼 민 것, 노란 호 = T ± 3% 떨어진 충격 짝, 채운 점 = 짝 있는 충격, 속 빈 점 = 짝 없음</span></h4><div id="clk"></div>
+    <div style="margin-top:8px">${ctxTable(i, Q.ctx)}</div>
+    <div class="help" style="margin-top:4px">위 표 = 이 탭의 숫자를 정상 120개와 비교 (띠 = 정상 5–95%, 선 = 중앙값). ${cLink("acf", "자기상관")} · ${cLink("impulse-count", "충격 수")}</div></div>
+  <div class="card"><h4>충격 목록 <span class="chip">1 kHz 고역통과</span> <span class="help">충격마다 울림 주파수 · 감쇠비 ζ · 맞춤 fit</span></h4>${impTable(i)}</div>`;
+  drawImpEnv(put("cie", 170), i); drawEnvSpec(put("cev", 170), i); drawLock(put("clk", 220), i);
+}
+// 5개씩 보기 (11-21 2차): 지표 6개(입력/구조/맥락 축) + 그림은 한 개씩 보기의 현재 탭(S.tab)을 따른다. 카드는 auto-fill 그리드라 좁으면 줄바꿈
+const FIVE_KEYS = ["n_ring", "kurt_1k", "ring_o3", "ring_o2", "fast_decay", "lb_S"];
+function impData() { if (!ENVW) { ENVW = new Uint16Array(bytes(D.rhy.wave).buffer); LOCK30 = i16(D.rhy.lock30); } }
 function renderFive() {
   if (!S.list.length) return empty();
-  const p0 = Math.floor(S.pos / 5) * 5, idx = S.list.slice(p0, p0 + 5);
+  if (!TABS.some(t => t[0] === S.tab)) S.tab = "hi";
+  const p0 = Math.floor(S.pos / 5) * 5, idx = S.list.slice(p0, p0 + 5), hi = S.tab === "hi";
   main.innerHTML = `<div class="card"><div class="title"><button class="navbtn" id="prev">← 이전 5</button><button class="navbtn" id="next">다음 5 →</button>
     <span class="help">${p0 + 1}–${p0 + idx.length} / ${S.list.length}</span>
-    <span class="chip">${sigName()}</span> ${segH("sy", [[0, "y축 파일별"], [1, "y축 같게"]], +S.shareY)} ${segH("px", [[1, "PSD 로그 x"], [0, "선형 x"]], +S.psdLog)}
+    ${segH("otab", TABS, S.tab)}
+    ${hi ? `<span class="chip">${sigName()}</span> ${segH("sy", [[0, "y축 파일별"], [1, "y축 같게"]], +S.shareY)} ${segH("px", [[1, "PSD 로그 x"], [0, "선형 x"]], +S.psdLog)}` : `<span class="help">${S.tab === "lo" ? "저역 파형 + 0–200 Hz PSD (평균 제거 원신호)" : "1 kHz 고역 포락선 + 주기 잠금 (30 Hz 저역)"}</span>`}
     <span class="help">이름 클릭 = 한 개씩 보기</span></div></div>
-  <div class="five">${idx.map((i, k) => `<div class="card fcard">
-    <div class="meta"><span class="dot ${D.y[i] ? "a" : "n"}"></span> <span class="nm" data-i="${i}">${D.names[i]}</span>
+  <div class="fivegrid five">${idx.map((i, k) => `<div class="card fcard">
+    <div class="meta"><span class="dot ${dotCls(i)}"></span> <span class="nm" data-i="${i}">${D.names[i]}</span>
       <div style="margin:3px 0">${modelBadges(i)}</div><div>${tagChips(i)}</div>
       <table>${FIVE_KEYS.map(key => { const p = D.pct[key][i], out = p !== null && (p < 5 || p > 95);
         return `<tr class="${out ? "out" : ""}" title="${esc(FEAT[key].desc)}"><td>${FEAT[key].label}</td><td style="text-align:right">${fmt(D.val[key][i], key)}</td><td class="help">${p === null ? "" : Math.round(p) + "%"}</td></tr>`; }).join("")}</table></div>
-    <div id="w${k}"></div><div id="p${k}"></div></div>`).join("")}</div>`;
-  const ym = S.shareY ? Math.max(...idx.map(i => D.sc[S.sig][i])) : null;
-  idx.forEach((i, k) => { const cw = canvas(160), cp = canvas(160); document.getElementById("w" + k).append(cw); document.getElementById("p" + k).append(cp);
-    drawWave(cw, i, { ymax: ym }); drawPSD(cp, i, true); });
+    <div id="a${k}"></div><div id="b${k}"></div></div>`).join("")}</div>`;
+  if (S.tab === "lo") lowData(); if (S.tab === "imp") impData();
+  const ym = hi && S.shareY ? Math.max(...idx.map(i => D.sc[S.sig][i])) : null;
+  idx.forEach((i, k) => {
+    const a = canvas(120), b = canvas(S.tab === "imp" ? 160 : 140); document.getElementById("a" + k).append(a); document.getElementById("b" + k).append(b);
+    if (hi) { drawWave(a, i, { ymax: ym }); drawPSD(b, i, true); }
+    else if (S.tab === "lo") { drawLowWave(a, i); drawLowPSD(b, i); }
+    else { drawImpEnv(a, i); drawLock(b, i); }
+  });
   main.querySelectorAll(".nm[data-i]").forEach(el => el.onclick = () => { S.pos = S.list.indexOf(+el.dataset.i); setMode("one"); });
   document.getElementById("prev").onclick = () => step(-5); document.getElementById("next").onclick = () => step(5);
   segBind("sy", v => { S.shareY = v === "1"; render(); }); segBind("px", v => { S.psdLog = v === "1"; render(); });
+  segBind("otab", v => { S.tab = v; render(); });
+  bindConceptLinks(main);
 }
+// 산점도 아래 숫자: train(정상+고장)만으로 계산. 스피어만 순위상관 + 축별 단변량 AUC (EDA용이라 라벨 사용)
+function rankAvg(a) { const o = a.map((v, i) => [v, i]).sort((p, q) => p[0] - q[0]), r = new Array(a.length); let i = 0;
+  while (i < o.length) { let j = i; while (j + 1 < o.length && o[j + 1][0] === o[i][0]) j++; for (let k = i; k <= j; k++) r[o[k][1]] = (i + j) / 2 + 1; i = j + 1; } return r; }
+function spearman(x, y) { const n = x.length; if (n < 3) return null; const a = rankAvg(x), b = rankAvg(y), ma = a.reduce((s, v) => s + v, 0) / n, mb = b.reduce((s, v) => s + v, 0) / n;
+  let sab = 0, saa = 0, sbb = 0; for (let k = 0; k < n; k++) { sab += (a[k] - ma) * (b[k] - mb); saa += (a[k] - ma) ** 2; sbb += (b[k] - mb) ** 2; } return sab / Math.sqrt(saa * sbb); }
+function aucOf(v, lab) { const r = rankAvg(v), n1 = lab.reduce((s, l) => s + l, 0), n0 = lab.length - n1; if (!n1 || !n0) return null;
+  let s = 0; lab.forEach((l, k) => { if (l) s += r[k]; }); return (s - n1 * (n1 + 1) / 2) / (n1 * n0); }
+function pairStats(kx, ky) {
+  const tr = [...Array(N).keys()].filter(i => G[i] <= 1), vx = D.val[kx], vy = D.val[ky], rho = m => { const s = tr.filter(i => m(i) && vx[i] !== null && vy[i] !== null); const r = spearman(s.map(i => vx[i]), s.map(i => vy[i])); return `${r === null ? "—" : r.toFixed(2)} <span class="help">(n=${s.length})</span>`; };
+  const auc = k => { const v = D.val[k], s = tr.filter(i => v[i] !== null), a = aucOf(s.map(i => v[i]), s.map(i => D.y[i])); if (a === null) return "—";
+    return a >= .5 ? `<b>${a.toFixed(2)}</b> <span class="help">고장이 클수록 (n=${s.length})</span>` : `<b>${(1 - a).toFixed(2)}</b> <span class="help">= 1 − ${a.toFixed(2)}, 고장이 작을수록 (n=${s.length})</span>`; };
+  return `<div style="margin-top:8px"><b>두 축이 같은 것을 재나 (스피어만 ρ)</b> · 전체 ${rho(() => true)} · 정상만 ${rho(i => G[i] === 0)} · 고장만 ${rho(i => G[i] === 1)}</div>
+    <div><b>각 축이 가르는 힘 (단변량 AUC, 고장 = 1)</b> · x ${esc(FEAT[kx].label)} ${auc(kx)} · y ${esc(FEAT[ky].label)} ${auc(ky)}</div>
+    <div class="help">train(정상 120 + 고장 30)만으로 계산 — val은 넣지 않음. 라벨을 쓴 EDA용 숫자라 모델 선택에 쓰지 않는다. |ρ| 큼 = 두 축이 비슷한 정보, AUC 0.5 = 못 가름</div>`;
+}
+const SC_PAIRS = [["입력 × 구조", "kurt_1k", "ring_o3", 1, 0, "고주파 첨도 × 4–8 kHz 울림 몫 (새 정의)"], ["연결부 음 × 8.3 kHz", "ring_o2", "res83", 0, 0, "2–4 kHz 울림 몫 × 8.3 kHz 공진 fit (새 정의)"],
+  ["울림 길이 × 충격 수", "fast_decay", "n_ring", 0, 1, "빨리 꺼지는 충격 비율 × 충격 수(로그)"], ["저주파 박자 × 맥락", "lb_S", "load_hf", 0, 0, "주기 잠금 S × 하중 대비 고주파"],
+  ["길 상태 끌림 확인", "lb_e0_20", "rms_hf", 0, 1, "0–20 Hz 에너지 × 고주파 RMS(200 Hz 고역, 로그)"]];
 function renderTable() {
   const ks = D.feat.filter(f => f.group !== "band").map(f => f.key);
   const grpName = k => (GRP[FEAT[k].group] || { label: "요약" }).label;
@@ -586,9 +716,9 @@ function renderTable() {
   let lastG = null;
   const rows = S.list.map(i => {
     const g = groupOf(i), gr = S.group !== "none" && g !== lastG ? `<tr><td colspan="${ks.length + 2 + MODELS.length + D.rules.length}" style="text-align:left;font-weight:700;background:var(--surface-2)">${g}</td></tr>` : ""; lastG = g;
-    const mt = m => { const e = errN(m, i), t = e ? `${D.y[i] ? "미탐" : "오경보"} ${e}` : "";
+    const mt = m => { if (isU(i)) return "<td>—</td>"; const e = errN(m, i), t = e ? `${D.y[i] ? "미탐" : "오경보"} ${e}` : "";
       return `<td class="${bad(m, i) ? "o" : ""}"${m === M() ? ' style="font-weight:700"' : ""}>${t}</td>`; };
-    return gr + `<tr data-i="${i}" style="cursor:pointer"><td><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</td>
+    return gr + `<tr data-i="${i}" style="cursor:pointer"><td><span class="dot ${dotCls(i)}"></span> ${D.names[i]}</td>
       <td style="text-align:left">${D.ftags[i].map(t => TAG[t].label).join(", ")}</td>${MODELS.map(mt).join("")}${D.rules.map(r => `<td>${ruleWord(r.key, i)}</td>`).join("")}
       ${ks.map(k => { const p = D.pct[k][i], o = p !== null && (p < 5 || p > 95); return `<td class="${o ? "o" : ""}" title="정상 중 ${p === null ? "—" : Math.round(p) + "%"}">${fmt(D.val[k][i], k)}${o ? (p > 95 ? " ▲" : " ▼") : ""}</td>`; }).join("")}</tr>`;
   }).join("");
@@ -599,16 +729,18 @@ function renderTable() {
 }
 function featOptions() { return D.groups.concat([{ key: "summary", label: "요약" }]).map(g => `<optgroup label="${g.label}">${D.feat.filter(f => f.group === g.key).map(f => `<option value="${f.key}">${f.label}</option>`).join("")}</optgroup>`).join(""); }
 function renderScatter() {
-  main.innerHTML = `<div class="card"><div class="bar">
+  main.innerHTML = `<div class="card"><div class="bar" style="margin-bottom:6px"><b>추천 쌍</b>${SC_PAIRS.map((p, k) => `<button class="navbtn" data-sp="${k}" title="${esc(p[5])}">${p[0]}</button>`).join("")}
+      <span class="help">누르면 x·y가 설정됨</span></div><div class="bar">
     <span class="ctl">x <select id="sx">${featOptions()}</select> <label><input type="checkbox" id="lx"> 로그</label></span>
     <span class="ctl">y <select id="sy2">${featOptions()}</select> <label><input type="checkbox" id="ly"> 로그</label></span>
-    <span class="legend"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span><span>검은 테두리 = ${M().id}이(가) 3/5 이상 틀린 파일 · 음영 = 정상 5–95%</span></span>
+    <span class="legend"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span><span><span class="dot v"></span> val = 속 빈 원 (라벨 없음, 통계에서 제외)</span><span>검은 테두리 = ${M().id}이(가) 3/5 이상 틀린 파일 · 음영 = 정상 5–95%</span></span>
     <span class="help">점 클릭 = 한 개씩 보기. 지금 필터에 맞는 파일만 진하게</span></div><div id="sc" style="margin-top:8px"></div></div>
     <div class="card" id="scnote"></div>`;
   const sx = document.getElementById("sx"), sy = document.getElementById("sy2"), lx = document.getElementById("lx"), ly = document.getElementById("ly");
   sx.value = S.sx; sy.value = S.sy; lx.checked = S.lx; ly.checked = S.ly;
   const re = () => { S.sx = sx.value; S.sy = sy.value; S.lx = lx.checked; S.ly = ly.checked; save(); drawScatter(); };
   [sx, sy, lx, ly].forEach(el => el.onchange = re);
+  main.querySelectorAll("[data-sp]").forEach(b => b.onclick = () => { const p = SC_PAIRS[+b.dataset.sp]; S.sx = p[1]; S.sy = p[2]; S.lx = !!p[3]; S.ly = !!p[4]; render(); });
   const c = canvas(520); document.getElementById("sc").append(c); drawScatter();
   function drawScatter() {
     const [g, w, h] = ctx2d(c), P = { l: 56, r: 12, t: 10, b: 34 }, inList = new Set(S.list), vx = D.val[S.sx], vy = D.val[S.sy];
@@ -628,21 +760,22 @@ function renderScatter() {
     if (rx.p5 !== null) g.fillRect(X(tx(rx.p5)), P.t, X(tx(rx.p95)) - X(tx(rx.p5)), h - P.t - P.b);
     if (ry.p5 !== null) g.fillRect(P.l, Y(ty(ry.p95)), w - P.l - P.r, Y(ty(ry.p5)) - Y(ty(ry.p95)));
     const cur = S.list[S.pos];
-    for (const [i, a, b] of [...pts].sort((p, q) => D.y[p[0]] - D.y[q[0]])) {
+    for (const [i, a, b] of [...pts].sort((p, q) => G[p[0]] - G[q[0]])) {
       const x = X(a), yv = Y(b), wrong = bad(M(), i);
-      g.globalAlpha = inList.has(i) ? 1 : .18;
-      g.beginPath(); g.arc(x, yv, 4.5, 0, 7); g.fillStyle = col(i); g.fill(); g.lineWidth = 2; g.strokeStyle = css("--surface"); g.stroke();
+      g.globalAlpha = visPt(i) ? 1 : .18;
+      g.beginPath(); g.arc(x, yv, 4.5, 0, 7); if (isU(i)) { g.lineWidth = 2; g.strokeStyle = col(i); g.stroke(); } else { g.fillStyle = col(i); g.fill(); g.lineWidth = 2; g.strokeStyle = css("--surface"); g.stroke(); }
       if (wrong) { g.beginPath(); g.arc(x, yv, 7.5, 0, 7); g.lineWidth = 1.5; g.strokeStyle = css("--text"); g.stroke(); }
       if (i === cur) { g.beginPath(); g.arc(x, yv, 11, 0, 7); g.lineWidth = 2; g.strokeStyle = css("--text"); g.stroke(); }
     }
     g.globalAlpha = 1;
     const near = (mx, my) => { let best = null, bd = 100; for (const [i, a, b] of pts) { const d = (X(a) - mx) ** 2 + (Y(b) - my) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
     hover(c, (mx, my) => { const i = near(mx, my); if (i === null) return null;
-      return `${D.names[i]} (${D.y[i] ? "고장" : "정상"}) · x ${fmt(vx[i], S.sx)} · y ${fmt(vy[i], S.sy)} · ${D.ftags[i].map(t => TAG[t].label).join(", ")}`; });
+      return `${D.names[i]} (${labTxt(i)}) · x ${fmt(vx[i], S.sx)} · y ${fmt(vy[i], S.sy)} · ${D.ftags[i].map(t => TAG[t].label).join(", ")}`; });
     c.onclick = e => { const r = c.getBoundingClientRect(), i = near(e.clientX - r.left, e.clientY - r.top); if (i === null) return;
       if (!S.list.includes(i)) { S.lab = "all"; S.model = "all"; S.tag = null; S.q = ""; syncCtl(); rebuild(i); } else S.pos = S.list.indexOf(i); setMode("one"); };
     const sn = document.getElementById("scnote");
     sn.innerHTML = [S.sx, S.sy].map(k => `<div><b>${cLink(FEAT[k].concept, esc(FEAT[k].label))}</b>: ${esc(FEAT[k].desc)} <span class="help">(정상 5–95% ${fmt(D.ref[k].p5, k)} ~ ${fmt(D.ref[k].p95, k)}, 고장 중앙 ${fmt(D.ref[k].f50, k)})</span></div>`).join("");
+    sn.innerHTML += pairStats(S.sx, S.sy);
     bindConceptLinks(sn);
   }
 }
@@ -654,10 +787,10 @@ function renderLR() {
   const band = +S.lrBand;
   // 규칙으로 잡힌 고장 = 경계와 무관 → 기본으로 평면·목록에서 뺀다 (규칙이 켜진 정상은 오류라 남김)
   const ruleAbn = [...Array(N).keys()].filter(i => D.y[i] && rulesOn(ex, i).length);
-  const hidden = new Set(S.lrRule ? [] : ruleAbn), shown = i => !hidden.has(i);
+  const hidden = new Set(S.lrRule ? [] : ruleAbn), shown = i => !isU(i) && !hidden.has(i);
   const nearI = [...Array(N).keys()].filter(i => shown(i) && (Math.abs(dec(i)) <= band || errOf(i) >= 1)).sort((a, b) => dec(a) - dec(b));
   main.innerHTML = `<div class="card"><div class="bar">
-      <b title="${modelTitle(ex)}">${ex.id} ${esc(ex.short)}</b><span class="help">머리줄 "모델"에서 바꿈</span>
+      <b title="${modelTitle(ex)}">${ex.id} ${esc(ex.short)}</b><span class="help">머리줄 "모델"에서 바꿈</span><span class="chip lab-v" title="이 평면은 train OOF 점수라 val·test 점은 없다">val은 미채점 (OOF 점수 기반 화면이라 제외)</span>
       <span class="ctl">경계 근처 = |결정값| ≤ <select id="lrBand">${[0.5, 1, 1.5, 2].map(v => `<option value="${v}">${v}</option>`).join("")}</select></span>
       <label class="ctl"><input type="checkbox" id="lrRule"${S.lrRule ? " checked" : ""}> 규칙으로 잡힌 고장도 그리기</label>
       <span class="help">F2 ${ex.f2} ± ${ex.f2_sd} · 재현율 ${ex.recall} · 오경보율 ${ex.fpr} · 평면: ${esc(D.lr.plane_label[ex.plane])}${ex.note ? " · " + esc(ex.note) : ""}</span></div>
@@ -669,18 +802,18 @@ function renderLR() {
         <div id="lrPlot"></div>
         <div><div class="help" style="margin-bottom:4px">경계 근처·틀린 파일 ${nearI.length}개 (결정값 순, 클릭 = 정보)</div>
           <div class="tbl-wrap" style="max-height:560px"><table class="big"><thead><tr><th>파일</th><th>결정값</th><th>이 실험 결과</th><th>규칙</th></tr></thead><tbody>
-          ${nearI.map(i => `<tr data-i="${i}" style="cursor:pointer${S.lrSel === i ? ";outline:2px solid var(--text)" : ""}"><td style="text-align:left"><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</td><td>${dec(i).toFixed(2)}</td><td class="${errOf(i) >= 3 ? "o" : ""}">${errTxt(i)}</td><td>${ruleOf(i)}</td></tr>`).join("")}
+          ${nearI.map(i => `<tr data-i="${i}" style="cursor:pointer${S.lrSel === i ? ";outline:2px solid var(--text)" : ""}"><td style="text-align:left"><span class="dot ${dotCls(i)}"></span> ${D.names[i]}</td><td>${dec(i).toFixed(2)}</td><td class="${errOf(i) >= 3 ? "o" : ""}">${errTxt(i)}</td><td>${ruleOf(i)}</td></tr>`).join("")}
           </tbody></table></div></div>
       </div></div><div class="card" id="lrInfo"></div>`;
   const sb = document.getElementById("lrBand");
   sb.value = String(band); sb.onchange = () => { S.lrBand = +sb.value; render(); };
   document.getElementById("lrRule").onchange = e => { S.lrRule = e.target.checked; if (!S.lrRule && hidden.has(S.lrSel)) S.lrSel = null; render(); };
   const c = canvas(600); document.getElementById("lrPlot").append(c);
-  const [g, w, h] = ctx2d(c), P = { l: 46, r: 12, t: 10, b: 34 }, lo = -3, hi = 4.5;
-  const X = v => P.l + (v - lo) / (hi - lo) * (w - P.l - P.r), Y = v => P.t + (1 - (v - lo) / (hi - lo)) * (h - P.t - P.b);
-  const cl = v => Math.max(lo, Math.min(hi, v));
+  const [g, w, h] = ctx2d(c), P = { l: 46, r: 12, t: 10, b: 34 }, [xlo, xhi, ylo, yhi] = ex.lim;
+  const X = v => P.l + (v - xlo) / (xhi - xlo) * (w - P.l - P.r), Y = v => P.t + (1 - (v - ylo) / (yhi - ylo)) * (h - P.t - P.b);
+  const clx = v => Math.max(xlo, Math.min(xhi, v)), cly = v => Math.max(ylo, Math.min(yhi, v));
   // 바탕: 정상 영역(결정값 < 0, 파랑)·고장 영역(결정값 ≥ 0, 주황) = 그림 사각형을 경계 반평면으로 자른 다각형
-  const f = (x, yv) => ex.w[0] * x + ex.w[1] * yv + ex.b, rect = [[lo, lo], [hi, lo], [hi, hi], [lo, hi]];
+  const f = (x, yv) => ex.w[0] * x + ex.w[1] * yv + ex.b, rect = [[xlo, ylo], [xhi, ylo], [xhi, yhi], [xlo, yhi]];
   const half = s => { const poly = [];                                  // s = +1 고장 쪽, −1 정상 쪽
     rect.forEach((p, k) => { const q = rect[(k + 1) % 4], fp = s * f(...p), fq = s * f(...q);
       if (fp >= 0) poly.push(p);
@@ -693,18 +826,18 @@ function renderLR() {
     const cx = poly.reduce((t, p) => t + p[0], 0) / poly.length, cy = poly.reduce((t, p) => t + p[1], 0) / poly.length;
     g.font = "bold 14px Malgun Gothic, sans-serif"; g.textAlign = "center"; g.fillStyle = css(cv); g.globalAlpha = .75;
     g.fillText(s > 0 ? "고장 영역" : "정상 영역", X(cx), Y(cy)); g.globalAlpha = 1; }
-  const tk = niceTicks(lo, hi, 6);
-  frame(g, w, h, P, tk.map(v => [v, X(v), String(v)]), tk.map(v => [v, Y(v), String(v)]), "AE z (스펙트럼 모양 이상)", "");
-  g.fillStyle = css("--text-3"); g.textAlign = "left"; g.fillText("ET z (충격 피처 이상)", P.l + 4, P.t + 6);
+  const tkx = niceTicks(xlo, xhi, 6), tky = niceTicks(ylo, yhi, 6);
+  frame(g, w, h, P, tkx.map(v => [v, X(v), String(v)]), tky.map(v => [v, Y(v), String(v)]), ex.xl, "");
+  g.fillStyle = css("--text-3"); g.textAlign = "left"; g.fillText("↑ " + ex.yl, P.l + 4, P.t + 6);
   // 경계선·여백: w0 x + w1 y + b = k
   g.save(); g.beginPath(); g.rect(P.l, P.t, w - P.l - P.r, h - P.t - P.b); g.clip();
   const seg = (k, dash, lw) => { g.beginPath(); g.setLineDash(dash); g.lineWidth = lw; g.strokeStyle = css("--text");
-    if (Math.abs(ex.w[1]) < 1e-9) { const x = (k - ex.b) / ex.w[0]; g.moveTo(X(x), Y(lo)); g.lineTo(X(x), Y(hi)); }
-    else { const yv = x => (k - ex.b - ex.w[0] * x) / ex.w[1]; g.moveTo(X(lo), Y(yv(lo))); g.lineTo(X(hi), Y(yv(hi))); }
+    if (Math.abs(ex.w[1]) < 1e-9) { const x = (k - ex.b) / ex.w[0]; g.moveTo(X(x), Y(ylo)); g.lineTo(X(x), Y(yhi)); }
+    else { const yv = x => (k - ex.b - ex.w[0] * x) / ex.w[1]; g.moveTo(X(xlo), Y(yv(xlo))); g.lineTo(X(xhi), Y(yv(xhi))); }
     g.stroke(); };
   seg(0, [], 1.8); seg(1, [5, 4], 1); seg(-1, [5, 4], 1); g.setLineDash([]);
   // 점
-  const pt = i => [X(cl(Z[i][0])), Y(cl(Z[i][1]))];
+  const pt = i => [X(clx(Z[i][0])), Y(cly(Z[i][1]))];
   const order = [...Array(N).keys()].filter(shown).sort((a, b) => D.y[a] - D.y[b]);
   for (const i of order) { const [x, yv] = pt(i);
     g.beginPath(); if (D.y[i]) g.arc(x, yv, 4.5, 0, 7); else g.rect(x - 4, yv - 4, 8, 8);
@@ -725,7 +858,7 @@ function renderLR() {
   g.restore();
   const near = (mx, my) => { let best = null, bd = 120; for (let i = 0; i < N; i++) { if (!shown(i)) continue; const [x, yv] = pt(i), d = (x - mx) ** 2 + (yv - my) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
   hover(c, (mx, my) => { const i = near(mx, my); if (i === null) return null;
-    return `${D.names[i]} (${D.y[i] ? "고장" : "정상"}) · 결정값 ${dec(i).toFixed(2)} · AE z ${Z[i][0].toFixed(2)} · ET z ${Z[i][1].toFixed(2)}${errTxt(i) ? " · " + errTxt(i) : ""}${ruleOf(i) ? " · " + ruleOf(i) : ""}`; });
+    return `${D.names[i]} (${labTxt(i)}) · 결정값 ${dec(i).toFixed(2)} · ${ex.xl.split(" ")[0]} ${Z[i][0].toFixed(2)} · ${ex.yl.split(" ")[0]} ${Z[i][1].toFixed(2)}${errTxt(i) ? " · " + errTxt(i) : ""}${ruleOf(i) ? " · " + ruleOf(i) : ""}`; });
   const select = i => { S.lrSel = i; render(); };
   c.onclick = e => { const r = c.getBoundingClientRect(), i = near(e.clientX - r.left, e.clientY - r.top); if (i !== null) select(i); };
   main.querySelectorAll("tr[data-i]").forEach(tr => tr.onclick = () => select(+tr.dataset.i));
@@ -733,8 +866,8 @@ function renderLR() {
   const info = document.getElementById("lrInfo"), i = S.lrSel;
   if (i === null || i === undefined) { info.innerHTML = `<span class="help">점이나 오른쪽 목록을 누르면 여기에 그 파일 정보가 뜹니다. 그림의 경계는 설명용(결정값 0)이고, 실제 판정 임계값은 fold마다 안쪽 CV로 고릅니다. 규칙이 켜진 파일은 경계와 무관하게 고장입니다.</span>`; return; }
   const side = dec(i) >= 0 ? "고장 쪽" : "정상 쪽", ok = D.y[i] ? (ex.miss[i] === 0) : (ex.fp[i] === 0);
-  info.innerHTML = `<div class="bar"><b style="font-size:15px"><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</b> <span>${D.y[i] ? "고장" : "정상"}</span>
-    <span class="chip">결정값 ${dec(i).toFixed(2)} (${side})</span><span class="chip">AE z ${Z[i][0].toFixed(2)}</span><span class="chip">ET z ${Z[i][1].toFixed(2)}</span>
+  info.innerHTML = `<div class="bar"><b style="font-size:15px"><span class="dot ${dotCls(i)}"></span> ${D.names[i]}</b> <span>${labTxt(i)}</span>
+    <span class="chip">결정값 ${dec(i).toFixed(2)} (${side})</span><span class="chip">${esc(ex.xl)} ${Z[i][0].toFixed(2)}</span><span class="chip">${esc(ex.yl)} ${Z[i][1].toFixed(2)}</span>
     <button class="navbtn" id="lrOpen">한 개씩 보기로 열기 →</button></div>
     <div style="margin-top:6px">${modelBadges(i)}</div><div style="margin-top:4px">${tagChips(i)}</div>`;
   document.getElementById("lrOpen").onclick = () => { if (!S.list.includes(i)) { S.lab = "all"; S.model = "all"; S.tag = null; S.q = ""; syncCtl(); rebuild(i); } else S.pos = S.list.indexOf(i); setMode("one"); };
@@ -747,7 +880,7 @@ function openFile(i) {
 }
 const finErr = i => errN(M(), i);                                      // 고른 모델의 틀린 횟수
 const finTxt = i => errTxt(M(), i);
-const decOf = (m, i) => { const z = D.lr.planes[m.plane][i], c = v => Math.max(-3, Math.min(4.5, v)); return m.w[0] * c(z[0]) + m.w[1] * c(z[1]) + m.b; };
+const decOf = (m, i) => { const z = D.lr.planes[m.plane][i]; if (!z) return null; const [a, b, c, d] = m.lim; return m.w[0] * Math.max(a, Math.min(b, z[0])) + m.w[1] * Math.max(c, Math.min(d, z[1])) + m.b; };
 // 경계 그림의 규칙 표시: 색 = CSS 변수 --{규칙 키}
 const RULE_MARK = {
   r83: { sym: "◇", draw: (g, x, y) => { g.beginPath(); g.moveTo(x, y - 10); g.lineTo(x + 10, y); g.lineTo(x, y + 10); g.lineTo(x - 10, y); g.closePath(); g.lineWidth = 1.5; g.strokeStyle = css("--r83"); g.stroke(); } },
@@ -755,12 +888,13 @@ const RULE_MARK = {
   lock: { sym: "□", draw: (g, x, y) => { g.lineWidth = 1.8; g.strokeStyle = css("--lock"); g.strokeRect(x - 9, y - 9, 18, 18); } },
   cap: { sym: "◌", draw: (g, x, y) => { g.beginPath(); g.setLineDash([2, 2]); g.arc(x, y, 11, 0, 7); g.lineWidth = 1.2; g.strokeStyle = css("--cap"); g.stroke(); g.setLineDash([]); } },
   res83: { sym: "△", draw: (g, x, y) => { g.beginPath(); g.moveTo(x, y - 11); g.lineTo(x + 10, y + 7); g.lineTo(x - 10, y + 7); g.closePath(); g.lineWidth = 1.6; g.strokeStyle = css("--res83"); g.stroke(); } },
+  e2: { sym: "✚", draw: (g, x, y) => { g.beginPath(); g.moveTo(x - 10, y); g.lineTo(x + 10, y); g.moveTo(x, y - 10); g.lineTo(x, y + 10); g.lineWidth = 2; g.strokeStyle = css("--e2"); g.stroke(); } },
   body: { sym: "⬚", draw: (g, x, y) => { g.setLineDash([3, 2]); g.lineWidth = 1.4; g.strokeStyle = css("--body"); g.strokeRect(x - 12, y - 12, 24, 24); g.setLineDash([]); } },
 };
 function infoCard(el, i, chips) {
   if (i === null || i === undefined) { el.innerHTML = `<span class="help">점이나 표의 행을 누르면 여기에 그 파일 정보가 뜹니다.</span>`; return; }
-  el.innerHTML = `<div class="bar"><b style="font-size:16px"><span class="dot ${D.y[i] ? "a" : "n"}"></span> ${D.names[i]}</b>
-    <span class="chip ${D.y[i] ? "lab-a" : "lab-n"}">${D.y[i] ? "고장" : "정상"}</span>${chips.map(c => `<span class="chip">${c}</span>`).join("")}
+  el.innerHTML = `<div class="bar"><b style="font-size:16px"><span class="dot ${dotCls(i)}"></span> ${D.names[i]}</b>
+    <span class="chip ${labCls(i)}">${labTxt(i)}</span>${chips.map(c => `<span class="chip">${c}</span>`).join("")}
     <span class="sp"></span><button class="navbtn pri" id="infoOpen">한 개씩 보기로 열기 →</button></div>
     <div style="margin-top:8px">${modelBadges(i)}</div><div style="margin-top:4px">${tagChips(i)}</div>`;
   document.getElementById("infoOpen").onclick = () => openFile(i);
@@ -771,7 +905,7 @@ function docFigs(key, doc) {
     ${F.map(f => `<figure style="margin:0"><img src="${f.src}" alt="${esc(f.cap)}" loading="lazy"><figcaption>${esc(f.cap)}</figcaption></figure>`).join("")}</details></div>`;
 }
 const tableRows = (rows, sel) => rows.map(r => `<tr data-i="${r.i}" style="cursor:pointer" class="${sel === r.i ? "sel" : ""}">${r.cells.map((c, k) => k === 0
-  ? `<td style="text-align:left"><span class="dot ${D.y[r.i] ? "a" : "n"}"></span> ${D.names[r.i]}</td>` : `<td class="${c.o ? "o" : ""}">${c.t ?? c}</td>`).join("")}</tr>`).join("");
+  ? `<td style="text-align:left"><span class="dot ${dotCls(r.i)}"></span> ${D.names[r.i]}</td>` : `<td class="${c.o ? "o" : ""}">${c.t ?? c}</td>`).join("")}</tr>`).join("");
 // x·y 배열 점 그림. 정상 = 네모, 고장 = 원, 초록 원 = 유격 규칙 켜짐, ✕ = 고른 모델이 틀림(굵게 3/5 이상), 큰 고리 = 고른 파일
 function pointPlot(c, o) {
   const [g, w, h] = ctx2d(c), P = { l: 50, r: 14, t: 16, b: 36 };
@@ -783,12 +917,12 @@ function pointPlot(c, o) {
   g.save(); g.beginPath(); g.rect(P.l, P.t, w - P.l - P.r, h - P.t - P.b); g.clip();
   if (o.deco) o.deco(g, X, Y);
   const inList = new Set(S.list), pt = i => [X(cx(o.x[i])), Y(cy(o.y[i]))];
-  for (const i of [...Array(N).keys()].sort((a, b) => D.y[a] - D.y[b])) {
+  for (const i of [...Array(N).keys()].sort((a, b) => G[a] - G[b])) {
     if (o.x[i] === null || o.y[i] === null) continue;
     const [x, yv] = pt(i), s = o.size ? o.size(i) : 4.5;
-    g.globalAlpha = inList.has(i) ? .9 : .15; g.beginPath(); if (D.y[i]) g.arc(x, yv, s, 0, 7); else g.rect(x - s * .9, yv - s * .9, s * 1.8, s * 1.8);
-    g.fillStyle = col(i); g.fill(); g.lineWidth = 1; g.strokeStyle = css("--surface"); g.stroke(); g.globalAlpha = 1;
-    if (!inList.has(i)) continue;
+    g.globalAlpha = visPt(i) ? .9 : .15; g.beginPath(); if (D.y[i] || isU(i)) g.arc(x, yv, s, 0, 7); else g.rect(x - s * .9, yv - s * .9, s * 1.8, s * 1.8);
+    if (isU(i)) { g.lineWidth = 2; g.strokeStyle = col(i); g.stroke(); } else { g.fillStyle = col(i); g.fill(); g.lineWidth = 1; g.strokeStyle = css("--surface"); g.stroke(); } g.globalAlpha = 1;
+    if (!visPt(i)) continue;
     if (o.knockRing && ruleN("knock", i)) { g.beginPath(); g.arc(x, yv, s + 4, 0, 7); g.lineWidth = 1.8; g.strokeStyle = css("--knock"); g.stroke(); }
     const e = finErr(i);
     if (e) { const k = e >= 3 ? 6 : 4; g.beginPath(); g.moveTo(x - k, yv - k); g.lineTo(x + k, yv + k); g.moveTo(x + k, yv - k); g.lineTo(x - k, yv + k); g.lineWidth = e >= 3 ? 2.2 : 1; g.strokeStyle = css("--text"); g.stroke(); }
@@ -796,24 +930,24 @@ function pointPlot(c, o) {
   }
   g.font = "11px Pretendard, Malgun Gothic, sans-serif"; const boxes = [];
   const hit = b => boxes.some(q => b[0] < q[2] && b[2] > q[0] && b[1] < q[3] && b[3] > q[1]);
-  for (const i of o.labels || []) { if (o.x[i] === null || !inList.has(i)) continue; const [x, yv] = pt(i), t = shortN(D.names[i]), tw = g.measureText(t).width;
+  for (const i of o.labels || []) { if (o.x[i] === null || !visPt(i)) continue; const [x, yv] = pt(i), t = shortN(D.names[i]), tw = g.measureText(t).width;
     for (const [dx, dy] of [[9, -8], [9, 10], [-tw - 9, -8], [-tw - 9, 10], [9, -20], [-tw - 9, 20]]) {
       const b = [x + dx, yv + dy - 9, x + dx + tw, yv + dy + 3]; if (hit(b)) continue; boxes.push(b);
       g.fillStyle = css("--surface"); g.globalAlpha = .85; g.fillRect(b[0] - 1, b[1], tw + 2, 12); g.globalAlpha = 1;
       g.fillStyle = col(i); g.textAlign = "left"; g.fillText(t, x + dx, yv + dy - 3); break; } }
   g.restore();
-  const near = (mx, my) => { let best = null, bd = 140; for (let i = 0; i < N; i++) { if (o.x[i] === null) continue; const [x, yv] = pt(i), d = (x - mx) ** 2 + (yv - my) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
+  const near = (mx, my) => { let best = null, bd = 140; for (let i = 0; i < N; i++) { if (o.x[i] === null || o.y[i] === null) continue; const [x, yv] = pt(i), d = (x - mx) ** 2 + (yv - my) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
   hover(c, (mx, my) => { const i = near(mx, my); return i === null ? null : o.tipf(i); });
   c.onclick = e => { const r = c.getBoundingClientRect(), i = near(e.clientX - r.left, e.clientY - r.top); if (i !== null) o.onPick(i); };
   return { X, Y };
 }
-const legendPts = () => `<span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span>
+const legendPts = () => `<span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span><span><span class="dot v"></span> val (라벨 없음, 속 빈 점)</span>
   <span style="color:var(--knock)">○ 유격 규칙 켜짐</span><span>✕ ${M().id}이(가) 틀림 (굵게 = 3/5 이상)</span><span>흐린 점 = 머리줄 필터 밖</span>`;
 
 // ---------- 분석 조각: 2-12 유격 반복 · 하중 대비 고주파 ----------
 function renderKnock() {
   const K = D.knock2, ex = M(), dec = i => decOf(ex, i), idx = [...Array(N).keys()];
-  const nor = idx.filter(i => !D.y[i]), abn = idx.filter(i => D.y[i]);
+  const nor = idx.filter(i => isN(i)), abn = idx.filter(i => D.y[i]);
   const out = idx.filter(i => K.r[i] >= 2), fpN = nor.filter(i => ex.fp[i] >= 3), fp1 = nor.filter(i => ex.fp[i] >= 1);
   // "큰 사건 한 번"형 오경보(2-11 N-A) = 자주 오경보 정상 중 R < 0.3 (설명용 구분, N-B형 059는 R이 높아 빠짐)
   const fpA = fpN.filter(i => K.R[i] < .3), fpB = fpN.filter(i => K.R[i] >= .3);
@@ -825,8 +959,8 @@ function renderKnock() {
     r = 정상 중심 거리 √((z1² + z6²)/2) (정상 120개 중앙값·MAD 기준 z) · <b>R = 2위/1위 사건 높이</b> (1에 가까우면 같은 크기 타격 반복, 0이면 큰 사건 한 번).
     σ = 200 Hz 고역통과의 1.4826·MAD, 사건 = |h| > 8σ, 10 ms 안은 한 사건. 규칙 = r ≥ 2 이고 R ≥ 0.7 (사후 문턱, 고정)</div>
   <div class="stats">
-    <div class="stat"><div class="k">r ≥ 2 바깥 파일</div><div class="v">${out.length}</div><div class="s">고장 ${out.filter(i => D.y[i]).length} · 정상 ${out.filter(i => !D.y[i]).length}</div></div>
-    <div class="stat"><div class="k">유격 규칙 켜짐</div><div class="v">${kOn.length}</div><div class="s">고장 ${kOn.filter(i => D.y[i]).length} · 정상 ${kOn.filter(i => !D.y[i]).length}</div></div>
+    <div class="stat"><div class="k">r ≥ 2 바깥 파일</div><div class="v">${out.length}</div><div class="s">고장 ${out.filter(i => D.y[i]).length} · 정상 ${out.filter(i => isN(i)).length} · val ${out.filter(isU).length}</div></div>
+    <div class="stat"><div class="k">유격 규칙 켜짐</div><div class="v">${kOn.length}</div><div class="s">고장 ${kOn.filter(i => D.y[i]).length} · 정상 ${kOn.filter(i => isN(i)).length} · val ${kOn.filter(isU).length}</div></div>
     <div class="stat"><div class="k">자주 오경보 정상 (3/5 이상)</div><div class="v">${fpN.length}</div><div class="s">큰 사건 한 번형 (R &lt; 0.3): ${fpA.map(i => `${shortN(D.names[i])} ${K.R[i].toFixed(2)}`).join(" · ") || "없음"}<br>그 밖: ${fpB.map(i => `${shortN(D.names[i])} ${K.R[i].toFixed(2)}`).join(" · ") || "없음"}</div></div>
     <div class="stat"><div class="k">R ≤ ${Rmax.toFixed(2)} 이고 결정값 ≥ ${dmin.toFixed(2)}인 고장 (R로 내리면 함께 내려갈 고장)</div><div class="v">${comps.length}</div><div class="s">${comps.map(i => `${shortN(D.names[i])} R ${K.R[i].toFixed(2)} · 결정값 ${dec(i).toFixed(1)}`).join("<br>") || "없음"}</div></div>
   </div>
@@ -845,7 +979,7 @@ function renderKnock() {
         </tbody></table></div></div></div></div>
   <div class="card" id="knInfo"></div>${docFigs("knock", "2-12_1114_저에너지고장.md")}`;
   const pick = i => { S.knSel = i; render(); };
-  const tip = i => `${D.names[i]} (${D.y[i] ? "고장" : "정상"}) · r ${K.r[i].toFixed(2)} · R ${K.R[i].toFixed(2)} · 사건 ${K.nev[i]} · z1 ${K.z1[i].toFixed(2)} · z6 ${K.z6[i].toFixed(2)} · 결정값 ${dec(i).toFixed(2)} · ${finTxt(i)}`;
+  const tip = i => `${D.names[i]} (${labTxt(i)}) · r ${K.r[i].toFixed(2)} · R ${K.R[i].toFixed(2)} · 사건 ${K.nev[i]} · z1 ${K.z1[i].toFixed(2)} · z6 ${K.z6[i].toFixed(2)} · 결정값 ${dec(i) === null ? "—" : dec(i).toFixed(2)} · ${finTxt(i)}`;
   const ext = (a, pad) => { const v = a.filter(x => x !== null); return [Math.min(...v) - pad, Math.max(...v) + pad]; };
   const [xlo, xhi] = ext(K.z6, .6), [ylo, yhi] = ext(K.z1, .6);
   const cA = canvas(540); document.getElementById("knA").append(cA);
@@ -871,7 +1005,7 @@ function renderKnock() {
 
 // ---------- 분석 조각: 2-13 주기 잠금 충격 ----------
 function renderLock() {
-  const L = D.lock, idx = [...Array(N).keys()], nor = idx.filter(i => !D.y[i]);
+  const L = D.lock, idx = [...Array(N).keys()], nor = idx.filter(i => isN(i));
   const sN = nor.map(i => L.S[i]).sort((a, b) => a - b), q = p => sN[Math.min(sN.length - 1, Math.floor(p * (sN.length - 1) + .5))];
   const s95 = q(.95), sMax = sN[sN.length - 1], iMax = nor.find(i => L.S[i] === sMax), zero = nor.filter(i => L.S[i] === 0).length;
   const above = idx.filter(i => L.S[i] > sMax), rank = [...idx].sort((a, b) => L.S[b] - L.S[a]).slice(0, 25);
@@ -879,7 +1013,7 @@ function renderLock() {
   <div class="note"><b>축 (라벨 무관 정의)</b> · T = 30 Hz 저역 신호를 τ만큼 민 자기 자신과의 상관이 최대인 τ (0.3–1.2 s) · r_LP = 그 최대 상관 (느린 파형이 똑같이 반복되는 정도) ·
     hit = 8σ 사건 중 T ± 3% 떨어진 곳에 다른 사건이 있는 비율 (충격이 그 주기에 잠김) · <b>S = r_LP × hit</b> (둘 다 있어야 높음). EXP-029부터 주기 잠금 규칙(LOCK_S ≥ 학습 정상 최대 + 0.1 → 고장)으로 모델에 들어감</div>
   <div class="stats">
-    <div class="stat"><div class="k">정상 최대를 넘는 파일</div><div class="v">${above.length}</div><div class="s">${above.map(i => shortN(D.names[i])).join(" ")} (모두 ${above.every(i => D.y[i]) ? "고장" : "고장 아님 포함"})</div></div>
+    <div class="stat"><div class="k">정상 최대를 넘는 파일</div><div class="v">${above.length}</div><div class="s">${above.map(i => shortN(D.names[i])).join(" ")} (고장 ${above.filter(i => D.y[i]).length} · 정상 ${above.filter(isN).length} · val ${above.filter(isU).length} — val은 라벨 없이 문턱 위/아래만 본다)</div></div>
     <div class="stat"><div class="k">정상 S 최대</div><div class="v">${sMax.toFixed(2)}</div><div class="s">${D.names[iMax]} · 정상 95% ${s95.toFixed(2)}</div></div>
     <div class="stat"><div class="k">S = 0 인 정상</div><div class="v">${zero}</div><div class="s">정상 ${nor.length}개 중 (주기 짝 충격 없음)</div></div>
     <div class="stat"><div class="k">abn_022</div><div class="v">${L.S[D.names.indexOf("abn_022")].toFixed(2)}</div><div class="s">T ${L.T[D.names.indexOf("abn_022")]} s · ${M().id} ${finTxt(D.names.indexOf("abn_022"))}</div></div>
@@ -895,7 +1029,7 @@ function renderLock() {
   const c = canvas(540); document.getElementById("lkA").append(c);
   pointPlot(c, { x: L.rlp, y: L.hit, xlo: -.02, xhi: 1.02, ylo: -.04, yhi: 1.06, xl: "r_LP 느린 파형이 같은 모양으로 반복되는 정도 →", yl: "↑ hit 충격이 그 주기만큼 떨어진 짝을 가진 비율",
     size: i => 3.5 + 4 * L.S[i], knockRing: true, sel: S.lkSel, onPick: pick,
-    tipf: i => `${D.names[i]} (${D.y[i] ? "고장" : "정상"}) · S ${L.S[i].toFixed(2)} · r_LP ${L.rlp[i].toFixed(2)} · hit ${L.hit[i].toFixed(2)} · T ${L.T[i]} s · 사건 ${L.nev[i]} · ${finTxt(i)}`,
+    tipf: i => `${D.names[i]} (${labTxt(i)}) · S ${L.S[i].toFixed(2)} · r_LP ${L.rlp[i].toFixed(2)} · hit ${L.hit[i].toFixed(2)} · T ${L.T[i]} s · 사건 ${L.nev[i]} · ${finTxt(i)}`,
     labels: idx.filter(i => L.S[i] > s95 || finErr(i) >= 3),
     deco: (g, X, Y) => { for (const [s, lab, dash] of [[s95, "정상 95%", [5, 4]], [sMax, "정상 최대", []]]) {
         g.beginPath(); let first = true; for (let k = 0; k <= 100; k++) { const r = s + (1.02 - s) * k / 100, hv = s / r; if (hv > 1.06) continue; first ? g.moveTo(X(r), Y(hv)) : g.lineTo(X(r), Y(hv)); first = false; }
@@ -963,15 +1097,15 @@ function renderConcept() {
 // ---------- 옆 목록·태그 ----------
 function renderSide() {
   const A = document.getElementById("aside");
-  const nN = N - D.y.reduce((a, b) => a + b, 0), nA = N - nN;
-  let h = `<h3>태그 (클릭 = 거르기, 정상/고장 수)</h3><div class="taglist"><div data-t="" class="${S.tag ? "" : "on"}"><span>모든 태그</span><span class="cnt">${nN} / ${nA}</span></div>` +
-    D.tags.map(t => { let n = 0, a = 0; for (let i = 0; i < N; i++) if (D.ftags[i].includes(t.key)) D.y[i] ? a++ : n++;
-      return `<div data-t="${t.key}" class="${S.tag === t.key ? "on" : ""}" title="${esc(t.desc)}"><span>${t.label}</span><span class="cnt">${n} / ${a}</span></div>`; }).join("") + `</div>`;
+  const nA = D.y.reduce((a, b) => a + b, 0), nN = G.filter(g => g === 0).length, nV = N - nN - nA;
+  let h = `<h3>태그 (클릭 = 거르기, 정상/고장 수)</h3><div class="taglist"><div data-t="" class="${S.tag ? "" : "on"}"><span>모든 태그</span><span class="cnt">${nN} / ${nA}${nV ? " / " + nV : ""}</span></div>` +
+    D.tags.map(t => { let n = 0, a = 0, v = 0; for (let i = 0; i < N; i++) if (D.ftags[i].includes(t.key)) G[i] === 1 ? a++ : G[i] === 0 ? n++ : v++;
+      return `<div data-t="${t.key}" class="${S.tag === t.key ? "on" : ""}" title="${esc(t.desc)}"><span>${t.label}</span><span class="cnt">${n} / ${a}${nV ? " / " + v : ""}</span></div>`; }).join("") + `</div>`;
   const cur = S.list[S.pos], p0 = Math.floor(S.pos / 5) * 5; let lastG = null, fl = "";
   S.list.forEach((i, p) => {
     const g = groupOf(i); if (S.group !== "none" && g !== lastG) { fl += `<div class="gh">${g}</div>`; lastG = g; }
     const on = S.mode === "five" ? p >= p0 && p < p0 + 5 : i === cur, sv = S.sort !== "name" ? fmt(D.val[S.sort][i], S.sort) : "";
-    fl += `<div data-p="${p}" class="${on ? "cur" : ""}"><span class="dot ${D.y[i] ? "a" : "n"}"></span>${D.names[i]}<span class="badge">${sv}</span></div>`;
+    fl += `<div data-p="${p}" class="${on ? "cur" : ""}"><span class="dot ${dotCls(i)}"></span>${D.names[i]}<span class="badge">${sv}</span></div>`;
   });
   h += `<h3>파일 ${S.list.length}개${S.sort !== "name" ? " · 오른쪽 = " + FEAT[S.sort].label : ""}</h3><div class="flist">${fl || '<span class="help">없음</span>'}</div>`;
   A.innerHTML = h;

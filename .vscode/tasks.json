@@ -34,6 +34,28 @@
       "presentation": { "reveal": "silent", "panel": "dedicated" }
     },
     {
+      // 진동 공부 뷰어: http://localhost:8770
+      "label": "진동 공부 뷰어 서버 켜기",
+      "type": "process",
+      "command": "C:\\Users\\User\\WorkSpace\\Donghun\\miniconda3\\Scripts\\conda.exe",
+      "args": ["run", "--no-capture-output", "-n", "qe-phm", "python", "-m", "http.server", "8770",
+               "--bind", "127.0.0.1", "--directory", "${workspaceFolder}\\참고자료\\진동공부"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "silent", "panel": "dedicated" }
+    },
+    {
+      // 신효섭 11-19 RF 뷰어: http://localhost:8768 (index.html → RF뷰어.html, 포트 전달 시 브라우저 자동 열림)
+      "label": "RF 뷰어(신효섭 1119) 서버 켜기",
+      "type": "process",
+      "command": "C:\\Users\\User\\WorkSpace\\Donghun\\miniconda3\\Scripts\\conda.exe",
+      "args": ["run", "--no-capture-output", "-n", "qe-phm", "python", "-m", "http.server", "8768",
+               "--bind", "127.0.0.1", "--directory", "${workspaceFolder}\\참고자료\\팀원 공유 정보\\신효섭\\1119_최종"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "silent", "panel": "dedicated" }
+    },
+    {
       "label": "25년 3조 뷰어 다시 만들기",
       "type": "shell",
       "command": "& 'C:\\Users\\User\\WorkSpace\\Donghun\\miniconda3\\Scripts\\conda.exe' run -n qe-phm python '${workspaceFolder}\\참고자료\\25년3조_비교\\pipeline_3조.py'; & 'C:\\Users\\User\\WorkSpace\\Donghun\\miniconda3\\Scripts\\conda.exe' run -n qe-phm python '${workspaceFolder}\\참고자료\\25년3조_비교\\build_viewer25.py'",
