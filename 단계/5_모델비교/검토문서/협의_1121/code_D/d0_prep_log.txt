@@ -1,0 +1,9 @@
+train (150, 50000) val (40, 50000) thr 1.0 thr_all [1.44114606 0.45737872 1.37310602] cols 150
+lr coef [[1.94383061 1.276768  ]] [-2.69629403]
+OOF lr: normal sd 2.181 median -2.638 p95 0.557 ; fault median 2.715
+OOF z normal med/sd AE 0.00/0.66 ET 0.00/0.94
+val z median AE 1.11 ET 0.63 ; train-normal-p95 AE 1.20 ET 1.16
+val rule on (rule83|knock): 4 ['val_001', 'val_027', 'val_035', 'val_039']
+val A(b) pred (pre-body, thr 1.0): 11 ['val_001', 'val_004', 'val_013', 'val_016', 'val_017', 'val_018', 'val_024', 'val_027', 'val_031', 'val_035', 'val_039']
+val lr within +-0.5 of thr (no rule): ['val_009', 'val_012', 'val_018', 'val_021', 'val_022', 'val_028', 'val_034']
+val lr within +-1.0 of thr (no rule): 14

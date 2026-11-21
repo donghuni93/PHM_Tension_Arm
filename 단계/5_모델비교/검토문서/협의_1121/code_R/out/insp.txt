@@ -1,0 +1,4 @@
+dict_keys(['names', 'split', 'y', 'imps', 'T2', 'f', 'PR', 'P83', 'W83', 'P86', 'W86', 'K', 'RES', 'ring_old', 'NIMP_old'])
+{'t': (19,), 'height_x': (19,), 'height_g': (19,), 'idx': (19,), 'rings': (19, 3)}
+['H1_nimp', 'H2_ratio21', 'H3_kurt_1-2k', 'H4_kurt_2-4k', 'H5_kurt_4-8k', 'H6_kurt_8-12.5k', 'H7_ring_1-2k', 'H8_ring_2-4k', 'H9_ring_4-8k', 'H10_ring_8-12.5k', 'H12_share_1-2k', 'H13_share_2-4k', 'H14_share_4-8k', 'H15_share_8-12.5k', 'H18_hfl', 'L1_S', 'L1_r', 'L1_T', 'L1_hit']
+<class 'numpy.ndarray'>(190, 3)

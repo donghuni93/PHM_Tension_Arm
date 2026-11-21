@@ -1,0 +1,8 @@
+n_imp>=3 & body_frac>=0.9: 정상 41 고장 0 [] val 3
+n_imp>=3 & body_frac>=0.8: 정상 44 고장 0 [] val 5
+n_imp>=3 & body_frac>=0.7: 정상 47 고장 0 [] val 8
+n_big==1 (새 정의: 최대의 50% 이상 사건 수): 정상 55 고장 15 [np.str_('abn_001'), np.str_('abn_003'), np.str_('abn_006'), np.str_('abn_007'), np.str_('abn_009'), np.str_('abn_012'), np.str_('abn_014'), np.str_('abn_018')] val 21
+n_big==1 & n_imp>=2: 정상 43 고장 15 [np.str_('abn_001'), np.str_('abn_003'), np.str_('abn_006'), np.str_('abn_007'), np.str_('abn_009'), np.str_('abn_012'), np.str_('abn_014'), np.str_('abn_018')] val 14
+n_ev==1: 정상 19 고장 0 [] val 8
+n_ev<=1: 정상 36 고장 0 [] val 12
+n_imp==0: 정상 17 고장 0 [] val 4

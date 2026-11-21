@@ -1,0 +1,447 @@
+{
+ "repro": {
+  "S_022_pre": 0.9626604759412567,
+  "S_014_pre": 0.5461622651409526,
+  "S_normal_max_pre": 0.44851009581223394,
+  "S_normal_max_file": "nor_092",
+  "S_val_max_pre": 0.1961328345041565,
+  "S_022_post": 0.9626604759412568,
+  "S_014_post": 0.5461622651409526,
+  "S_normal_max_post": 0.4450915737404943,
+  "S_val_max_post": 0.1961328345041565,
+  "n_impacts_post": {
+   "normal": 854,
+   "val": 247,
+   "abnormal": 402
+  },
+  "n_impacts_abn_024": 22,
+  "n_impacts_abn_015": 35
+ },
+ "spearman": {
+  "candidates": [
+   "H1_nimp",
+   "H2_ratio21",
+   "H3_kurt_1-2k",
+   "H4_kurt_2-4k",
+   "H5_kurt_4-8k",
+   "H6_kurt_8-12.5k",
+   "H7_ring_1-2k",
+   "H8_ring_2-4k",
+   "H9_ring_4-8k",
+   "H10_ring_8-12.5k",
+   "H12_share_1-2k",
+   "H13_share_2-4k",
+   "H14_share_4-8k",
+   "H15_share_8-12.5k",
+   "H16_peak_h",
+   "H17_peak_w",
+   "H18_hfl",
+   "L1_S"
+  ],
+  "groups": [
+   {
+    "members": [
+     "H3_kurt_1-2k",
+     "H4_kurt_2-4k"
+    ],
+    "mean_abs": {
+     "H3_kurt_1-2k": 0.848,
+     "H4_kurt_2-4k": 0.848
+    },
+    "kept": "H3_kurt_1-2k"
+   },
+   {
+    "members": [
+     "H5_kurt_4-8k",
+     "H6_kurt_8-12.5k"
+    ],
+    "mean_abs": {
+     "H5_kurt_4-8k": 0.862,
+     "H6_kurt_8-12.5k": 0.862
+    },
+    "kept": "H5_kurt_4-8k"
+   }
+  ],
+  "dropped": {
+   "H4_kurt_2-4k": "H3_kurt_1-2k",
+   "H6_kurt_8-12.5k": "H5_kurt_4-8k"
+  },
+  "final": [
+   "H1_nimp",
+   "H2_ratio21",
+   "H3_kurt_1-2k",
+   "H5_kurt_4-8k",
+   "H7_ring_1-2k",
+   "H8_ring_2-4k",
+   "H9_ring_4-8k",
+   "H10_ring_8-12.5k",
+   "H12_share_1-2k",
+   "H13_share_2-4k",
+   "H14_share_4-8k",
+   "H15_share_8-12.5k",
+   "H16_peak_h",
+   "H17_peak_w",
+   "H18_hfl",
+   "L1_S"
+  ],
+  "n_final": 16,
+  "pairs_ge_0.8": [
+   [
+    "H3_kurt_1-2k",
+    "H4_kurt_2-4k",
+    0.848
+   ],
+   [
+    "H5_kurt_4-8k",
+    "H6_kurt_8-12.5k",
+    0.862
+   ]
+  ]
+ },
+ "bands": [
+  {
+   "feature": "H1_nimp",
+   "normal_p5": 0.0,
+   "normal_p95": 3.334,
+   "val_out": 0.025,
+   "val_median": 1.386,
+   "normal_median": 1.609,
+   "fault_out": 0.133,
+   "auc": 0.798
+  },
+  {
+   "feature": "H2_ratio21",
+   "normal_p5": 0.0,
+   "normal_p95": 0.94,
+   "val_out": 0.075,
+   "val_median": 0.386,
+   "normal_median": 0.436,
+   "fault_out": 0.033,
+   "auc": 0.597
+  },
+  {
+   "feature": "H3_kurt_1-2k",
+   "normal_p5": 0.483,
+   "normal_p95": 2.339,
+   "val_out": 0.1,
+   "val_median": 1.051,
+   "normal_median": 0.7,
+   "fault_out": 0.233,
+   "auc": 0.871
+  },
+  {
+   "feature": "H4_kurt_2-4k",
+   "normal_p5": 0.494,
+   "normal_p95": 2.248,
+   "val_out": 0.25,
+   "val_median": 0.999,
+   "normal_median": 0.878,
+   "fault_out": 0.467,
+   "auc": 0.843
+  },
+  {
+   "feature": "H5_kurt_4-8k",
+   "normal_p5": 0.494,
+   "normal_p95": 2.739,
+   "val_out": 0.225,
+   "val_median": 2.075,
+   "normal_median": 1.744,
+   "fault_out": 0.367,
+   "auc": 0.727
+  },
+  {
+   "feature": "H6_kurt_8-12.5k",
+   "normal_p5": 0.481,
+   "normal_p95": 2.579,
+   "val_out": 0.25,
+   "val_median": 1.66,
+   "normal_median": 1.664,
+   "fault_out": 0.3,
+   "auc": 0.695
+  },
+  {
+   "feature": "H7_ring_1-2k",
+   "normal_p5": -1.0,
+   "normal_p95": 0.802,
+   "val_out": 0.025,
+   "val_median": 0.025,
+   "normal_median": 0.0,
+   "fault_out": 0.0,
+   "auc": 0.643
+  },
+  {
+   "feature": "H8_ring_2-4k",
+   "normal_p5": -1.0,
+   "normal_p95": 0.5,
+   "val_out": 0.25,
+   "val_median": 0.0,
+   "normal_median": 0.0,
+   "fault_out": 0.233,
+   "auc": 0.874
+  },
+  {
+   "feature": "H9_ring_4-8k",
+   "normal_p5": -1.0,
+   "normal_p95": 1.0,
+   "val_out": 0.0,
+   "val_median": 0.417,
+   "normal_median": 0.989,
+   "fault_out": 0.0,
+   "auc": 0.267
+  },
+  {
+   "feature": "H10_ring_8-12.5k",
+   "normal_p5": -1.0,
+   "normal_p95": 0.001,
+   "val_out": 0.05,
+   "val_median": 0.0,
+   "normal_median": 0.0,
+   "fault_out": 0.667,
+   "auc": 0.83
+  },
+  {
+   "feature": "H12_share_1-2k",
+   "normal_p5": -1.402,
+   "normal_p95": -0.075,
+   "val_out": 0.025,
+   "val_median": -0.61,
+   "normal_median": -0.507,
+   "fault_out": 0.1,
+   "auc": 0.34
+  },
+  {
+   "feature": "H13_share_2-4k",
+   "normal_p5": -1.409,
+   "normal_p95": -0.515,
+   "val_out": 0.4,
+   "val_median": -0.665,
+   "normal_median": -0.765,
+   "fault_out": 0.5,
+   "auc": 0.654
+  },
+  {
+   "feature": "H14_share_4-8k",
+   "normal_p5": -1.482,
+   "normal_p95": -0.074,
+   "val_out": 0.05,
+   "val_median": -0.454,
+   "normal_median": -0.354,
+   "fault_out": 0.067,
+   "auc": 0.304
+  },
+  {
+   "feature": "H15_share_8-12.5k",
+   "normal_p5": -2.47,
+   "normal_p95": -0.878,
+   "val_out": 0.175,
+   "val_median": -1.768,
+   "normal_median": -1.816,
+   "fault_out": 0.567,
+   "auc": 0.81
+  },
+  {
+   "feature": "H16_peak_h",
+   "normal_p5": 0.46,
+   "normal_p95": 3.341,
+   "val_out": 0.175,
+   "val_median": 2.121,
+   "normal_median": 1.553,
+   "fault_out": 0.567,
+   "auc": 0.843
+  },
+  {
+   "feature": "H17_peak_w",
+   "normal_p5": 24.414,
+   "normal_p95": 1376.953,
+   "val_out": 0.15,
+   "val_median": 646.973,
+   "normal_median": 329.59,
+   "fault_out": 0.4,
+   "auc": 0.846
+  },
+  {
+   "feature": "H18_hfl",
+   "normal_p5": -0.99,
+   "normal_p95": 0.348,
+   "val_out": 0.0,
+   "val_median": -0.489,
+   "normal_median": -0.493,
+   "fault_out": 0.4,
+   "auc": 0.404
+  },
+  {
+   "feature": "L1_S",
+   "normal_p5": 0.0,
+   "normal_p95": 0.254,
+   "val_out": 0.025,
+   "val_median": 0.0,
+   "normal_median": 0.0,
+   "fault_out": 0.233,
+   "auc": 0.695
+  }
+ ],
+ "knn": {
+  "새 피처 (16열)": {
+   "purity": 0.6666666666666666,
+   "random": 0.19463087248322147,
+   "train_5nn_median": 4.116043306455518,
+   "train_5nn_p95": 8.949492291858975,
+   "val_5nn_median": 4.999512688152501,
+   "val_over_p95": 2,
+   "val_over_p90": 6,
+   "val_max": 19.37547785948126,
+   "val_top5": [
+    [
+     "031",
+     19.38
+    ],
+    [
+     "035",
+     16.08
+    ],
+    [
+     "004",
+     8.35
+    ],
+    [
+     "002",
+     8.08
+    ],
+    [
+     "012",
+     7.92
+    ]
+   ]
+  },
+  "ext150 (150열)": {
+   "purity": 0.4533333333333333,
+   "random": 0.19463087248322147,
+   "train_5nn_median": 47.89209844564304,
+   "train_5nn_p95": 2629.9458951707047,
+   "val_5nn_median": 52.571366271627696,
+   "val_over_p95": 7,
+   "val_over_p90": 7,
+   "val_max": 9074039.150800148,
+   "val_top5": [
+    [
+     "004",
+     9074039.15
+    ],
+    [
+     "031",
+     5136517.41
+    ],
+    [
+     "035",
+     2878215.75
+    ],
+    [
+     "016",
+     129173.27
+    ],
+    [
+     "027",
+     18975.51
+    ]
+   ]
+  }
+ },
+ "knn_clip10": {
+  "새 피처": {
+   "purity": 0.7866666666666666,
+   "random": 0.19463087248322147,
+   "train_5nn_median": 3.435343582745298,
+   "train_5nn_p95": 5.897570991550707,
+   "val_5nn_median": 3.943620307031371,
+   "val_over_p95": 2,
+   "val_over_p90": 3,
+   "val_max": 6.30774470757037,
+   "val_top5": [
+    [
+     "035",
+     6.31
+    ],
+    [
+     "031",
+     6.29
+    ],
+    [
+     "012",
+     5.77
+    ],
+    [
+     "023",
+     5.49
+    ],
+    [
+     "040",
+     5.38
+    ]
+   ]
+  },
+  "ext150": {
+   "purity": 0.5533333333333333,
+   "random": 0.19463087248322147,
+   "train_5nn_median": 20.59278355113907,
+   "train_5nn_p95": 41.52929210131001,
+   "val_5nn_median": 27.10460336222448,
+   "val_over_p95": 7,
+   "val_over_p90": 10,
+   "val_max": 46.23957894335572,
+   "val_top5": [
+    [
+     "012",
+     46.24
+    ],
+    [
+     "031",
+     45.71
+    ],
+    [
+     "034",
+     44.83
+    ],
+    [
+     "004",
+     43.03
+    ],
+    [
+     "016",
+     42.83
+    ]
+   ]
+  }
+ },
+ "tsne": {
+  "new_15": {
+   "kl": 0.24477887153625488,
+   "seed": 1
+  },
+  "new_30": {
+   "kl": 0.15673121809959412,
+   "seed": 0
+  },
+  "ext_30": {
+   "kl": 0.303979754447937,
+   "seed": 4
+  }
+ },
+ "cols_new": [
+  "H1_nimp",
+  "H2_ratio21",
+  "H3_kurt_1-2k",
+  "H5_kurt_4-8k",
+  "H7_ring_1-2k",
+  "H8_ring_2-4k",
+  "H9_ring_4-8k",
+  "H10_ring_8-12.5k",
+  "H12_share_1-2k",
+  "H13_share_2-4k",
+  "H14_share_4-8k",
+  "H15_share_8-12.5k",
+  "H16_peak_h",
+  "H17_peak_w",
+  "H18_hfl",
+  "L1_S"
+ ]
+}

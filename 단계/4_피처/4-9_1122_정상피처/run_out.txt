@@ -1,0 +1,16 @@
+﻿conda.exe : Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+At line:1 char:374
++ ... 1122_정상피처"; & "C:\Users\User\WorkSpace\Donghun\miniconda3\Scripts\con ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Font 'default' ...a dummy symbol.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.

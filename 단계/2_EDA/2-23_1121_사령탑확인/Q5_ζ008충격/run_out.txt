@@ -1,0 +1,3 @@
+C:\Users\User\WorkSpace\Donghun\3�븰�뀈2�븰湲�\�뭹吏덇났�븰\�떒怨�\2_EDA\2-23_1121_�궗�졊�깙�솗�씤\Q5_瓘008異⑷꺽\run.py:145: Pandas4Warning: Starting with pandas version 4.0 all arguments of sum will be keyword-only.
+  Mn = M.div(M.sum(1), axis=0).fillna(0)
+done

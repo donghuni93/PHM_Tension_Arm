@@ -1,0 +1,22 @@
+공간 | PR-AUC ± sd | 위험 정상 | 오경보 FA 점수백분위 | 고장 5-NN 순도(폴드밖) | FA 정상 5-NN 순도
+new14      | 0.968 ± 0.013 | 2.4 | 0.713 | 0.661 | 0.810
++dom       | 0.975 ± 0.013 | 1.0 | 0.715 | 0.664 | 0.817
++n_ev      | 0.977 ± 0.007 | 0.8 | 0.724 | 0.671 | 0.821
++dom,n_ev  | 0.981 ± 0.007 | 1.2 | 0.725 | 0.671 | 0.819
+
+== new14 열 val 이동 (val 중앙 - 정상 중앙)/정상IQR, val 중 정상 5-95% 밖 비율 ==
+H1_nimp          shift -0.23  outside 0.03
+H2_ratio21       shift -0.08  outside 0.07
+H3_kurt_1-2k     shift +0.60  outside 0.10
+H5_kurt_4-8k     shift +0.27  outside 0.23
+H7_ring_1-2k     shift +25000000.00  outside 0.03
+H8_ring_2-4k     shift +0.00  outside 0.25
+H9_ring_4-8k     shift -0.65  outside 0.00
+H10_ring_8-12.5k shift +0.00  outside 0.05
+H12_share_1-2k   shift -0.20  outside 0.03
+H13_share_2-4k   shift +0.34  outside 0.40
+H14_share_4-8k   shift -0.21  outside 0.05
+H15_share_8-12.5k shift +0.07  outside 0.17
+H18_hfl          shift +0.01  outside 0.00
+L1_S             shift +0.00  outside 0.03
+dom/n_ev val shift: dom 정상중앙 0.577128647220656 val 0.6206865693166566 n_ev val 3.0

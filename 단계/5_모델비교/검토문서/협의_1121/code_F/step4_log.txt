@@ -1,0 +1,5 @@
+  File "C:\Users\User\WorkSpace\Donghun\3\ufffd•™\ufffd…„2\ufffd•™ê¸\ufffd\\ufffd’ˆì§ˆê³µ\ufffd•™\\ufffd‹¨ê³\ufffd\5_ëª¨ë¸ë¹„êµ\ê²\ufffd\ufffd† ë¬¸ì„œ\\ufffd˜‘\ufffd˜_1121\code_F\step4_ring9.py", line 121
+    P(f"
+      ^
+SyntaxError: unterminated f-string literal (detected at line 121)
+ERROR conda.cli.main_run:execute(148): `conda run python step4_ring9.py` failed. (See above for error)

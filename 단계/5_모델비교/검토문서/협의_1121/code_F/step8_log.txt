@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "C:\Users\User\WorkSpace\Donghun\3학년2학기\품질공학\단계\5_모델비교\검토문서\협의_1121\code_F\step8_final.py", line 67, in <module>
+    Em = tsne_best(Z, perp)
+         ^^^^^^^^^
+NameError: name 'tsne_best' is not defined
+ERROR conda.cli.main_run:execute(148): `conda run python step8_final.py` failed. (See above for error)

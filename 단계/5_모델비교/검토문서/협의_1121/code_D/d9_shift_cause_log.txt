@@ -1,0 +1,14 @@
+lo_frac vs AEz/ETz Spearman [정상]: 0.35 / 0.40 (n=103)
+lo_frac vs AEz/ETz Spearman [val]: 0.28 / 0.28 (n=36)
+body_frac vs AEz/ETz Spearman [정상]: -0.53 / -0.52 (n=103)
+body_frac vs AEz/ETz Spearman [val]: -0.29 / -0.04 (n=36)
+n_imp vs AEz/ETz Spearman [정상]: 0.14 / 0.38 (n=120)
+n_imp vs AEz/ETz Spearman [val]: 0.12 / 0.75 (n=40)
+n_ev vs AEz/ETz Spearman [정상]: 0.08 / 0.29 (n=120)
+n_ev vs AEz/ETz Spearman [val]: 0.02 / 0.50 (n=40)
+h1 vs AEz/ETz Spearman [정상]: 0.24 / 0.54 (n=120)
+h1 vs AEz/ETz Spearman [val]: -0.08 / 0.80 (n=40)
+[정상] lo_frac>=0.5: n=26 AEz 중앙 0.27 ETz 0.58 | lo_frac<0.5: n=77 AEz -0.06 ETz -0.09
+[val] lo_frac>=0.5: n=18 AEz 중앙 1.10 ETz 0.94 | lo_frac<0.5: n=18 AEz 1.08 ETz 0.63
+[정상] 충격<=1: n=29 AEz 중앙 -0.21 ETz -0.94 | 충격>=2: n=91 AEz 0.12 ETz 0.20
+[val] 충격<=1: n=11 AEz 중앙 1.20 ETz 0.04 | 충격>=2: n=29 AEz 1.08 ETz 0.88

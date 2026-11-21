@@ -1,0 +1,7 @@
+base16 열 = ['H1_nimp', 'H2_ratio21', 'H3_kurt_1-2k', 'H5_kurt_4-8k', 'H7_ring_1-2k', 'H8_ring_2-4k', 'H9_ring_4-8k', 'H10_ring_8-12.5k', 'H12_share_1-2k', 'H13_share_2-4k', 'H14_share_4-8k', 'H15_share_8-12.5k', 'H16_peak_h', 'H17_peak_w', 'H18_hfl', 'L1_S']
+nor_097 mean -0.87: H16_peak_h +3.6, H14_share_4-8k -3.0, H9_ring_4-8k -2.8, H18_hfl +2.7, H10_ring_8-12.5k -2.6
+nor_101 mean -0.87: H16_peak_h +3.6, H14_share_4-8k -2.9, H9_ring_4-8k -2.8, H18_hfl +2.7, H10_ring_8-12.5k -2.6
+nor_120 mean -0.86: H16_peak_h +3.6, H14_share_4-8k -3.0, H9_ring_4-8k -2.8, H18_hfl +2.6, H10_ring_8-12.5k -2.6
+abn_016 mean -1.04: H17_peak_w +6.2, H16_peak_h +3.5, H15_share_8-12.5k +3.0, H8_ring_2-4k +2.1, H14_share_4-8k -2.0
+정상 평균 |mean| 분위: [0.017 0.027 0.867]
+DC 큰 파일 로그 PSD 1-2 kHz 구간 중앙값(참고)

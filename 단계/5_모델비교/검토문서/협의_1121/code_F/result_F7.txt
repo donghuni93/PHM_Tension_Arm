@@ -1,0 +1,89 @@
+== A) 8.3k 순음: 돌출 >= 1.0 dex 파일 (train) : 파일 | 라벨 | 돌출 | 폭 Hz
+  nor_007 y=0 prom 1.05 f 8600 w 177
+  nor_009 y=0 prom 1.14 f 8002 w 24
+  nor_013 y=0 prom 1.87 f 8118 w 604
+  nor_014 y=0 prom 3.21 f 8002 w 31
+  nor_019 y=0 prom 1.59 f 8246 w 128
+  nor_021 y=0 prom 1.21 f 8600 w 165
+  nor_022 y=0 prom 1.45 f 8002 w 24
+  nor_030 y=0 prom 1.49 f 8002 w 24
+  nor_031 y=0 prom 1.05 f 8044 w 2655
+  nor_032 y=0 prom 1.01 f 8002 w 464
+  nor_035 y=0 prom 1.21 f 8002 w 488
+  nor_037 y=0 prom 1.07 f 8319 w 281
+  nor_039 y=0 prom 1.22 f 8057 w 592
+  nor_045 y=0 prom 1.27 f 8002 w 24
+  nor_052 y=0 prom 1.05 f 8002 w 1495
+  nor_053 y=0 prom 3.15 f 8002 w 31
+  nor_066 y=0 prom 1.26 f 8600 w 122
+  nor_082 y=0 prom 1.10 f 8160 w 378
+  nor_090 y=0 prom 1.70 f 8002 w 24
+  nor_091 y=0 prom 1.43 f 8008 w 421
+  nor_108 y=0 prom 1.15 f 8118 w 2100
+  abn_002 y=1 prom 2.09 f 8234 w 311
+  abn_003 y=1 prom 1.35 f 8557 w 232
+  abn_005 y=1 prom 1.18 f 8246 w 330
+  abn_006 y=1 prom 2.49 f 8240 w 317
+  abn_010 y=1 prom 1.59 f 8234 w 311
+  abn_012 y=1 prom 1.21 f 8344 w 269
+  abn_015 y=1 prom 1.21 f 8002 w 208
+  abn_018 y=1 prom 1.15 f 8002 w 2686
+  abn_023 y=1 prom 1.52 f 8582 w 714
+  abn_027 y=1 prom 1.74 f 8167 w 8484
+  abn_029 y=1 prom 2.30 f 8246 w 531
+  abn_030 y=1 prom 1.69 f 8319 w 85
+  돌출>=1.0: 고장 12 /30 정상 21 /120 val 12 /40
+  돌출>=1.0 & 폭>=150: 고장 11  정상 12  val 7
+  tone_prom 단변량 AUC(150): 0.562
+  tone_w 단변량 AUC(150): 0.462
+
+== B) 고주파(>=8.0k) 충격이 있는 파일의 '한 사건 몫'(높이 합 중 최대 비율) 
+  nor_019 y=0 n_hi=3 top1_share=0.37 (f: [8250])
+  nor_043 y=0 n_hi=1 top1_share=1.00 (f: [9250])
+  nor_059 y=0 n_hi=3 top1_share=0.41 (f: [8750, 9000])
+  nor_065 y=0 n_hi=1 top1_share=1.00 (f: [10250])
+  nor_092 y=0 n_hi=1 top1_share=1.00 (f: [8250])
+  nor_116 y=0 n_hi=2 top1_share=0.76 (f: [9500])
+  abn_001 y=1 n_hi=3 top1_share=0.72 (f: [10250])
+  abn_002 y=1 n_hi=3 top1_share=0.53 (f: [8250])
+  abn_003 y=1 n_hi=3 top1_share=0.45 (f: [8500, 9500])
+  abn_004 y=1 n_hi=14 top1_share=0.10 (f: [8500, 8750, 9000, 9250, 9750, 10000, 10250, 10500, 10750])
+  abn_006 y=1 n_hi=7 top1_share=0.24 (f: [8250])
+  abn_007 y=1 n_hi=1 top1_share=1.00 (f: [9500])
+  abn_010 y=1 n_hi=7 top1_share=0.21 (f: [8000, 8250])
+  abn_011 y=1 n_hi=6 top1_share=0.24 (f: [8750, 9250, 9750, 10000, 10750])
+  abn_012 y=1 n_hi=1 top1_share=1.00 (f: [8500])
+  abn_013 y=1 n_hi=11 top1_share=0.16 (f: [8250, 8500, 9500])
+  abn_015 y=1 n_hi=2 top1_share=0.51 (f: [11500, 12000])
+  abn_018 y=1 n_hi=2 top1_share=0.50 (f: [10250])
+  abn_019 y=1 n_hi=12 top1_share=0.10 (f: [8750, 9000, 9250, 10250, 10500, 10750])
+  abn_020 y=1 n_hi=3 top1_share=0.36 (f: [9500])
+  abn_024 y=1 n_hi=9 top1_share=0.18 (f: [8750, 9000, 10000, 10250, 10500, 10750, 11000])
+  abn_025 y=1 n_hi=2 top1_share=0.51 (f: [8000])
+  abn_026 y=1 n_hi=3 top1_share=0.76 (f: [9000, 9500])
+  abn_028 y=1 n_hi=3 top1_share=0.40 (f: [10250])
+  abn_029 y=1 n_hi=6 top1_share=0.35 (f: [8000, 8250])
+  abn_030 y=1 n_hi=1 top1_share=1.00 (f: [8250])
+  val_006 val n_hi=1 top1_share=1.00
+  val_021 val n_hi=1 top1_share=1.00
+
+== C) 본체(5.5-7.9k) 충격 몫과 '충격 >= 3, 몫 >= 0.9' (EXP-034 정상 증거의 새 정의 판) 
+  충격>=3 & 본체 몫>=0.9: 정상 41/120 고장 0/30 val 3/40
+  충격>=4 & 본체 몫>=0.9: 정상 36/120 고장 0/30 val 3/40
+  오경보 정상 11개의 (충격 수, 본체 몫, 고주파 충격 수):
+    nor_065: n=1 body=0.00 hi=1 mid(2-3.4k)=0
+    nor_116: n=6 body=0.67 hi=2 mid(2-3.4k)=0
+    nor_037: n=6 body=0.17 hi=0 mid(2-3.4k)=2
+    nor_110: n=5 body=0.40 hi=0 mid(2-3.4k)=2
+    nor_095: n=18 body=0.72 hi=0 mid(2-3.4k)=0
+    nor_059: n=3 body=0.00 hi=3 mid(2-3.4k)=0
+    nor_055: n=2 body=1.00 hi=0 mid(2-3.4k)=0
+    nor_025: n=28 body=0.96 hi=0 mid(2-3.4k)=1
+    nor_097: n=0 body=nan hi=0 mid(2-3.4k)=0
+    nor_101: n=0 body=nan hi=0 mid(2-3.4k)=0
+    nor_120: n=0 body=nan hi=0 mid(2-3.4k)=0
+
+== D) 정상 5-95% 밖 정도: 정상 파일 중 충격 수 >=3 인 개수와 그 본체 몫 분포
+  정상 충격>=3 파일 79개, 본체 몫 중앙 0.94, 몫<0.9 인 개수 38
+  고장 충격>=3 파일 30개, 본체 몫 중앙 0.07, 몫>=0.9 인 개수 0
+  val 충격>=3 파일 26개, 본체 몫 중앙 0.33, 몫>=0.9 인 개수 3

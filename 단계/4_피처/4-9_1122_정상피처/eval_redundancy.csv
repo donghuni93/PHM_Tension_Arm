@@ -1,0 +1,11 @@
+﻿feature,max_abs_rho,with_,second
+N1_reb,0.8,n_ev,H1_nimp +0.79
+N2_ret_ms,0.6,H5_kurt_4-8k,H3_kurt_1-2k +0.53
+N3_ifrac,0.76,H5_kurt_4-8k,H1_nimp +0.74
+N3_crest,0.87,H5_kurt_4-8k,H3_kurt_1-2k +0.65
+N4_nout,0.53,H9_ring_4-8k,H3_kurt_1-2k +0.42
+N5_edge,0.42,n_ev,L1_S +0.41
+N6_calm,0.6,H1_nimp,n_ev -0.57
+ref_n_ev,1.0,n_ev,H1_nimp +0.94
+ref_H1_nimp,1.0,H1_nimp,n_ev +0.94
+ref_H14_share,1.0,H14_share_4-8k,H12_share_1-2k -0.73
