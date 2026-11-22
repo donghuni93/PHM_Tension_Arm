@@ -1,0 +1,61 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>EXP-044 J 모델 경계와 val 판정</title>
+<style>
+@page { size: A4; margin: 14mm 14mm 14mm 14mm; }
+:root { --fg:#1d2430; --muted:#5b6575; --line:#d9dee6; --nor:#2a78d6; --abn:#d4561f; --warn:#a86b00; --warnbg:#fff4dc; }
+body { font-family: "WenQuanYi Zen Hei", "Malgun Gothic", sans-serif; color: var(--fg); font-size: 10pt; line-height: 1.6; margin: 0; }
+h1 { font-size: 17pt; margin: 0 0 4px; } h2 { font-size: 12pt; margin: 10px 0 5px; padding-bottom: 3px; border-bottom: 1px solid var(--line); }
+.meta { color: var(--muted); font-size: 8.5pt; }
+.kpi { display: flex; gap: 22px; margin: 10px 0 4px; } .kpi div { display: flex; flex-direction: column; }
+.kpi b { font-size: 13pt; } .kpi span { font-size: 8pt; color: var(--muted); }
+p { margin: 4px 0; } ul { margin: 4px 0; padding-left: 16px; } li { margin: 2px 0; }
+figure { margin: 6px 0 0; page-break-inside: avoid; } figure img { width: 80%; display: block; margin: 0 auto; border: 1px solid var(--line); }
+figcaption { font-size: 8.5pt; color: var(--muted); margin-top: 4px; }
+.nor { color: var(--nor); font-weight: bold; } .abn { color: var(--abn); font-weight: bold; }
+.note { background: var(--warnbg); border-left: 3px solid var(--warn); padding: 6px 10px; font-size: 9pt; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 9pt; margin-top: 6px; page-break-inside: avoid; }
+th, td { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+th { color: var(--muted); font-size: 8.5pt; } td.n { text-align: right; white-space: nowrap; }
+.pb { page-break-before: always; }
+</style></head><body>
+<h1>EXP-044 J 모델 경계와 val 판정</h1>
+<div class="meta">9조 텐션암 이상감지 · 2026-11-22 · 원본 단계/5_모델비교/EXP-044_1122_AE추가/</div>
+<p style="margin-top:8px"><b>J</b> = ET 점수 + 박자 z + AE z를 로지스틱으로 합치고, 규칙 두 개(E2 하중 대비 덜컥, 8.3 kHz)를 OR로 붙인 모델입니다. 학습 150개에서는 고장 30개를 모두 잡았고, 정상 3개(116 · 065 · 059)는 반복해서 오경보합니다. val 40개 중 10개를 고장으로 판정했으며, 경계에 붙은 파일이 7개라 그 부분은 확신이 낮습니다.</p>
+<div class="kpi"><div><b>0.977 ± 0.010</b><span>중첩 CV F2 (seed 5)</span></div><div><b>1.000</b><span>재현율</span></div><div><b>0.030</b><span>오경보율</span></div><div><b>10 / 40</b><span>val 고장 판정</span></div></div>
+
+<h2>1. 학습 150개 최종 판단</h2>
+<figure><img src="그림1_학습_최종판단.png"><figcaption>파랑 배경 = 정상 판단 영역, 주황 배경 = 고장 판단 영역(학습 150개 전체로 학습한 결합 경계, 박자 z = 0 단면). 점 색 = 최종 판단(규칙 포함), 모양 = 실제 라벨(네모 정상 · 원 고장). 점은 OOF(fold마다 학습에 안 쓴 모델로 판정)라 경계 근처에서는 배경색과 점 색이 다를 수 있고, 박자 z가 크면 그 파일의 경계는 왼쪽으로 옮겨 갑니다.</figcaption></figure>
+<ul>
+<li>파랑 영역 안에 있는데 고장으로 판단된 고장 파일은 규칙이나 박자가 잡은 것입니다. <span class="abn">A002</span>는 8.3 kHz 규칙, <span class="abn">A017</span>은 E2 규칙, <span class="abn">A022</span>는 박자 z(8.5)가 잡았습니다.</li>
+<li>빨간 테두리 네모는 오경보입니다(이 seed에서는 5개). 중첩 CV 5 seed에서 반복되는 것은 116 · 065 · 059입니다.</li>
+</ul>
+
+<h2>2. 판정하지 못한 것</h2>
+<table><thead><tr><th>파일</th><th>오경보 횟수 (seed 5번 중)</th><th>이유</th></tr></thead><tbody>
+<tr><td class="nor">N116</td><td class="n">5</td><td>고장과 같은 9.5 kHz 칸에서 울림. 충격 6개로 단발이 아님</td></tr>
+<tr><td class="nor">N065</td><td class="n">4</td><td>10.25 kHz 칸에서 한 번 크게 울림. ET·AE 모두 경계 근처</td></tr>
+<tr><td class="nor">N059</td><td class="n">3</td><td>8.75–9 kHz 칸. AE z 2.5로 고장 무리 안에 위치</td></tr>
+</tbody></table>
+<p style="margin-top:6px">피처 7종, 모델 4종, 저대역 0.2–1 kHz 피처(PHO-006)를 넣어도 이 세 파일은 정상 쪽으로 내려가지 않았습니다. 지금 가진 신호 정보로는 고장과 구분되지 않는 <b>정보 한계</b>로 판단합니다. 또 8.3 kHz 규칙 문턱은 라벨을 본 뒤 정한 값이라 F2 0.977은 조금 낙관적입니다.</p>
+
+<h2 class="pb">3. val 40개 최종 판단</h2>
+<figure><img src="그림2_val_최종판단.png"><figcaption>배경은 그림 1과 같은 경계입니다. 삼각형 = val(주황 = 고장 판단, 파랑 = 정상 판단), 회색 점 = 학습 150개(참고). 고장 판단 10개: 001 004 013 016 017 024 027 031 035 039. 001만 파랑 영역에 있는데, 8.3 kHz 규칙이 고장으로 판단했습니다.</figcaption></figure>
+<div class="note"><b>주의</b>: val은 AE z가 학습 정상보다 전체적으로 높습니다(중앙 약 +1.7, 학습 정상 0). val의 3–5 kHz 배경이 통째로 +10.9 dB 올라가 있어 고장 비율보다는 측정 조건 차이일 가능성이 큽니다. 그래서 val 삼각형이 위쪽에 몰려 있고, 판정은 사실상 ET 점수가 가릅니다.</div>
+
+<h2>4. 경계에 있는 val 파일</h2>
+<p>여유 = 결합 점수가 경계에서 떨어진 정도(학습 정상 점수 IQR 단위). +는 고장 쪽, −는 정상 쪽이며, 0에 가까울수록 작은 변화에도 판정이 뒤집힐 수 있습니다.</p>
+<table><thead><tr><th>val</th><th>판단</th><th>여유</th><th>ET</th><th>AE z</th><th>경계인 이유</th></tr></thead><tbody>
+<tr><td>027</td><td class="abn">고장</td><td class="n">+0.14</td><td class="n">0.18</td><td class="n">1.87</td><td>ET는 경계 바로 위, 박자 z 1.2가 고장 쪽으로 밀어 줌</td></tr>
+<tr><td>025</td><td class="nor">정상</td><td class="n">−0.03</td><td class="n">0.25</td><td class="n">1.30</td><td>ET만 보면 고장. AE가 상대적으로 낮아 결합이 정상으로 판단</td></tr>
+<tr><td>018</td><td class="nor">정상</td><td class="n">−0.05</td><td class="n">−0.22</td><td class="n">2.42</td><td>ET는 정상인데 AE가 높아 경계에 붙음(AE 이동 영향이 가장 큰 유형)</td></tr>
+<tr><td>021</td><td class="nor">정상</td><td class="n">−0.17</td><td class="n">−0.39</td><td class="n">1.91</td><td>018과 같은 유형</td></tr>
+<tr><td>012</td><td class="nor">정상</td><td class="n">−0.28</td><td class="n">−0.64</td><td class="n">1.71</td><td>ET·AE 모두 중간값</td></tr>
+<tr><td>036</td><td class="nor">정상</td><td class="n">−0.29</td><td class="n">−0.06</td><td class="n">0.02</td><td>ET는 경계인데 AE가 거의 0이라 결합이 정상으로 판단</td></tr>
+<tr><td>009</td><td class="nor">정상</td><td class="n">−0.31</td><td class="n">−0.73</td><td class="n">1.73</td><td>012와 같은 유형</td></tr>
+<tr><td>001</td><td class="abn">고장</td><td class="n">규칙</td><td class="n">−1.19</td><td class="n">2.58</td><td>ET로는 정상, 8.3 kHz 규칙으로만 고장. 학습의 A002와 같은 모습</td></tr>
+</tbody></table>
+<ul style="margin-top:6px">
+<li>ET만 쓰면 025 · 036도 고장이 되어 11개입니다. 이 두 파일은 결합 모델과 ET 단독의 판단이 갈립니다.</li>
+<li>저대역 피처를 넣은 실험(PHO-006)에서는 025 · 018이 고장으로 뒤집혔습니다. 경계 파일이 실제로 흔들린다는 근거입니다.</li>
+</ul>
+<p class="meta" style="margin-top:10px">val 판정은 학습 150개 전체로 한 번 학습한 결과이며 제출 파일이 아닙니다. 그림 코드: 공유_1122/그림_최종판단.py (QE_FULL=1).</p>
+</body></html>
