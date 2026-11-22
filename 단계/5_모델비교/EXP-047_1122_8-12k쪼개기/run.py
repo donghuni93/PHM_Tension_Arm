@@ -31,7 +31,7 @@ ex = Experiment(__file__, "EXP-047", "8–12.5 kHz 옥타브를 8–10 · 10–1
 ns = NS(); names, y, g = ns.names, ns.y, ns.g; nor = y == 0
 OUT = outlier_idx(names); isout = np.zeros(ns.n, bool); isout[OUT] = True; keep = ~isout
 for src_, k, nm in (("EXP-044_1122_AE추가", "중첩: J | W + AE + E2 + 8.3k (최종 후보)", "J | EXP-044 값 (기준, 이상치 포함 학습)"),
-                    ("EXP-046_1122_이상치정상_학습제외", "중첩: K | J, 이상치 3개 학습 제외 (150개 평가)", "J-x | EXP-046 값 (이상치 3개 학습 제외)")):
+                    ("기각/EXP-046_1122_이상치정상_학습제외", "중첩: K | J, 이상치 3개 학습 제외 (150개 평가)", "J-x | EXP-046 값 (이상치 3개 학습 제외)")):
     ex.res["configs"]["중첩: " + nm] = dict(json.load(open(os.path.join(B5, src_, "result.json"), encoding="utf-8"))["configs"][k], mid=True)
 ex._write()
 
