@@ -224,3 +224,179 @@ class Add83:
         F = np.asarray(F); out = self.m_.fires(F[:, :-1]); out["R83"] = F[:, -1] > 0.5; return out
     def decision_function(self, F):
         F = np.asarray(F); return np.maximum(self.m_.decision_function(F[:, :-1]), F[:, -1])
+
+
+class ExcludeTrain:
+    """학습할 때만 drop 번호의 행을 뺀다 (평가 · 판정에는 그대로 쓴다). 입력 행의 마지막 열 = 행 번호(파일 번호). 11-22 이상치 정상 3개(src.exp.OUTLIER_NORMALS) 처리용"""
+    def __init__(self, mk, drop): self.mk, self.drop = mk, tuple(drop)
+    def fit(self, F, y):
+        F = np.asarray(F); keep = ~np.isin(F[:, -1].astype(int), self.drop)
+        self.m_ = self.mk().fit(F[keep], np.asarray(y)[keep]); return self
+    def __getattr__(self, k):
+        if k in ("m_", "mk", "drop") or k.startswith("__"): raise AttributeError(k)
+        return getattr(self.m_, k)
+    def fires(self, F): return self.m_.fires(F)
+    def decision_function(self, F): return self.m_.decision_function(F)
+
+
+# ---------------------------------------------------------------------------
+# 11-22 4-10: t-SNE · 5-NN용 공간 (라벨 없음). robust_z는 정상 값의 절반 이상이 같은 값이면(H9: 정상 60/120 = 1.0)
+# MAD가 0 근처가 되어 z가 100 넘게 터진다(EXP-044 t-SNE가 한 줄로 늘어선 원인) → 척도 하한 = 정상 표준편차의 0.5배
+# ---------------------------------------------------------------------------
+def map_scale(A_ref, *As, floor=0.5):
+    """열마다 (v − 정상 중앙) / max(1.4826·MAD, floor·정상 sd). A_ref = 기준 정상 행. 반환 = As 각각의 변환"""
+    A_ref = np.asarray(A_ref, float)
+    med = np.median(A_ref, 0)
+    sc = np.maximum(1.4826 * np.median(np.abs(A_ref - med), 0), floor * A_ref.std(0)) + 1e-9
+    return [(np.asarray(A, float) - med) / sc for A in As]
+
+
+def ae_map_cols(ns, seed=0):
+    """AE(정상만 학습, src.experts.ae_segerr) 복원 오차 → train OOF 5겹 열 (n, 5): [전체 평균, 1–2 · 2–4 · 4–8 · 8–12.5 kHz 칸 평균], log10.
+    라벨은 '정상만 학습'에만 쓴다(AE의 정의). 칸 = segment_logpsd 1025 bin(12.2 Hz 간격)"""
+    from sklearn.model_selection import StratifiedKFold
+    from src.experts import ae_segerr
+    fb = np.arange(1025) * 25000 / 2048
+    bands = [(1000, 2000), (2000, 4000), (4000, 8000), (8000, 12500)]
+    out = np.empty((ns.n, 5)); idx = np.arange(ns.n)
+    for a, b in StratifiedKFold(5, shuffle=True, random_state=seed).split(idx, ns.y):
+        e = ae_segerr(idx[a], idx[b]).mean(1)                       # (te, 1025)
+        out[b, 0] = np.log10(e.mean(1))
+        for k, (lo, hi) in enumerate(bands):
+            out[b, k + 1] = np.log10(e[:, (fb >= lo) & (fb < hi)].mean(1))
+    return out
+
+
+AE_MAP_COLS = ["AE_mean", "AE_1-2k", "AE_2-4k", "AE_4-8k", "AE_8-12.5k"]
+
+
+def tsne_best(Z, seeds=3, perplexity=30):
+    """seed 여러 개 중 KL 최소 배치 → (KL, 배치 (n, 2), seed별 배치 목록)"""
+    from sklearn.manifold import TSNE
+    runs = []
+    for s_ in range(seeds):
+        t_ = TSNE(2, perplexity=perplexity, init="random", random_state=s_, learning_rate="auto"); E = t_.fit_transform(Z)
+        runs.append((float(t_.kl_divergence_), E))
+    kl, E = min(runs, key=lambda r: r[0])
+    return kl, E, [r[1] for r in runs]
+
+
+def knn_report(Z, y, k=5, seeds=5):
+    """공간의 정상-고장 분리 숫자: (5-NN 고장 이웃 중 정상 비율 평균, 정상 이웃 중 고장 비율 평균, 폴드 밖 5-NN ROC-AUC 평균, sd)"""
+    from sklearn.metrics import roc_auc_score
+    from sklearn.model_selection import StratifiedKFold
+    from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
+    Z, y = np.asarray(Z, float), np.asarray(y)
+    _, I = NearestNeighbors(n_neighbors=k + 1).fit(Z).kneighbors(Z); I = I[:, 1:]
+    other = (y[I] != y[:, None]).mean(1)
+    aucs = []
+    for s in range(seeds):
+        pr = np.empty(len(y))
+        for a, b in StratifiedKFold(5, shuffle=True, random_state=s).split(Z, y):
+            pr[b] = KNeighborsClassifier(k).fit(Z[a], y[a]).predict_proba(Z[b])[:, 1]
+        aucs.append(roc_auc_score(y, pr))
+    return float(other[y == 1].mean()), float(other[y == 0].mean()), float(np.mean(aucs)), float(np.std(aucs))
+
+
+# ---------------------------------------------------------------------------
+# 11-22 기본 t-SNE (사용자 결정, 4-10 S3 방식): 모든 실험의 tsne_라벨 그림은 이 함수로 그리고 핵심 그림(key=True)으로 둔다
+# 공간 = 모델 입력 H 열(+ 봉우리 H16 · H17, 박자 S) + AE 5열, map_scale(기준 = 지도에 넣는 정상). 지도 = 146개(TSNE_DROP 제외)
+# 왼쪽 = 라벨 없는 배치(회색), 오른쪽 = 같은 배치에 라벨 색. 숫자 = 폴드 밖 5-NN AUC · 고장 이웃 중 정상 비율
+# ---------------------------------------------------------------------------
+TSNE_DROP = ("nor_059", "nor_065", "nor_116", "abn_022")
+TSNE_LABELS = ("abn_002", "abn_029", "abn_009", "abn_018", "abn_013", "abn_014", "abn_017", "abn_023", "abn_028")
+
+
+def tsne_space(ns, T=None, cols=None, drop=TSNE_DROP):
+    """기본 t-SNE 공간 → (Z (지도 파일 × 열), keep (150 bool), 열 이름). tsne_default와 같은 계산(그림 없이). 두 실험 비교용"""
+    T = ns.T if T is None else T; cols = list(ns.cols if cols is None else cols)
+    names = np.array(ns.names); nor = ns.y == 0; keep = ~np.isin(names, list(drop))
+    Tn = T.copy(); pk = PeakRef(ns.df).fit(ns.L[nor & keep]).transform(ns.L); Tn["H16_peak_h"], Tn["H17_peak_w"] = pk[:, 0], pk[:, 1]
+    A = np.column_stack([Tn[cols].values, ae_map_cols(ns)])
+    return map_scale(A[nor & keep], A)[0][keep], keep, cols + AE_MAP_COLS
+
+
+def tsne_default(ns, T=None, cols=None, drop=TSNE_DROP, mark=(), mark_label="", labels=TSNE_LABELS, title=""):
+    """기본 t-SNE 그림 → (fig, info). T · cols = H 표와 열(기본 ns.T · ns.cols; 열을 바꾼 실험은 자기 표 · 열을 넘긴다. H16 · H17은 여기서 계산).
+    mark = 빨간 원으로 표시할 파일 번호(150개 기준, 예: 오경보). info = dict(kl, auc, auc_sd, abn_nb_nor, nor_nb_abn, n)"""
+    import matplotlib.pyplot as plt
+    cols = list(ns.cols if cols is None else cols)
+    names = np.array(ns.names); y = ns.y
+    Z, keep, colsA = tsne_space(ns, T, cols, drop); A = Z; yk, nk = y[keep], names[keep]
+    kl, E, _ = tsne_best(Z); k5 = knn_report(Z, yk)
+    mk = np.zeros(len(names), bool); mk[list(mark)] = True; mk = mk[keep]
+    fig, axs = plt.subplots(1, 2, figsize=(17, 8))
+    axs[0].scatter(*E.T, s=22, color="#666", alpha=.8, lw=0)
+    axs[0].set_title(f"라벨 없음 — {keep.sum()}개 ({' · '.join(short(d) for d in drop)} 제외), {A.shape[1]}열 (H {len(cols)} + AE 5)", fontsize=9.5)
+    ax = axs[1]
+    ax.scatter(*E[yk == 0].T, s=22, color=NOR, alpha=.65, lw=0, label=f"정상 ({(yk == 0).sum()})")
+    ax.scatter(*E[yk == 1].T, s=40, color=ABN, lw=0, label=f"고장 ({(yk == 1).sum()})")
+    if mk.any(): ax.scatter(*E[mk].T, s=130, facecolor="none", edgecolor="#d62728", lw=1.6, label=mark_label or "표시")
+    for f_ in labels:
+        if f_ in nk:
+            i = list(nk).index(f_); ax.annotate(short(f_), E[i], xytext=(4, 4), textcoords="offset points", fontsize=7.5, color=ABN if f_.startswith("abn") else NOR)
+    ax.legend(fontsize=8.5, loc="upper right"); ax.set_title("같은 배치, 라벨 색 (비교용)", fontsize=9.5)
+    for a_ in axs: a_.set_xticks([]); a_.set_yticks([])
+    fig.suptitle(f"t-SNE 기본(4-10){(' · ' + title) if title else ''} — perplexity 30, KL {kl:.2f} · 폴드 밖 5-NN AUC {k5[2]:.3f} · 고장 이웃 중 정상 {k5[0]:.2f}", x=.01, ha="left", fontsize=10.5)
+    fig.tight_layout()
+    return fig, dict(kl=kl, auc=k5[2], auc_sd=k5[3], abn_nb_nor=k5[0], nor_nb_abn=k5[1], n=int(keep.sum()))
+
+
+# ---------------------------------------------------------------------------
+# 11-22 기본 t-SNE + val (사용자 요청): 기본 공간(tsne_space와 같음)에 val 40개를 얹는다. 라벨 없음
+# 왼쪽 = train 지도(기본 t-SNE) 위에 val을 원래 공간의 가까운 train 5개 위치 평균으로 올림, 오른쪽 = train + val을 함께 다시 펼침
+# val AE 5열 = train 정상 전체로 학습한 AE(ae_segerr와 같은 구조 · seed)의 복원 오차. train AE 열은 5겹 OOF
+# ---------------------------------------------------------------------------
+def ae_map_cols_val(ns):
+    """val의 AE 5열 (n_val, 5): train 정상 전체로 학습한 AE. 열 = AE_MAP_COLS"""
+    from src.experts import LP as LP_TR, segment_logpsd
+    from src.final import _fit_ae
+    mu, sd, mdl = _fit_ae(LP_TR[ns.y == 0]); _, LPv = segment_logpsd(ns.Xv)
+    Z = (LPv - mu) / sd; R = mdl.predict(Z.reshape(-1, Z.shape[-1])).reshape(Z.shape); e = ((R - Z) ** 2).mean(1)
+    fb = np.arange(1025) * 25000 / 2048
+    return np.column_stack([np.log10(e.mean(1))] + [np.log10(e[:, (fb >= lo) & (fb < hi)].mean(1)) for lo, hi in ((1000, 2000), (2000, 4000), (4000, 8000), (8000, 12500))])
+
+
+def tsne_space_val(ns, T=None, Tv=None, cols=None, drop=TSNE_DROP):
+    """기본 공간의 (train 지도 행 Z, val 행 Zv, keep, 열 이름). 눈금 기준 = 지도에 넣는 train 정상"""
+    T = ns.T if T is None else T; Tv = ns.Tv if Tv is None else Tv; cols = list(ns.cols if cols is None else cols)
+    names = np.array(ns.names); nor = ns.y == 0; keep = ~np.isin(names, list(drop))
+    pr = PeakRef(ns.df).fit(ns.L[nor & keep]); Tn, Tvn = T.copy(), Tv.copy()
+    for D_, L_ in ((Tn, ns.L), (Tvn, ns.Lv)):
+        pk = pr.transform(L_); D_["H16_peak_h"], D_["H17_peak_w"] = pk[:, 0], pk[:, 1]
+    A, Av = np.column_stack([Tn[cols].values, ae_map_cols(ns)]), np.column_stack([Tvn[cols].values, ae_map_cols_val(ns)])
+    Zt, Zv = map_scale(A[nor & keep], A, Av)
+    return Zt[keep], Zv, keep, cols + AE_MAP_COLS
+
+
+def tsne_val_default(ns, val_fault, T=None, Tv=None, cols=None, title="", drop=TSNE_DROP):
+    """기본 t-SNE + val 그림 → (fig, 표 DataFrame). val_fault = val 40개 고장 판정(bool, ns.nv 순서).
+    표 = val마다 가까운 train 5개 중 고장 수 · 가장 가까운 train 거리 · 그 거리가 train끼리 거리의 몇 %인가 · |z|가 가장 큰 열"""
+    import matplotlib.pyplot as plt
+    from sklearn.neighbors import NearestNeighbors
+    Zt, Zv, keep, colsA = tsne_space_val(ns, T, Tv, cols, drop)
+    names = np.array(ns.names); yk, nk = ns.y[keep], names[keep]; vf = np.asarray(val_fault, bool); nv = [s[-3:] for s in ns.nv]
+    nn = NearestNeighbors(n_neighbors=6).fit(Zt); dt, _ = nn.kneighbors(Zt); d_tr = dt[:, 1]          # train끼리 가장 가까운 거리 (자기 제외)
+    dv, Iv = nn.kneighbors(Zv, n_neighbors=5)
+    kl, Et, _ = tsne_best(Zt)
+    Eplace = Et[Iv].mean(1)                                                                              # 왼쪽: 가까운 train 5개 위치 평균
+    klj, Ej, _ = tsne_best(np.vstack([Zt, Zv])); Ejt, Ejv = Ej[:len(Zt)], Ej[len(Zt):]
+    q95, qmax = np.percentile(d_tr, 95), d_tr.max()
+    zi = np.abs(Zv).argmax(1)
+    tab = pd.DataFrame(dict(파일=nv, 판정=np.where(vf, "고장", "정상"), 이웃고장=(yk[Iv] == 1).sum(1), 최근접거리=dv[:, 0].round(2),
+                            거리백분위=[round(float(np.mean(d_tr <= d) * 100)) for d in dv[:, 0]], 최대z열=[colsA[j] for j in zi], 최대z=[round(float(Zv[i, j]), 1) for i, j in enumerate(zi)]))
+    far = dv[:, 0] > q95
+    fig, axs = plt.subplots(1, 2, figsize=(17, 8))
+    for ax, (Etr, Ev, ttl) in zip(axs, ((Et, Eplace, f"기본 지도 ({keep.sum()}개) 위에 val (원래 공간의 가까운 train 5개 위치 평균)"),
+                                       (Ejt, Ejv, f"{keep.sum()} + val {len(nv)}을 함께 다시 t-SNE (KL {klj:.2f})"))):
+        ax.scatter(*Etr[yk == 0].T, s=20, color=NOR, alpha=.35, lw=0, label=f"train 정상 ({(yk == 0).sum()})")
+        ax.scatter(*Etr[yk == 1].T, s=34, color=ABN, alpha=.55, lw=0, label=f"train 고장 ({(yk == 1).sum()})")
+        ax.scatter(*Ev[~vf].T, marker="^", s=70, color="#c9b3ea", edgecolor=PUR, lw=1, label=f"val 정상 판정 ({(~vf).sum()})")
+        ax.scatter(*Ev[vf].T, marker="^", s=80, color=PUR, edgecolor="#222", lw=1.2, label=f"val 고장 판정 ({vf.sum()})")
+        ax.scatter(*Ev[far].T, s=260, facecolor="none", edgecolor="#d62728", lw=1.4, label=f"train에서 먼 val (최근접 거리 > train 95 %, {far.sum()})")
+        for i in np.flatnonzero(vf | far): ax.annotate(nv[i], Ev[i], xytext=(5, 4), textcoords="offset points", fontsize=8, color=PUR)
+        ax.set_title(ttl, fontsize=9.5); ax.set_xticks([]); ax.set_yticks([]); ax.legend(fontsize=7.5, loc="upper right")
+    fig.suptitle(f"기본 t-SNE + val{(' · ' + title) if title else ''} — {Zt.shape[1]}열 (H {len(colsA) - 5} + AE 5), 제외 {' · '.join(short(d) for d in drop)}", x=.01, ha="left", fontsize=10.5)
+    fig.tight_layout()
+    tab.attrs.update(q95=float(q95), qmax=float(qmax))
+    return fig, tab

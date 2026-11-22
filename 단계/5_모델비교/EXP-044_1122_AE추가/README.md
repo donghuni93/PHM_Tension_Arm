@@ -12,7 +12,7 @@
 - 문턱 · E2 · 8.3k 규칙은 EXP-043과 같음
 
 - 가설: H3, H2, H1 ([물리가설](../../1_기준·기록/물리가설.md))
-- 실행: 2026-11-22 · git `bfc87b8+수정중` · 코드 [run.py](run.py)
+- 실행: 2026-11-22 · git `fdfe336+수정중` · 코드 [run.py](run.py)
 - 평가: 중첩 CV (바깥 5 × 안쪽 4, seed 5개). 자주 놓침 = seed 5번 중 3번 이상
 
 ## 결과
@@ -28,11 +28,15 @@
 <!-- key-figs: 자동 (save_fig key=True) -->
 ![logistic_plane](figs/logistic_plane.png)
 
-*logistic_plane* — ET × AE 평면 (OOF seed 0). 보라 세로선 = ET 단독 경계, 점선 = 결합 경계, 색 테두리 = 고장을 잡은 부품
+*logistic_plane* — 점 위치 = ET + 박자 z 환산(점선 꼬리 = ET 값 위치). ET × AE 평면 (OOF seed 0). 배경 = 결합(로지스틱) 판단, 보라 세로선 = ET 단독 판단 경계, 색 테두리 = 고장을 잡은 부품
+
+![tsne_라벨](figs/tsne_라벨.png)
+
+*tsne_라벨* — 기본 t-SNE(4-10): 왼쪽 라벨 없음, 오른쪽 라벨 색. 빨간 원 = J 오경보. 폴드 밖 5-NN AUC 0.965
 
 <!-- /key-figs -->
 
-- 남은 오경보: 116 · 065 · 059 ([오류분석_표.md](오류분석_표.md)). val 판정: [val_판정.md](val_판정.md)
+- 남은 오경보: 116 · 065 · 059 ([오류분석_표.md](오류분석_표.md)). val 판정: [val_판정.md](val_판정.md) · [README2.md](README2.md)
 - 주의: val의 AE z가 +1.7 이동(95 %가 ≥ 1.0), AE 계수 0.553 → 확정 전 처리 필요. 8.3k 문턱은 사후 값
 - 보조 분석(큐브 경계 · 비선형 결합 · 10 kHz 가정): [분석/](분석/)
 
@@ -40,14 +44,14 @@
 ## 그림
 
 ### val_판정
-val 40개를 train OOF 위에 겹침. 보라 세로선 = ET 단독 경계
+점 위치 = ET + 박자 z 환산(점선 꼬리 = ET 값 위치). val 40개를 train OOF 위에 겹침. 배경 = 결합(로지스틱) 판단, 보라 세로선 = ET 단독 판단 경계
 
 ![val_판정](figs/val_판정.png)
 
-### tsne_라벨
-라벨(정상/고장)로 색을 입힌 t-SNE. 빨간 원 = J 오경보
+### tsne_val포함
+기본 t-SNE + val 40개 (보라 ▲ = J 판정, 진한 = 고장). 빨간 원 = train에서 먼 val (가장 가까운 train 거리가 train끼리 거리의 95 % 위)
 
-![tsne_라벨](figs/tsne_라벨.png)
+![tsne_val포함](figs/tsne_val포함.png)
 
 
 ## 중간 단계 결과 (비교 · 절제 · 이전 실험 값)

@@ -157,3 +157,40 @@ def robust_z(v_normal):
             sc = float(np.std(v_normal))
     sc = sc + 1e-9
     return lambda v: (np.asarray(v, float) - med) / sc
+
+
+# ---------------------------------------------------------------------------
+# 11-22 EXP-047: 8–12.5 kHz 옥타브를 8–10 · 10–12.5 kHz로 쪼갬 (H10 · H15의 대체 후보)
+# 근거: 섞인 고장 009 · 018 · 013은 옆 정상보다 8–9 kHz가 높고 11–12.5 kHz가 낮아(4-10 진단) 한 칸으로 합치면 상쇄된다
+# 경계 10 kHz는 실행 전 고정(8.3 · 9.5 kHz 금속 모드는 아래 칸, H2′). 라벨 안 씀, 파일마다 독립
+# ---------------------------------------------------------------------------
+HI_SPLIT = ["H10a_ring_8-10k", "H10b_ring_10-12.5k", "H15a_share_8-10k", "H15b_share_10-12.5k"]
+
+
+def hi_split_table(X, imps=None):
+    """신호 (n, 50000) → DataFrame(HI_SPLIT). 울림 비율 = 충격 울림 주파수가 그 칸인 충격의 비율(충격 0개면 −1),
+    파워 몫 = Welch(feat2_table과 같은 설정) 칸 파워 ÷ 1 kHz 위 파워 합, log10"""
+    X = np.asarray(X, dtype=float)
+    imps = all_impacts(X) if imps is None else imps
+    rows = []
+    for x, im in zip(X, imps):
+        if len(im["t"]):
+            fr = im["rings"][:, 0]
+            ring = [float(np.mean((fr >= 8000) & (fr < 10000))), float(np.mean(fr >= 10000))]
+        else:
+            ring = [-1.0, -1.0]
+        f, P = welch_log(x)
+        tot = P[f >= 1000].sum()
+        sh = [float(np.log10(P[(f >= lo) & (f < hi)].sum() / tot + 1e-20)) for lo, hi in ((8000, 10000), (10000, 12500))]
+        rows.append(ring + sh)
+    return pd.DataFrame(rows, columns=HI_SPLIT)
+
+
+def cached_hi_split(tag, X):
+    """캐시 outputs/cache/feat2split_{tag}.csv. hi_split_table을 고치면 지우고 다시"""
+    p = os.path.join(_CACHE, f"feat2split_{tag}.csv")
+    if os.path.exists(p):
+        return pd.read_csv(p)
+    T = hi_split_table(X)
+    T.to_csv(p, index=False)
+    return T

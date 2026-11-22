@@ -362,11 +362,16 @@ from src.experts import peak83_table, Rule83, KnockRule, LockRule, ETLogitX, HIT
 from src.features import feature_table_knock
 from sklearn.model_selection import StratifiedGroupKFold
 _SIG = os.path.join(ROOT, "단계", "5_모델비교")                      # 11-22: 최신 실험은 base/가 아니라 바로 아래
-# 11-22: 뷰어 모델은 EXP-039 · EXP-044 둘만 (나머지는 뷰어에서 뺌. 실험 폴더는 그대로)
+_BASE = os.path.join(_SIG, "base")                                  # EXP-039는 11-22에 base/로 내려감 → 두 곳을 모두 본다
+_EXPDIR = {d: os.path.join(_SIG, d) for d in os.listdir(_SIG) if d.startswith("EXP-")}
+_EXPDIR.update({d: os.path.join(_BASE, d) for d in os.listdir(_BASE) if d.startswith("EXP-")})
+# 11-22: 뷰어 모델은 EXP-039 · EXP-044 · EXP-047 셋만 (나머지는 뷰어에서 뺌. 실험 폴더는 그대로)
 # result.json에 없는 정보: 짧은 이름 · 판정에 쓰는 규칙(RULES 키) · 메모. 평면(점 좌표 · 경계 · 축)은 plane_models.py가 figs/plane_models.json에 저장
 EXP_SPEC = {
     "EXP-039": dict(short="D+ 규칙 없음", rules=[],
                     note="대표 구성 = AE + ET(D+ 81열) 규칙 없음. 규칙을 모델 안으로 넣은 실험이라 규칙 표시 없음"),
+    "EXP-047": dict(short="8–12.5k 쪼개기 (S)", rules=["r83", "res83", "e2"],
+                    note="대표 구성 S = J에서 ET 입력 H10 · H15를 8–10 · 10–12.5 kHz 4열로 교체 (기각, F2 0.968). 평면 · 규칙은 J와 같은 방식"),
     "EXP-044": dict(short="AE 추가 (J)", rules=["r83", "res83", "e2"],
                     note="대표 구성 J = ET logit + 박자 z + AE z 결합 OR E2 OR 8.3k. 결합은 3입력이라 박자 z = 0 단면으로 그림 · E2 · 8.3k는 경계와 무관하게 고장 판정"),
 }
@@ -384,7 +389,7 @@ WARN = []
 
 def model_entry(folder):
     """그 실험의 대표 구성(main), main이 없으면 첫 구성"""
-    r = json.load(open(os.path.join(_SIG, folder, "result.json"), encoding="utf-8"))
+    r = json.load(open(os.path.join(_EXPDIR[folder], "result.json"), encoding="utf-8"))
     cfg = r.get("main") or next(iter(r["configs"])); c = r["configs"][cfg]
     sp = EXP_SPEC.get(r["id"])
     if sp is None: WARN.append(f"EXP_SPEC에 {r['id']} 없음 → 규칙 없음 · 기본 평면으로 표시"); sp = {}
@@ -396,14 +401,14 @@ def model_entry(folder):
 
 # 최신 번호 먼저 (폴더 이름이 EXP-nnn으로 시작). 기본 선택 = 맨 앞
 def _has_configs(d):
-    p = os.path.join(_SIG, d, "result.json")
+    p = os.path.join(_EXPDIR[d], "result.json")
     if not os.path.isfile(p): return False
     if json.load(open(p, encoding="utf-8")).get("configs"): return True
     WARN.append(f"{d}: result.json에 configs 없음 → 뷰어에서 뺌"); return False
 
 
-MODELS = [model_entry(d) for d in sorted(os.listdir(_SIG), reverse=True) if d[:7] in EXP_SPEC and _has_configs(d)]
-assert [m["id"] for m in MODELS] == ["EXP-044", "EXP-039"], [m["id"] for m in MODELS]
+MODELS = [model_entry(d) for d in sorted(_EXPDIR, reverse=True) if d[:7] in EXP_SPEC and _has_configs(d)]
+assert [m["id"] for m in MODELS] == ["EXP-047", "EXP-044", "EXP-039"], [m["id"] for m in MODELS]
 
 # 규칙이 켜지는 파일 (라벨 안 씀). n = seed 5번 중 켜진 횟수. kind: up = 무조건 고장, cap = 점수 감점 대상
 _g = np.arange(NTR)
@@ -495,8 +500,33 @@ assert os.path.isfile(_PM_PATH), "plane_models.py를 먼저 실행하세요 (fig
 _PM = json.load(open(_PM_PATH, encoding="utf-8"))
 for m in MODELS:
     pm = _PM[m["id"]]; assert len(pm["pts"]) == NTR
-    m.update(plane=m["id"], w=[round(v, 5) for v in pm["w"]], b=round(pm["b"], 5), lim=pm["lim"], xl=pm["xl"], yl=pm["yl"])
-LR = dict(planes={m["id"]: _PM[m["id"]]["pts"] for m in MODELS}, plane_label={m["id"]: _PM[m["id"]]["label"] for m in MODELS})
+    m.update(plane=m["id"], w=[round(v, 5) for v in pm["w"]], b=round(pm["b"], 5), lim=list(pm["lim"]), xl=pm["xl"], yl=pm["yl"])
+    if "wz" in pm:                                               # 3입력 결합(박자 z): 점을 실제 판정 위치(ET + wz/w0·z)에 찍으므로 가로 범위를 그에 맞춘다
+        m["wz"] = round(pm["wz"], 5); _xe = [p_[0] + pm["wz"] * z_ / pm["w"][0] for p_, z_ in zip(pm["pts"], pm["z"])]
+        m["lim"][0], m["lim"][1] = float(np.floor(min(m["lim"][0], min(_xe) - .3))), float(np.ceil(max(m["lim"][1], max(_xe) + .3)))
+# val 40개(라벨 없음): train 150 전체로 학습한 모델의 판정을 평면 위에 보라색으로 겹친다 (plane_val.py → figs/plane_val.json). 인덱스 NTR.. = val
+_PV_PATH = os.path.join(ROOT, "단계", "2_EDA", "2-4_EDA뷰어", "figs", "plane_val.json")
+assert os.path.isfile(_PV_PATH), "plane_val.py를 먼저 실행하세요 (figs/plane_val.json)"
+_PV = json.load(open(_PV_PATH, encoding="utf-8")); _vi0 = [i for i in range(N) if y[i] == 2]
+for m in MODELS:
+    assert _PV[m["id"]]["names"] == [names[i] for i in _vi0], f"{m['id']}: val 순서가 다름"
+LR = dict(planes={m["id"]: _PM[m["id"]]["pts"] + _PV[m["id"]]["pts"] for m in MODELS}, plane_label={m["id"]: _PM[m["id"]]["label"] for m in MODELS},
+          zs={m["id"]: _PM[m["id"]].get("z", []) + _PV[m["id"]].get("z", []) for m in MODELS if "wz" in _PM[m["id"]]},
+          vflag={m["id"]: [-1] * NTR + _PV[m["id"]]["flag"] + [-1] * (N - NTR - len(_vi0)) for m in MODELS},
+          vcat={m["id"]: [""] * NTR + _PV[m["id"]]["cat"] + [""] * (N - NTR - len(_vi0)) for m in MODELS})
+# 경계 아래 기본 t-SNE (11-22, claude-d2): tsne_models.py → figs/tsne_models.json (EXP-044 · EXP-047만). train 좌표 = 150 순서(제외 4개는 None), val 좌표 = val 순서
+_TS_PATH = os.path.join(ROOT, "단계", "2_EDA", "2-4_EDA뷰어", "figs", "tsne_models.json")
+if os.path.isfile(_TS_PATH):
+    _TS = json.load(open(_TS_PATH, encoding="utf-8"))
+    for _k, _v in _TS.items():
+        assert len(_v["tr"]) == NTR and [str(n_)[-3:] for n_ in _v["val_names"]] == [names[i][-3:] for i in _vi0], f"tsne {_k}: 순서가 다름"
+    LR["tsne"] = {_k: dict(xy=_v["tr"] + _v["val"] + [None] * (N - NTR - len(_vi0)), nb=[[]] * NTR + _v["nb"] + [[]] * (N - NTR - len(_vi0)),
+                           nb_abn=[-1] * NTR + _v["nb_abn"] + [-1] * (N - NTR - len(_vi0)), label=_v["label"]) for _k, _v in _TS.items()}
+
+for m in MODELS:                                                 # val 점(환산 위치)도 가로 범위에 들어오게 넓힌다
+    if "wz" in m:
+        _xv = [p_[0] + m["wz"] * z_ / m["w"][0] for p_, z_ in zip(_PV[m["id"]]["pts"], _PV[m["id"]]["z"])]
+        m["lim"][0], m["lim"][1] = float(np.floor(min(m["lim"][0], min(_xv) - .3))), float(np.ceil(max(m["lim"][1], max(_xv) + .3)))
 
 # %% 그림 데이터 (int16·uint8로 줄임)
 NB, NZ = 1000, 1000                         # 파형 포락 50 샘플(2 ms)씩 최소·최대 / 최대 충격 ±20 ms

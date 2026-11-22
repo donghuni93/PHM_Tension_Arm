@@ -36,18 +36,18 @@ ns = NS(); n = ns.n; assert (ns.y == y).all()
 spec, res = rule83_flags(ns.X); r83 = (spec | res).astype(float)
 M_rule = np.column_stack([ns.M, np.arange(n, dtype=float), r83])
 mk = lambda: Add83(lambda: TwoAE("lin", ("E2",), fixed=tuple(ns.FIXED), nf=ns.nf, df=ns.df, peak=tuple(ns.PEAK)))
-e2n = np.zeros(n, int); a0 = aez0 = None
+e2n = np.zeros(n, int); a0 = aez0 = z0 = None
 for seed in range(5):
-    a, aez, e2 = np.empty(n), np.empty(n), np.zeros(n, bool)
+    a, aez, zz, e2 = np.empty(n), np.empty(n), np.empty(n), np.zeros(n, bool)
     for tr, te in StratifiedGroupKFold(5, shuffle=True, random_state=seed).split(ns.g, ns.y, ns.g):
         f = mk().fit(M_rule[tr], ns.y[tr]).fires(M_rule[te])
-        a[te], aez[te], e2[te] = f["a"], f["ae"], f["E2"]
+        a[te], aez[te], zz[te], e2[te] = f["a"], f["ae"], f["z"], f["E2"]
     e2n += e2
-    if seed == 0: a0, aez0 = a.copy(), aez.copy()
+    if seed == 0: a0, aez0, z0 = a.copy(), aez.copy(), zz.copy()
     print("044 seed", seed, flush=True)
 mm = mk().fit(M_rule, ns.y).m_
 c = mm.c_.coef_[0]
-OUT["EXP-044"] = dict(pts=np.round(np.c_[a0, aez0], 3).tolist(), w=[float(c[0]), float(c[2])], b=float(mm.c_.intercept_[0] - mm.tc_),
+OUT["EXP-044"] = dict(pts=np.round(np.c_[a0, aez0], 3).tolist(), w=[float(c[0]), float(c[2])], wz=float(c[1]), z=np.round(z0, 3).tolist(), b=float(mm.c_.intercept_[0] - mm.tc_),
                       xl="ET 점수 (logit, OOF)", yl="AE z (OOF)",
                       lim=[float(np.floor(a0.min() - .3)), float(np.ceil(a0.max() + .3)), float(np.floor(aez0.min() - .3)), float(np.ceil(aez0.max() + .3))],
                       thr=float(mm.tc_), e2n=e2n.tolist(),

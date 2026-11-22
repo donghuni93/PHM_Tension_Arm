@@ -294,7 +294,7 @@ const fmt = (v, k) => {
 // ---------- 모델: 유의미 실험 전부 (최신 먼저). 머리줄 "모델"에서 고른 하나(S.ref)가 모든 화면의 기준 ----------
 const MODELS = D.models, MID = Object.fromEntries(MODELS.map(m => [m.id, m]));
 const RULE = Object.fromEntries(D.rules.map(r => [r.key, r]));
-if (!MID[S.ref]) S.ref = MODELS[0].id;
+if (!MID[S.ref]) S.ref = MID["EXP-044"] ? "EXP-044" : MODELS[0].id;     // 기본 = 현 최선 EXP-044 (목록은 최신 번호 먼저)
 const M = () => MID[S.ref];
 const prevModel = () => MODELS[MODELS.indexOf(M()) + 1] || null;          // 바로 이전 번호의 유의미 실험
 const errN = (m, i) => isU(i) ? 0 : D.y[i] ? m.miss[i] : m.fp[i];                      // seed 5번 중 틀린 횟수
@@ -497,7 +497,7 @@ const modelTitle = m => esc(`${m.id} ${m.title}\n구성: ${m.cfg}\nF2 ${m.f2} ±
 const ruleChip = (k, i) => { const r = RULE[k], w = ruleWord(k, i);
   return `<span class="chip ${w ? "warn" : ""}" title="${esc(r.desc + " (" + r.since + "부터)")}">${r.label} ${w ? `<b>${w}</b>` : "꺼짐"} · ${r.info[i]}</span>`; };
 function modelBadges(i) {
-  if (isU(i)) return `<span class="chip lab-v" title="val·test는 라벨이 없고, 최종 모델로 채점하지 않는다 (val 사용 규칙은 아직 정하지 않음)">${GN[G[i]]} · 라벨 없음 · 모델 채점 안 함</span>`;
+  if (isU(i)) return `<span class="chip lab-v" title="val·test는 라벨이 없어 맞고 틀림은 채점하지 않는다. val 판정은 train 150 전체로 학습한 값">${GN[G[i]]} · 라벨 없음 · 채점 안 함</span>` + MODELS.map(m => vOf(m, i) >= 0 ? ` <span class="chip" style="border-color:var(--val);color:var(--val)">${m.id} ${vTxt(m, i)}</span>` : "").join("");
   const m = M(), e = errN(m, i);
   const chips = [`<span class="chip ${bad(m, i) ? "warn" : ""}" style="font-weight:700" title="${modelTitle(m)}">${m.id} ${m.short} · ${D.y[i] ? "미탐" : "오경보"} <b>${e}</b>/5</span>`, ...m.rules.map(k => ruleChip(k, i))];
   const others = MODELS.filter(o => o !== m).map(o => { const v = errN(o, i); return v >= 3 ? `<b>${o.id} ${v}/5</b>` : `${o.id} ${v ? v + "/5" : "✓"}`; }).join(" · ");
@@ -716,7 +716,7 @@ function renderTable() {
   let lastG = null;
   const rows = S.list.map(i => {
     const g = groupOf(i), gr = S.group !== "none" && g !== lastG ? `<tr><td colspan="${ks.length + 2 + MODELS.length + D.rules.length}" style="text-align:left;font-weight:700;background:var(--surface-2)">${g}</td></tr>` : ""; lastG = g;
-    const mt = m => { if (isU(i)) return "<td>—</td>"; const e = errN(m, i), t = e ? `${D.y[i] ? "미탐" : "오경보"} ${e}` : "";
+    const mt = m => { if (isU(i)) return `<td>${vOf(m, i) >= 0 ? (vOf(m, i) ? "<b style='color:var(--val)'>고장 판정</b>" : "정상 판정") + (D.lr.vcat[m.plane][i] && D.lr.vcat[m.plane][i] !== "—" ? " " + D.lr.vcat[m.plane][i] : "") : "—"}</td>`; const e = errN(m, i), t = e ? `${D.y[i] ? "미탐" : "오경보"} ${e}` : "";
       return `<td class="${bad(m, i) ? "o" : ""}"${m === M() ? ' style="font-weight:700"' : ""}>${t}</td>`; };
     return gr + `<tr data-i="${i}" style="cursor:pointer"><td><span class="dot ${dotCls(i)}"></span> ${D.names[i]}</td>
       <td style="text-align:left">${D.ftags[i].map(t => TAG[t].label).join(", ")}</td>${MODELS.map(mt).join("")}${D.rules.map(r => `<td>${ruleWord(r.key, i)}</td>`).join("")}
@@ -783,28 +783,29 @@ function renderScatter() {
 function renderLR() {
   const ex = M(), Z = D.lr.planes[ex.plane], dec = i => decOf(ex, i);
   const ruleOf = i => rulesOn(ex, i).map(k => `${RULE[k].label} ${ruleWord(k, i)}`).join(" · ");
-  const errOf = i => errN(ex, i), errTxt = i => errOf(i) ? `${D.y[i] ? "미탐" : "오경보"} ${errOf(i)}/5` : "";
+  const errOf = i => errN(ex, i), vf = i => vOf(ex, i);                  // vf: val 판정 (−1 = val 아님, 0 정상, 1 고장)
+  const errTxt = i => vf(i) >= 0 ? vTxt(ex, i) : errOf(i) ? `${D.y[i] ? "미탐" : "오경보"} ${errOf(i)}/5` : "";
   const band = +S.lrBand;
   // 규칙으로 잡힌 고장 = 경계와 무관 → 기본으로 평면·목록에서 뺀다 (규칙이 켜진 정상은 오류라 남김)
-  const ruleAbn = [...Array(N).keys()].filter(i => D.y[i] && rulesOn(ex, i).length);
-  const hidden = new Set(S.lrRule ? [] : ruleAbn), shown = i => !isU(i) && !hidden.has(i);
-  const nearI = [...Array(N).keys()].filter(i => shown(i) && (Math.abs(dec(i)) <= band || errOf(i) >= 1)).sort((a, b) => dec(a) - dec(b));
+  const ruleAbn = [...Array(N).keys()].filter(i => D.y[i] === 1 && rulesOn(ex, i).length);
+  const hidden = new Set(S.lrRule ? [] : ruleAbn), shown = i => (!isU(i) || vf(i) >= 0) && !hidden.has(i);
+  const nearI = [...Array(N).keys()].filter(i => shown(i) && (Math.abs(dec(i)) <= band || errOf(i) >= 1 || vf(i) === 1)).sort((a, b) => dec(a) - dec(b));
   main.innerHTML = `<div class="card"><div class="bar">
-      <b title="${modelTitle(ex)}">${ex.id} ${esc(ex.short)}</b><span class="help">머리줄 "모델"에서 바꿈</span><span class="chip lab-v" title="이 평면은 train OOF 점수라 val·test 점은 없다">val은 미채점 (OOF 점수 기반 화면이라 제외)</span>
+      <b title="${modelTitle(ex)}">${ex.id} ${esc(ex.short)}</b><span class="help">머리줄 "모델"에서 바꿈</span><span class="chip lab-v" title="train 150 전체로 학습한 모델이 val을 판정한 값. val 라벨은 없어 맞고 틀림은 채점하지 않는다 (test는 없음)">보라 ▲ = val 40개 (라벨 없음 · 모델 판정 고장 ${[...Array(N).keys()].filter(i => vf(i) === 1).length}개)</span>
       <span class="ctl">경계 근처 = |결정값| ≤ <select id="lrBand">${[0.5, 1, 1.5, 2].map(v => `<option value="${v}">${v}</option>`).join("")}</select></span>
       <label class="ctl"><input type="checkbox" id="lrRule"${S.lrRule ? " checked" : ""}> 규칙으로 잡힌 고장도 그리기</label>
       <span class="help">F2 ${ex.f2} ± ${ex.f2_sd} · 재현율 ${ex.recall} · 오경보율 ${ex.fpr} · 평면: ${esc(D.lr.plane_label[ex.plane])}${ex.note ? " · " + esc(ex.note) : ""}</span></div>
-      <div class="legend" style="margin:6px 0"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span>
-      <span>실선 = 결정값 0 · 점선 = ±1 · 파랑 바탕 = 정상 영역 · 주황 바탕 = 고장 영역</span>${ex.rules.map(k => `<span style="color:var(--${k})">${RULE_MARK[k].sym} ${RULE[k].label}</span>`).join("")}
+      <div class="legend" style="margin:6px 0"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span><span style="color:var(--val)"><b>▲</b> val 고장 판정 (진한 보라) · <b>△</b> val 정상 판정 (연한 보라)</span>
+      ${ex.wz ? `<span>점 위치 = 실제 판정 위치 (ET + 박자 z 환산). 점선 꼬리 = 박자 z 0 단면 위치에서 옮겨 온 거리 · 점 작은 원 = 단면 위치</span>` : ""}<span>실선 = 결정값 0 · 점선 = ±1 · 파랑 바탕 = 정상 영역 · 주황 바탕 = 고장 영역</span>${ex.rules.map(k => `<span style="color:var(--${k})">${RULE_MARK[k].sym} ${RULE[k].label}</span>`).join("")}
       <span>✕ 이 실험이 틀림 (굵게 = 3/5 이상)</span><span>이름 = 경계 근처 또는 틀린 파일</span></div>
       ${ruleAbn.length ? `<div class="help" style="margin-bottom:6px">${S.lrRule ? "규칙으로 잡힌 고장도 그림 (경계와 무관하게 고장 판정)" : "평면에서 뺀 고장 (규칙으로 잡혀 경계와 무관)"} ${ruleAbn.length}개: ${ruleAbn.map(i => `${shortN(D.names[i])}(${rulesOn(ex, i).map(k => RULE[k].label).join("·")})`).join(", ")}</div>` : ""}
       <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:10px">
         <div id="lrPlot"></div>
         <div><div class="help" style="margin-bottom:4px">경계 근처·틀린 파일 ${nearI.length}개 (결정값 순, 클릭 = 정보)</div>
-          <div class="tbl-wrap" style="max-height:560px"><table class="big"><thead><tr><th>파일</th><th>결정값</th><th>이 실험 결과</th><th>규칙</th></tr></thead><tbody>
-          ${nearI.map(i => `<tr data-i="${i}" style="cursor:pointer${S.lrSel === i ? ";outline:2px solid var(--text)" : ""}"><td style="text-align:left"><span class="dot ${dotCls(i)}"></span> ${D.names[i]}</td><td>${dec(i).toFixed(2)}</td><td class="${errOf(i) >= 3 ? "o" : ""}">${errTxt(i)}</td><td>${ruleOf(i)}</td></tr>`).join("")}
+          <div class="tbl-wrap" style="max-height:560px"><table class="big"><thead><tr><th>파일</th><th>결정값</th>${ex.wz ? "<th>박자 z</th>" : ""}<th>이 실험 결과</th><th>규칙</th></tr></thead><tbody>
+          ${nearI.map(i => `<tr data-i="${i}" style="cursor:pointer${S.lrSel === i ? ";outline:2px solid var(--text)" : ""}"><td style="text-align:left"><span class="dot ${dotCls(i)}"></span> ${D.names[i]}</td><td>${dec(i).toFixed(2)}</td>${ex.wz ? `<td>${zOf(ex, i).toFixed(1)}</td>` : ""}<td class="${errOf(i) >= 3 ? "o" : ""}">${errTxt(i)}</td><td>${ruleOf(i)}</td></tr>`).join("")}
           </tbody></table></div></div>
-      </div></div><div class="card" id="lrInfo"></div>`;
+      </div></div><div class="card" id="lrTsne"></div><div class="card" id="lrInfo"></div>`;
   const sb = document.getElementById("lrBand");
   sb.value = String(band); sb.onchange = () => { S.lrBand = +sb.value; render(); };
   document.getElementById("lrRule").onchange = e => { S.lrRule = e.target.checked; if (!S.lrRule && hidden.has(S.lrSel)) S.lrSel = null; render(); };
@@ -827,7 +828,7 @@ function renderLR() {
     g.font = "bold 14px Malgun Gothic, sans-serif"; g.textAlign = "center"; g.fillStyle = css(cv); g.globalAlpha = .75;
     g.fillText(s > 0 ? "고장 영역" : "정상 영역", X(cx), Y(cy)); g.globalAlpha = 1; }
   const tkx = niceTicks(xlo, xhi, 6), tky = niceTicks(ylo, yhi, 6);
-  frame(g, w, h, P, tkx.map(v => [v, X(v), String(v)]), tky.map(v => [v, Y(v), String(v)]), ex.xl, "");
+  frame(g, w, h, P, tkx.map(v => [v, X(v), String(v)]), tky.map(v => [v, Y(v), String(v)]), ex.wz ? ex.xl + " + 박자 z 환산" : ex.xl, "");
   g.fillStyle = css("--text-3"); g.textAlign = "left"; g.fillText("↑ " + ex.yl, P.l + 4, P.t + 6);
   // 경계선·여백: w0 x + w1 y + b = k
   g.save(); g.beginPath(); g.rect(P.l, P.t, w - P.l - P.r, h - P.t - P.b); g.clip();
@@ -837,12 +838,18 @@ function renderLR() {
     g.stroke(); };
   seg(0, [], 1.8); seg(1, [5, 4], 1); seg(-1, [5, 4], 1); g.setLineDash([]);
   // 점
-  const pt = i => [X(clx(Z[i][0])), Y(cly(Z[i][1]))];
+  const pt = i => [X(clx(Z[i][0] + shiftOf(ex, i))), Y(cly(Z[i][1]))];     // 가로 = ET + 박자 z 환산 (= 실제 판정 위치)
+  const pt0 = i => [X(clx(Z[i][0])), Y(cly(Z[i][1]))];                  // 박자 z 0 단면 위치
   const order = [...Array(N).keys()].filter(shown).sort((a, b) => D.y[a] - D.y[b]);
+  if (ex.wz) { g.save(); g.lineWidth = 1; g.globalAlpha = .55; g.setLineDash([2, 2]);                 // 박자 z 이동 (|이동| ≥ 0.3일 때만)
+    for (const i of order) { if (Math.abs(shiftOf(ex, i)) < .3) continue; const [x0, y0] = pt0(i), [x1] = pt(i); g.strokeStyle = col(i); g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y0); g.stroke();
+      g.beginPath(); g.arc(x0, y0, 2, 0, 7); g.fillStyle = col(i); g.fill(); }
+    g.restore(); }
   for (const i of order) { const [x, yv] = pt(i);
-    g.beginPath(); if (D.y[i]) g.arc(x, yv, 4.5, 0, 7); else g.rect(x - 4, yv - 4, 8, 8);
-    g.fillStyle = col(i); g.globalAlpha = .85; g.fill(); g.globalAlpha = 1;
-    for (const k of rulesOn(ex, i)) RULE_MARK[k].draw(g, x, yv);
+    g.beginPath(); if (vf(i) >= 0) { g.moveTo(x, yv - 7); g.lineTo(x + 6.5, yv + 5); g.lineTo(x - 6.5, yv + 5); g.closePath(); } else if (D.y[i]) g.arc(x, yv, 4.5, 0, 7); else g.rect(x - 4, yv - 4, 8, 8);
+    g.fillStyle = col(i); g.globalAlpha = vf(i) === 0 ? .3 : .9; g.fill(); g.globalAlpha = 1;
+    if (vf(i) >= 0) { g.lineWidth = vf(i) ? 1.4 : 1.6; g.strokeStyle = vf(i) ? css("--text") : col(i); g.stroke(); }
+    else for (const k of rulesOn(ex, i)) RULE_MARK[k].draw(g, x, yv);
     if (errOf(i)) { const s = errOf(i) >= 3 ? 7 : 5; g.beginPath(); g.moveTo(x - s, yv - s); g.lineTo(x + s, yv + s); g.moveTo(x + s, yv - s); g.lineTo(x - s, yv + s);
       g.lineWidth = errOf(i) >= 3 ? 2.2 : 1; g.strokeStyle = css("--text"); g.stroke(); }
     if (i === S.lrSel) { g.beginPath(); g.arc(x, yv, 13, 0, 7); g.lineWidth = 2.5; g.strokeStyle = css("--text"); g.stroke(); }
@@ -850,7 +857,7 @@ function renderLR() {
   // 이름: 경계 근처·틀린 파일. 겹치면 위·아래·오른쪽·왼쪽 순으로 비켜 놓고, 그래도 겹치면 생략(목록에 있음)
   g.font = "11px Malgun Gothic, sans-serif"; const boxes = [];
   const hit = b => boxes.some(o => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
-  for (const i of [...nearI].sort((a, b) => errOf(b) - errOf(a))) { const [x, yv] = pt(i), t = D.names[i].replace("abn_", "A").replace("nor_", "N"), tw = g.measureText(t).width;
+  for (const i of [...nearI].sort((a, b) => errOf(b) - errOf(a))) { const [x, yv] = pt(i), t = shortN(D.names[i]), tw = g.measureText(t).width;
     for (const [dx, dy] of [[8, -8], [8, 10], [-tw - 8, -8], [-tw - 8, 10], [8, -20], [-tw - 8, 20]]) {
       const b = [x + dx, yv + dy - 9, x + dx + tw, yv + dy + 3]; if (hit(b)) continue; boxes.push(b);
       g.fillStyle = css("--surface"); g.globalAlpha = .8; g.fillRect(b[0] - 1, b[1], tw + 2, 12); g.globalAlpha = 1;
@@ -858,29 +865,72 @@ function renderLR() {
   g.restore();
   const near = (mx, my) => { let best = null, bd = 120; for (let i = 0; i < N; i++) { if (!shown(i)) continue; const [x, yv] = pt(i), d = (x - mx) ** 2 + (yv - my) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
   hover(c, (mx, my) => { const i = near(mx, my); if (i === null) return null;
-    return `${D.names[i]} (${labTxt(i)}) · 결정값 ${dec(i).toFixed(2)} · ${ex.xl.split(" ")[0]} ${Z[i][0].toFixed(2)} · ${ex.yl.split(" ")[0]} ${Z[i][1].toFixed(2)}${errTxt(i) ? " · " + errTxt(i) : ""}${ruleOf(i) ? " · " + ruleOf(i) : ""}`; });
+    return `${D.names[i]} (${labTxt(i)}) · 결정값 ${dec(i).toFixed(2)} · ${ex.xl.split(" ")[0]} ${Z[i][0].toFixed(2)} · ${ex.yl.split(" ")[0]} ${Z[i][1].toFixed(2)}${ex.wz ? ` · 박자 z ${zOf(ex, i).toFixed(1)} (환산 ${shiftOf(ex, i) >= 0 ? "+" : ""}${shiftOf(ex, i).toFixed(2)})` : ""}${errTxt(i) ? " · " + errTxt(i) : ""}${ruleOf(i) ? " · " + ruleOf(i) : ""}`; });
   const select = i => { S.lrSel = i; render(); };
   c.onclick = e => { const r = c.getBoundingClientRect(), i = near(e.clientX - r.left, e.clientY - r.top); if (i !== null) select(i); };
   main.querySelectorAll("tr[data-i]").forEach(tr => tr.onclick = () => select(+tr.dataset.i));
+  renderLRTsne(ex, vf, dec, band, errOf);
   // 정보 카드
   const info = document.getElementById("lrInfo"), i = S.lrSel;
   if (i === null || i === undefined) { info.innerHTML = `<span class="help">점이나 오른쪽 목록을 누르면 여기에 그 파일 정보가 뜹니다. 그림의 경계는 설명용(결정값 0)이고, 실제 판정 임계값은 fold마다 안쪽 CV로 고릅니다. 규칙이 켜진 파일은 경계와 무관하게 고장입니다.</span>`; return; }
   const side = dec(i) >= 0 ? "고장 쪽" : "정상 쪽", ok = D.y[i] ? (ex.miss[i] === 0) : (ex.fp[i] === 0);
   info.innerHTML = `<div class="bar"><b style="font-size:15px"><span class="dot ${dotCls(i)}"></span> ${D.names[i]}</b> <span>${labTxt(i)}</span>
-    <span class="chip">결정값 ${dec(i).toFixed(2)} (${side})</span><span class="chip">${esc(ex.xl)} ${Z[i][0].toFixed(2)}</span><span class="chip">${esc(ex.yl)} ${Z[i][1].toFixed(2)}</span>
+    <span class="chip">결정값 ${dec(i).toFixed(2)} (${side})</span><span class="chip">${esc(ex.xl)} ${Z[i][0].toFixed(2)}</span><span class="chip">${esc(ex.yl)} ${Z[i][1].toFixed(2)}</span>${ex.wz ? `<span class="chip">박자 z ${zOf(ex, i).toFixed(1)} (결정값 ${(ex.wz * zOf(ex, i) >= 0 ? "+" : "") + (ex.wz * zOf(ex, i)).toFixed(2)})</span>` : ""}
     <button class="navbtn" id="lrOpen">한 개씩 보기로 열기 →</button></div>
     <div style="margin-top:6px">${modelBadges(i)}</div><div style="margin-top:4px">${tagChips(i)}</div>`;
   document.getElementById("lrOpen").onclick = () => { if (!S.list.includes(i)) { S.lab = "all"; S.model = "all"; S.tag = null; S.q = ""; syncCtl(); rebuild(i); } else S.pos = S.list.indexOf(i); setMode("one"); };
 }
+// ---------- 경계 아래: 기본 t-SNE (4-10 방식, tsne_models.py) · train 146개 + val 40개를 라벨 없이 함께 펼침 ----------
+function renderLRTsne(ex, vf, dec, band, errOf) {
+  const box = document.getElementById("lrTsne"), T = D.lr.tsne && D.lr.tsne[ex.id];
+  if (!T) { box.innerHTML = `<span class="help">t-SNE: ${ex.id}는 좌표가 없습니다 (EXP-044 · EXP-047만, tsne_models.py)</span>`; return; }
+  const idx = [...Array(N).keys()].filter(i => T.xy[i]);
+  box.innerHTML = `<div class="bar"><b>t-SNE — ${ex.id} 공간</b><span class="help">${esc(T.label)}. 배치는 라벨 없이 정함, 색은 비교용. 047은 044 배치에서 출발해 펼쳐 두 모델을 바꿔 보면 같은 파일이 비슷한 자리에 있다</span></div>
+    <div class="legend" style="margin:6px 0"><span><span class="dot n"></span> 정상</span><span><span class="dot a"></span> 고장</span><span style="color:var(--val)"><b>▲</b> val 고장 판정 · <b>△</b> val 정상 판정 (위 경계 그림과 같은 모델 판정)</span><span>✕ 이 실험이 틀림 (굵게 = 3/5 이상)</span><span>이름 = val 고장 판정 · 경계 근처 val(|결정값| ≤ ${band}) · 틀린 train</span><span>점을 누르면 위 경계 그림 · 목록과 같은 파일이 선택됨</span></div>
+    <div id="lrTsnePlot"></div>`;
+  const c = canvas(560); document.getElementById("lrTsnePlot").append(c);
+  const [g, w, h] = ctx2d(c), P = { l: 12, r: 12, t: 12, b: 12 };
+  const xs = idx.map(i => T.xy[i][0]), ys = idx.map(i => T.xy[i][1]);
+  const xlo = Math.min(...xs) - 2, xhi = Math.max(...xs) + 2, ylo = Math.min(...ys) - 2, yhi = Math.max(...ys) + 2;
+  const X = v => P.l + (v - xlo) / (xhi - xlo) * (w - P.l - P.r), Y = v => P.t + (1 - (v - ylo) / (yhi - ylo)) * (h - P.t - P.b);
+  const pt = i => [X(T.xy[i][0]), Y(T.xy[i][1])];
+  g.strokeStyle = css("--text-3"); g.lineWidth = 1; g.strokeRect(P.l, P.t, w - P.l - P.r, h - P.t - P.b);
+  const order = [...idx].sort((a, b) => (vf(a) >= 0) - (vf(b) >= 0) || D.y[a] - D.y[b]);
+  for (const i of order) { const [x, yv] = pt(i);
+    g.beginPath(); if (vf(i) >= 0) { g.moveTo(x, yv - 7); g.lineTo(x + 6.5, yv + 5); g.lineTo(x - 6.5, yv + 5); g.closePath(); } else if (D.y[i]) g.arc(x, yv, 4.5, 0, 7); else g.rect(x - 4, yv - 4, 8, 8);
+    g.fillStyle = col(i); g.globalAlpha = vf(i) === 0 ? .3 : (vf(i) === 1 ? .95 : .8); g.fill(); g.globalAlpha = 1;
+    if (vf(i) >= 0) { g.lineWidth = vf(i) ? 1.4 : 1.6; g.strokeStyle = vf(i) ? css("--text") : col(i); g.stroke(); }
+    if (vf(i) < 0 && errOf(i)) { const s = errOf(i) >= 3 ? 7 : 5; g.beginPath(); g.moveTo(x - s, yv - s); g.lineTo(x + s, yv + s); g.moveTo(x + s, yv - s); g.lineTo(x - s, yv + s);
+      g.lineWidth = errOf(i) >= 3 ? 2.2 : 1; g.strokeStyle = css("--text"); g.stroke(); }
+    if (i === S.lrSel) { g.beginPath(); g.arc(x, yv, 13, 0, 7); g.lineWidth = 2.5; g.strokeStyle = css("--text"); g.stroke(); } }
+  // 이름: val 고장 판정 · 경계 근처 val · 틀린 train (겹치면 비켜 놓고, 그래도 겹치면 생략)
+  g.font = "11px Malgun Gothic, sans-serif"; const boxes = [];
+  const hit = b => boxes.some(o => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
+  const named = idx.filter(i => vf(i) === 1 || (vf(i) === 0 && Math.abs(dec(i)) <= band) || (vf(i) < 0 && errOf(i) >= 1));
+  for (const i of named.sort((a, b) => Math.abs(dec(a)) - Math.abs(dec(b)))) { const [x, yv] = pt(i), t = shortN(D.names[i]), tw = g.measureText(t).width;
+    for (const [dx, dy] of [[8, -8], [8, 10], [-tw - 8, -8], [-tw - 8, 10], [8, -20], [-tw - 8, 20]]) {
+      const b = [x + dx, yv + dy - 9, x + dx + tw, yv + dy + 3]; if (hit(b)) continue; boxes.push(b);
+      g.fillStyle = css("--surface"); g.globalAlpha = .8; g.fillRect(b[0] - 1, b[1], tw + 2, 12); g.globalAlpha = 1;
+      g.fillStyle = col(i); g.textAlign = "left"; g.fillText(t, x + dx, yv + dy - 3); break; } }
+  const near = (mx, my) => { let best = null, bd = 120; for (const i of idx) { const [x, yv] = pt(i), d = (x - mx) ** 2 + (yv - my) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
+  hover(c, (mx, my) => { const i = near(mx, my); if (i === null) return null;
+    const nb = T.nb_abn[i] >= 0 ? ` · 원래 공간에서 가까운 train 5개 중 고장 ${T.nb_abn[i]} (${T.nb[i].map(shortN).join(" ")})` : "";
+    return `${D.names[i]} (${labTxt(i)}) · 결정값 ${dec(i) === null ? "—" : dec(i).toFixed(2)}${vf(i) >= 0 ? " · " + vTxt(ex, i) : errOf(i) ? ` · ${D.y[i] ? "미탐" : "오경보"} ${errOf(i)}/5` : ""}${nb}`; });
+  c.onclick = e => { const r = c.getBoundingClientRect(), i = near(e.clientX - r.left, e.clientY - r.top); if (i !== null) { S.lrSel = i; render(); } };
+}
 // ---------- 공용: 파일 열기 · 정보 카드 · 점 그림 ----------
-const shortN = n => n.replace("abn_", "A").replace("nor_", "N");
+const shortN = n => n.replace("abn_", "A").replace("nor_", "N").replace("val_", "V");
 function openFile(i) {
   if (!S.list.includes(i)) { S.lab = "all"; S.model = "all"; S.tag = null; S.q = ""; syncCtl(); rebuild(i); } else S.pos = S.list.indexOf(i);
   setMode("one");
 }
 const finErr = i => errN(M(), i);                                      // 고른 모델의 틀린 횟수
 const finTxt = i => errTxt(M(), i);
-const decOf = (m, i) => { const z = D.lr.planes[m.plane][i]; if (!z) return null; const [a, b, c, d] = m.lim; return m.w[0] * Math.max(a, Math.min(b, z[0])) + m.w[1] * Math.max(c, Math.min(d, z[1])) + m.b; };
+const vOf = (m, i) => isU(i) && D.lr.vflag[m.plane] ? D.lr.vflag[m.plane][i] : -1;      // val 판정: −1 해당 없음 · 0 정상 · 1 고장
+const vTxt = (m, i) => { const c = D.lr.vcat[m.plane][i]; return `val 판정 ${vOf(m, i) ? "고장" : "정상"}${c && c !== "—" ? " (" + c + ")" : ""}`; };
+const zOf = (m, i) => m.wz ? (D.lr.zs[m.plane][i] ?? 0) : 0;                           // 박자 z (3입력 결합 모델만, 없으면 0)
+const shiftOf = (m, i) => m.wz ? m.wz * zOf(m, i) / m.w[0] : 0;                         // 박자 z 몫을 ET 눈금으로 환산한 이동량
+const decOf = (m, i) => { const z = D.lr.planes[m.plane][i]; if (!z) return null; const [a, b, c, d] = m.lim; return m.w[0] * Math.max(a, Math.min(b, z[0])) + m.w[1] * Math.max(c, Math.min(d, z[1])) + (m.wz || 0) * zOf(m, i) + m.b; };
 // 경계 그림의 규칙 표시: 색 = CSS 변수 --{규칙 키}
 const RULE_MARK = {
   r83: { sym: "◇", draw: (g, x, y) => { g.beginPath(); g.moveTo(x, y - 10); g.lineTo(x + 10, y); g.lineTo(x, y + 10); g.lineTo(x - 10, y); g.closePath(); g.lineWidth = 1.5; g.strokeStyle = css("--r83"); g.stroke(); } },

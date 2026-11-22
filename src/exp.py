@@ -27,7 +27,7 @@ os.makedirs(CACHE, exist_ok=True)
 
 __all__ = ["ROOT", "CACHE", "np", "pd", "viz", "nested_cv", "load_train", "cached_table",
            "feature_table", "feature_table_ext", "feature_table_phys",
-           "make_et", "ColModel", "RankAvg", "CollinearityFilter", "vif", "Experiment", "md_table", "error_md_table"]
+           "make_et", "ColModel", "RankAvg", "CollinearityFilter", "vif", "Experiment", "md_table", "error_md_table", "OUTLIER_NORMALS", "outlier_idx"]
 
 
 # ---------- 데이터 ----------
@@ -300,3 +300,12 @@ def error_md_table(names, y, pos_counts, files, n_seeds=None, extra=None):
     out = ["| | " + " | ".join(files) + " |", "|---|" + "---|" * len(files)]
     out += [f"| {r} | " + " | ".join(str(cols[f][r]) for f in files) + " |" for r in rows]
     return chr(10).join(out)
+
+
+# 11-22 사용자 결정: 데이터로 구분할 수 없는 정상 이상치. 학습에서는 빼고, 평가 · 결과 계산에는 넣고, 그림에는 따로 표시한다
+OUTLIER_NORMALS = ("nor_059", "nor_065", "nor_116")
+
+
+def outlier_idx(names):
+    """OUTLIER_NORMALS의 행 번호 (names 순서)"""
+    return [list(names).index(n) for n in OUTLIER_NORMALS]

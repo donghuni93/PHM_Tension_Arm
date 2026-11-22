@@ -30,7 +30,9 @@ ex.record("기준 ext150", nested_cv(E.values, y, g, et), names, main=True)
 # ex.record("비교 구성", nested_cv(...), names, mid=True)
 
 # %% 핵심 그림 (key=True, 필수): 결합 모델 실험 = logistic_plane (ET × AE 평면, OOF seed 0, 데이터 범위로 크롭)
-#   ① ET 단독 경계(세로선: 학습 OOF ET logit에서 F2 최대 문턱) ② 결합 경계 ③ 최종 판정으로 색(고장을 잡은 부품 구분)
+#   ① 배경 = 결합(로지스틱) 판단 색(정상 파랑 · 고장 주황) ② 경계선 = ET 단독 판단(세로선: 학습 OOF ET logit에서 F2 최대 문턱) ③ 점은 최종 판정으로 색(고장을 잡은 부품 구분)
+#   이상치 정상 3개(src.exp.OUTLIER_NORMALS)는 학습에서만 빼고(ExcludeTrain) 평가에는 포함, 그림에서 ◆로 표시
+#   ④ 결합이 3입력(ET · AE z · 박자 z)이면 점 위치 = 실제 판정 위치: 가로 = ET + (c[1]/c[0])·박자 z (c = 결합 계수), 이동 ≥ 0.3인 점은 원래 ET 위치에서 점선 꼬리 + 작은 원. val 그림도 같음 (11-22)
 #   예시 코드: 단계/5_모델비교/EXP-044_1122_AE추가/run.py
 # ex.save_fig(fig, "logistic_plane", "한 줄 설명", key=True)
 
@@ -41,5 +43,5 @@ ex.record("기준 ext150", nested_cv(E.values, y, g, et), names, main=True)
 # %% val 판정 (제출 파일 아님): val_판정.md(표) + figs/val_판정.png(ET 단독 경계 포함). csv 만들지 않음
 # ex.save_fig(fig, "val_판정", "..."); ex.save_md("val_판정", md_table(V))
 
-# %% t-SNE (라벨 색, README 그림 1장, 필요할 때만)
-# ex.save_fig(fig, "tsne_라벨", "라벨로 색을 입힌 t-SNE")
+# %% t-SNE 기본 (핵심 그림, 필수, 11-22): src.exp2util.tsne_default (4-10 방식). 열을 바꾼 실험은 T · cols를 넘긴다
+# fig, ti = tsne_default(ns, mark=오경보_번호, mark_label="오경보"); ex.save_fig(fig, "tsne_라벨", "기본 t-SNE(4-10)", key=True)

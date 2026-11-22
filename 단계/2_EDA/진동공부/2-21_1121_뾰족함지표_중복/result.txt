@@ -1,0 +1,35 @@
+뾰족함 계열 62개 (ET 58 + 충격 수·큰 타격 수·K1·1 kHz 고역통과 첨도)
+|ρ| ≥ 0.8 묶음 수: 21 (지표 62개)
+  묶음 19 ( 4개) 대표 P02_kurtosis_012 AUC 0.88 | P02_kurtosis_012, P02_crest_012, E01_env_kurtosis_012, S01_max_to_mean_012
+  묶음 10 ( 2개) 대표 두번째타격_K1 AUC 0.87 | 두번째타격_K1, 큰타격수_n20
+  묶음 17 ( 4개) 대표 P02_kurtosis_025 AUC 0.83 | P02_kurtosis_025, P02_crest_025, E01_env_kurtosis_025, S01_max_to_mean_025
+  묶음 15 ( 3개) 대표 P02_crest_000 AUC 0.83 | P02_crest_000, E01_env_kurtosis_000, P02_kurtosis_000
+  묶음 13 ( 1개) 대표 W03_win_kurtosis_max AUC 0.82 | W03_win_kurtosis_max
+  묶음 14 ( 1개) 대표 T16_tkeo_max AUC 0.81 | T16_tkeo_max
+  묶음 12 ( 4개) 대표 T12_clearance AUC 0.80 | T12_clearance, T10_impulse, T09_crest, T07_kurtosis
+  묶음 11 ( 1개) 대표 충격수 AUC 0.77 | 충격수
+  묶음  1 ( 4개) 대표 P02_kurtosis_037 AUC 0.76 | P02_kurtosis_037, P02_crest_037, E01_env_kurtosis_037, S01_max_to_mean_037
+  묶음  5 ( 2개) 대표 첨도_1k고역 AUC 0.76 | 첨도_1k고역, T18_tkeo_kurtosis
+  묶음  4 ( 4개) 대표 P02_crest_050 AUC 0.73 | P02_crest_050, P02_kurtosis_050, E01_env_kurtosis_050, S01_max_to_mean_050
+  묶음 20 ( 1개) 대표 S01_kurtosis_012 AUC 0.72 | S01_kurtosis_012
+  묶음  3 ( 8개) 대표 P02_kurtosis_075 AUC 0.72 | P02_kurtosis_075, P02_crest_075, P02_crest_062, P02_kurtosis_062, E01_env_kurtosis_075, E01_env_kurtosis_062, S01_max_to_mean_075, S01_max_to_mean_062
+  묶음  8 ( 4개) 대표 P02_kurtosis_087 AUC 0.71 | P02_kurtosis_087, P02_crest_087, S01_max_to_mean_087, E01_env_kurtosis_087
+  묶음 16 ( 2개) 대표 S01_max_to_mean_000 AUC 0.69 | S01_max_to_mean_000, S01_kurtosis_000
+  묶음  9 ( 8개) 대표 P02_crest_100 AUC 0.69 | P02_crest_100, P02_kurtosis_100, P02_kurtosis_112, P02_crest_112, E01_env_kurtosis_100, E01_env_kurtosis_112, S01_max_to_mean_100, S01_max_to_mean_112
+  묶음 21 ( 1개) 대표 W01_win_rms_max_to_mean AUC 0.66 | W01_win_rms_max_to_mean
+  묶음 18 ( 1개) 대표 S01_kurtosis_025 AUC 0.63 | S01_kurtosis_025
+  묶음  2 ( 1개) 대표 S01_kurtosis_037 AUC 0.58 | S01_kurtosis_037
+  묶음  6 ( 3개) 대표 S01_kurtosis_050 AUC 0.56 | S01_kurtosis_050, S01_kurtosis_075, S01_kurtosis_062
+  묶음  7 ( 3개) 대표 S01_kurtosis_100 AUC 0.53 | S01_kurtosis_100, S01_kurtosis_112, S01_kurtosis_087
+ρ(충격수, 첨도_1k고역) = 0.61
+ρ(충격수, T07_kurtosis) = 0.60
+ρ(T07_kurtosis, T09_crest) = 0.89
+ρ(큰타격수_n20, 충격수) = 0.74
+ρ(두번째타격_K1, T09_crest) = 0.62
+
+특이 파일: 정상 백분위 (충격수 · 1 kHz 첨도 · 원신호 첨도 · 파고율)
+  abn_002: 18% · 22% · 11% · 31%
+  abn_014: 78% · 94% · 65% · 66%
+  abn_017: 57% · 86% · 96% · 95%
+  abn_022: 57% · 81% · 28% · 48%
+  abn_015: 93% · 56% · 71% · 36%
