@@ -156,3 +156,74 @@ class TwoAE(Two):
         for e in ("E1", "E2"):
             if e in f: on |= f[e]
         return on.astype(float)
+
+
+class TwoStack(TwoAE):
+    """PHO-008: TwoAE(J의 결합)에 1단 전문가를 더 쌓는다. 입력 행 = TwoAE와 같음 [Two 행 | 파일 번호].
+    extra: 이름 튜플. 각 전문가 점수는 안쪽 4겹 OOF → 학습 정상 강건 z → 로지스틱(L2, C=1, 균형) 입력에 추가
+      'ext'   ET on ext150 logit (src.experts.et_logit, 캐시)
+      'shape' 모양만 보는 AE (src.experts.ae_shape_mean, 구간 평균 log PSD 제거)
+      'mspc'  ext150 정상 PCA T² + SPE (src.candidates.mspc_ext)
+      'knn'   H 피처(학습 정상 중앙값 · MAD로 표준화)에서 학습 정상 5개 이웃까지 평균 거리 (정상만)
+    판정 문턱 · 전문가 E1/E2는 TwoAE와 같다. val · test에는 아직 쓰지 않는다(파일 번호로만 동작)"""
+
+    def __init__(self, comb="lin", experts=(), fixed=(), nf=0, df=1.0, peak=(), q_exp=99.0, seed=0, scale_thr=1.0, extra=()):
+        super().__init__(comb, experts, fixed, nf, df, peak, q_exp, seed, scale_thr); self.extra = tuple(extra)
+
+    @staticmethod
+    def _knn(Htr, ytr, Hte, k=5):
+        N = Htr[ytr == 0]; med = np.median(N, 0); sc = 1.4826 * np.median(np.abs(N - med), 0) + 1e-9
+        A, B = (N - med) / sc, (Hte - med) / sc
+        d = np.sqrt(((B[:, None, :] - A[None]) ** 2).sum(-1)); d.sort(1)
+        return d[:, :k].mean(1)
+
+    def _ex(self, name, tr_idx, te_idx, Htr=None, ytr=None, Hte=None):
+        if name == "ext":
+            from src.experts import et_logit; return et_logit(tr_idx, te_idx)[:, 0]
+        if name == "shape":
+            from src.experts import ae_shape_mean; return ae_shape_mean(tr_idx, te_idx)[:, 0]
+        if name == "mspc":
+            from src.candidates import mspc_ext; return mspc_ext(tr_idx, te_idx)[:, 0]
+        if name == "knn":
+            return self._knn(Htr, ytr, Hte)
+        raise ValueError(name)
+
+    def fit(self, F, y):
+        from src.experts import ae_mean
+        F, y = np.asarray(F, float), np.asarray(y)
+        idx = F[:, -1].astype(int); F = F[:, :-1]; self.fit_idx_ = idx
+        self.pr_ = PeakRef(self.df).fit(F[y == 0, self.nf + 1:])
+        H, pk, S = self._parts(F); self.H_fit_, self.y_fit_ = H, y
+        self.zf_ = robust_z(S[y == 0]); z = self.zf_(S)
+        n = len(y); oof, ae = np.empty(n), np.empty(n); EX = np.empty((n, len(self.extra)))
+        for a, b in StratifiedKFold(4, shuffle=True, random_state=0).split(H, y):
+            oof[b] = lg(make_et(n=ET_N, seed=self.seed)().fit(H[a], y[a]).predict_proba(H[b])[:, 1])
+            ae[b] = ae_mean(idx[a], idx[b])[:, 0]
+            for j, nm in enumerate(self.extra):
+                EX[b, j] = self._ex(nm, idx[a], idx[b], H[a], y[a], H[b])
+        self.m_ = make_et(n=ET_N, seed=self.seed)().fit(H, y)
+        self.aef_ = robust_z(ae[y == 0]); self.exf_ = [robust_z(EX[y == 0, j]) for j in range(len(self.extra))]
+        Z = np.column_stack([oof, z, self.aef_(ae)] + [f(EX[:, j]) for j, f in enumerate(self.exf_)]); self.Z_, self.y_ = Z, y
+        self.c_ = LogisticRegression(C=1.0, class_weight="balanced").fit(Z, y)
+        self.tc_ = float(best_f2_threshold(y, self.c_.decision_function(Z)))
+        self.i1_ = self.fixed.index("H1_nimp") if "H1_nimp" in self.fixed else None
+        self.t16_ = self._thr(pk[y == 0, 0]); self.t18_ = self._thr(H[y == 0, self.fixed.index("H18_hfl")])
+        return self
+
+    def _comb_score(self, a, z, aez=None, ex=None):
+        cols = [a, z, np.zeros_like(a) if aez is None else aez]
+        cols += [np.zeros_like(a)] * len(self.extra) if ex is None else list(ex.T)
+        return self.c_.decision_function(np.column_stack(cols))
+
+    def fires(self, F):
+        from src.experts import ae_mean
+        F = np.asarray(F, float); te = F[:, -1].astype(int); F = F[:, :-1]
+        H, pk, S = self._parts(F)
+        a, z = lg(self.m_.predict_proba(H)[:, 1]), self.zf_(S)
+        aez = self.aef_(ae_mean(self.fit_idx_, te)[:, 0])
+        ex = np.column_stack([f(self._ex(nm, self.fit_idx_, te, self.H_fit_, self.y_fit_, H)) for nm, f in zip(self.extra, self.exf_)]) if self.extra else np.zeros((len(te), 0))
+        s = self._comb_score(a, z, aez, ex)
+        out = dict(main=(s >= self.tc_), a=a, z=z, ae=aez, ex=ex, score=s)
+        if "E1" in self.experts: out["E1"] = pk[:, 0] > self.t16_
+        if "E2" in self.experts: out["E2"] = (H[:, self.fixed.index("H18_hfl")] > self.t18_) & (H[:, self.i1_] >= np.log(2) - 1e-9)
+        return out

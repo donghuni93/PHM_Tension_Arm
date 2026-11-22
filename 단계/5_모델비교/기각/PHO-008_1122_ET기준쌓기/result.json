@@ -1,0 +1,217 @@
+{
+ "id": "PHO-008",
+ "title": "ET 기준 쌓기 (정보가 다른 1단 전문가 추가)",
+ "hypotheses": [
+  "H1",
+  "H2",
+  "H3"
+ ],
+ "member": "이동훈",
+ "model": "J + 1단 전문가(ext · shape · mspc · knn) → 로지스틱 OR E2 OR 8.3k",
+ "changes": "J의 2단 로지스틱 입력에 ext150 ET · 모양 AE · 정상 PCA · 정상 kNN 점수를 하나씩 / 모두 추가",
+ "key_changes": [
+  "1단 전문가 후보 4개(ext · shape · mspc · knn)를 하나씩, 그리고 모두",
+  "2단 로지스틱 · 규칙 · 문턱은 J와 같음",
+  "quick 선별 → full 확인 (사전 고정 규칙)"
+ ],
+ "git": "0a48cdf+수정중",
+ "date": "2026-11-22",
+ "configs": {
+  "quick: J": {
+   "f2": 0.971,
+   "f2_sd": 0.003,
+   "recall": 1.0,
+   "precision": 0.87,
+   "mid": true,
+   "fpr": 0.037,
+   "fpr_sd": 0.004,
+   "f2_p10": 0.937,
+   "f2_p40": 0.989,
+   "missed": [],
+   "fp3": 3,
+   "n_seeds": 2,
+   "mode": "seed 2 · ET 100",
+   "miss_counts": {},
+   "fp_counts": {
+    "nor_025": 1,
+    "nor_037": 1,
+    "nor_059": 2,
+    "nor_065": 2,
+    "nor_106": 1,
+    "nor_116": 2
+   }
+  },
+  "quick: J + ext": {
+   "f2": 0.948,
+   "f2_sd": 0.033,
+   "recall": 0.967,
+   "precision": 0.879,
+   "mid": true,
+   "fpr": 0.033,
+   "fpr_sd": 0.008,
+   "f2_p10": 0.918,
+   "f2_p40": 0.963,
+   "missed": [],
+   "fp3": 3,
+   "n_seeds": 2,
+   "mode": "seed 2 · ET 100",
+   "miss_counts": {
+    "abn_014": 1,
+    "abn_022": 1
+   },
+   "fp_counts": {
+    "nor_025": 1,
+    "nor_059": 2,
+    "nor_065": 2,
+    "nor_106": 1,
+    "nor_116": 2
+   }
+  },
+  "quick: J + shape": {
+   "f2": 0.974,
+   "f2_sd": 0.0,
+   "recall": 1.0,
+   "precision": 0.882,
+   "mid": true,
+   "fpr": 0.033,
+   "fpr_sd": 0.0,
+   "f2_p10": 0.943,
+   "f2_p40": 0.99,
+   "missed": [],
+   "fp3": 3,
+   "n_seeds": 2,
+   "mode": "seed 2 · ET 100",
+   "miss_counts": {},
+   "fp_counts": {
+    "nor_037": 1,
+    "nor_059": 2,
+    "nor_065": 2,
+    "nor_106": 1,
+    "nor_116": 2
+   }
+  },
+  "quick: J + mspc": {
+   "f2": 0.958,
+   "f2_sd": 0.016,
+   "recall": 0.983,
+   "precision": 0.868,
+   "mid": true,
+   "fpr": 0.037,
+   "fpr_sd": 0.004,
+   "f2_p10": 0.924,
+   "f2_p40": 0.976,
+   "missed": [],
+   "fp3": 3,
+   "n_seeds": 2,
+   "mode": "seed 2 · ET 100",
+   "miss_counts": {
+    "abn_022": 1
+   },
+   "fp_counts": {
+    "nor_025": 1,
+    "nor_037": 1,
+    "nor_059": 2,
+    "nor_065": 2,
+    "nor_106": 1,
+    "nor_116": 2
+   }
+  },
+  "quick: J + knn": {
+   "f2": 0.886,
+   "f2_sd": 0.017,
+   "recall": 0.933,
+   "precision": 0.741,
+   "mid": true,
+   "fpr": 0.083,
+   "fpr_sd": 0.025,
+   "f2_p10": 0.821,
+   "f2_p40": 0.923,
+   "missed": [
+    "022"
+   ],
+   "fp3": 7,
+   "n_seeds": 2,
+   "mode": "seed 2 · ET 100",
+   "miss_counts": {
+    "abn_005": 1,
+    "abn_009": 1,
+    "abn_022": 2
+   },
+   "fp_counts": {
+    "nor_006": 2,
+    "nor_028": 1,
+    "nor_038": 2,
+    "nor_043": 1,
+    "nor_044": 1,
+    "nor_059": 2,
+    "nor_065": 2,
+    "nor_082": 2,
+    "nor_094": 1,
+    "nor_098": 2,
+    "nor_102": 1,
+    "nor_108": 1,
+    "nor_116": 2
+   }
+  },
+  "quick: J + 넷 다": {
+   "f2": 0.876,
+   "f2_sd": 0.027,
+   "recall": 0.933,
+   "precision": 0.711,
+   "mid": true,
+   "fpr": 0.1,
+   "fpr_sd": 0.042,
+   "f2_p10": 0.8,
+   "f2_p40": 0.918,
+   "missed": [
+    "022"
+   ],
+   "fp3": 7,
+   "n_seeds": 2,
+   "mode": "seed 2 · ET 100",
+   "miss_counts": {
+    "abn_005": 1,
+    "abn_009": 1,
+    "abn_022": 2
+   },
+   "fp_counts": {
+    "nor_006": 2,
+    "nor_028": 1,
+    "nor_038": 2,
+    "nor_043": 1,
+    "nor_044": 1,
+    "nor_054": 1,
+    "nor_059": 2,
+    "nor_065": 2,
+    "nor_073": 1,
+    "nor_082": 2,
+    "nor_086": 1,
+    "nor_094": 1,
+    "nor_098": 2,
+    "nor_102": 1,
+    "nor_108": 1,
+    "nor_110": 1,
+    "nor_116": 2
+   }
+  }
+ },
+ "figs": {
+  "logistic_plane": "ET × AE 평면 (OOF seed 0). 왼쪽 J, 오른쪽 J + 전문가 넷. 배경 = 결합 판단 영역(박자 · 새 전문가 z = 0 단면)"
+ },
+ "main": "quick: J + shape",
+ "notes": {
+  "quick_pass": [],
+  "2단 계수 (J + 넷 다, 전체 학습)": {
+   "ET": 1.309,
+   "박자": 0.296,
+   "AE": 0.101,
+   "ext": 0.077,
+   "shape": 0.061,
+   "mspc": 0.009,
+   "knn": 0.0
+  }
+ },
+ "key_figs": [
+  "logistic_plane"
+ ]
+}
