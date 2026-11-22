@@ -1,5 +1,5 @@
 # %% [markdown]
-# 7단계 ③ 리허설: 학습 파일 40개를 '가짜 val'로 떼어 놓고, val 날에 할 일을 처음부터 끝까지 해 본다
+# 7단계 ③ 리허설 (구성 J-축소, 11-22): 학습 파일 40개를 '가짜 val'로 떼어 놓고, val 날에 할 일을 처음부터 끝까지 해 본다
 # - 목적: 11/19에 처음 돌리다가 막히지 않게 한다 (폴더 읽기 → 판정 → 제출 CSV → 채점). 점수 자체는 중첩 CV의 한 조각과 같다
 # - 방법: 고장 8 + 정상 32개(val과 같은 40개, 고장 20% 가정)를 뽑아 이름을 val_001… 로 바꿔 outputs/rehearsal/val/ 에 복사,
 #         남은 110개로 학습 → 2_예측.py 와 같은 함수로 판정 → 숨겨 둔 정답으로 F2
@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import fbeta_score
 from src.data import load_dataset, load_folder
-from src.final import FinalModel, write_submission
+from src.final import FinalJ, write_submission
 
 DATA = os.path.join(_d, "data", "TeamProject_train_변경")
 X, y, names = load_dataset(DATA)
@@ -39,7 +39,7 @@ for seed in range(3):
     # 양식 흉내: 파일 이름에 .csv가 붙고 순서가 뒤집힌 양식이어도 맞게 채워지는지
     pd.DataFrame({"filename": [f + ".csv" for f in key.file[::-1]], "label": 0}).to_csv(os.path.join(root, "양식.csv"), index=False)
 
-    m = FinalModel().fit(X[keep], y[keep], [names[i] for i in keep])
+    m = FinalJ().fit(X[keep], y[keep], [names[i] for i in keep])
     Xv, nv = load_folder(os.path.join(root, "val"))
     D = m.predict_table(Xv, nv)
     sub = write_submission(D, os.path.join(root, "submission_val_리허설.csv"), os.path.join(root, "양식.csv"))
@@ -51,6 +51,6 @@ for seed in range(3):
     assert len(J) == 40 and (J.label.values == D.set_index("file").loc[J.file, "pred"].values).all()
     t, p = J["정답"].values, J["label"].values
     miss = J[(t == 1) & (p == 0)]["원래 이름"].tolist(); fa = J[(t == 0) & (p == 1)]["원래 이름"].tolist()
-    lines.append(f"seed {seed}: F2 {fbeta_score(t, p, beta=2):.3f} · 고장 8개 중 {int(((t == 1) & (p == 1)).sum())}개 탐지 · 오경보 {len(fa)}/32 · 임계값 {m.thr_:.2f} "
-                 f"(seed별 {np.round(m.thr_all_, 2).tolist()}) · 놓침 {miss or '없음'} · 오경보 {fa or '없음'} · 경계 표시 {int(D.borderline.sum())}개")
+    lines.append(f"seed {seed}: F2 {fbeta_score(t, p, beta=2):.3f} · 고장 8개 중 {int(((t == 1) & (p == 1)).sum())}개 탐지 · 오경보 {len(fa)}/32 · 결합 문턱 {m.thr_:.2f} "
+                 f"· 놓침 {miss or '없음'} · 오경보 {fa or '없음'} · 결합 여유 0.5 이내 {int((D.margin.abs() < 0.5).sum())}개")
 open(os.path.join(HERE, "결과", "리허설_결과.txt"), "w", encoding="utf-8").write("\n".join(lines) + "\n")
