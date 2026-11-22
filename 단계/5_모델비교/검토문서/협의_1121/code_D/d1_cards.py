@@ -13,7 +13,7 @@ lr_oof = core.lr_.decision_function(oofz)
 F2tr, Ltr, fr = cached_feat2("train", X); F2va, Lva, _ = cached_feat2("val", Xv)
 pk = PeakRef(float(fr[1] - fr[0])).fit(Ltr[nor])
 ptr, pva = pk.transform(Ltr), pk.transform(Lva)
-MM = pd.read_csv(os.path.join(ROOT, "단계", "4_피처", "4-8_1121_모드지도", "features_modemap.csv")).set_index("file")
+MM = pd.read_csv(os.path.join(ROOT, "단계", "4_피처", "base", "4-8_1121_모드지도", "features_modemap.csv")).set_index("file")
 
 
 def frame(T, F2, pp, nm):

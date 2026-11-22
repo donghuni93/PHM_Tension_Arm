@@ -41,7 +41,7 @@ IMP = pd.read_csv(os.path.join(HERE, "impacts_new.csv"), encoding="utf-8-sig")
 NI = pd.read_csv(os.path.join(HERE, "nimp.csv"), encoding="utf-8-sig")
 files = NI.file.tolist(); N = len(files); ntr = 150
 yall = NI.y.values.astype(int); y = yall[:ntr]; nor = y == 0; fault = y == 1
-MM = pd.read_csv(os.path.join(_d, "단계", "4_피처", "4-8_1121_모드지도", "features_modemap.csv"), encoding="utf-8-sig").set_index("file").loc[files]
+MM = pd.read_csv(os.path.join(_d, "단계", "4_피처", "base", "4-8_1121_모드지도", "features_modemap.csv"), encoding="utf-8-sig").set_index("file").loc[files]
 EX = pd.read_csv(os.path.join(_d, "outputs", "cache", "feat_ext.csv")); EXv = pd.read_csv(os.path.join(_d, "outputs", "cache", "feat_ext_val.csv"))
 assert list(EX.columns) == list(EXv.columns)
 E_all = np.nan_to_num(np.vstack([EX.values, EXv.values])); ecols = list(EX.columns)
