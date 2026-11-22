@@ -7,7 +7,7 @@
 # %% 설정
 import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__)) if "__file__" in dir() else os.getcwd()
-sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..", "..", "..")))
+sys.path.insert(0, next(_p for _p in (os.path.abspath(os.path.join(HERE, *[".."] * _k)) for _k in range(8)) if os.path.isdir(os.path.join(_p, "src"))))
 from src.exp import load_train
 from src import viz  # 한글 폰트 설정
 import numpy as np

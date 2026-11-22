@@ -41,7 +41,7 @@ IMP = pd.read_csv(os.path.join(HERE, "impacts_new.csv"), encoding="utf-8-sig")
 NI = pd.read_csv(os.path.join(HERE, "nimp.csv"), encoding="utf-8-sig")
 files = NI.file.tolist(); N = len(files); ntr = 150
 yall = NI.y.values.astype(int); y = yall[:ntr]; nor = y == 0; fault = y == 1
-MM = pd.read_csv(os.path.join(_d, "단계", "4_피처", "base", "4-8_1121_모드지도", "features_modemap.csv"), encoding="utf-8-sig").set_index("file").loc[files]
+MM = pd.read_csv(os.path.join(_d, "단계", "4_피처", "아카이브", "4-8_1121_모드지도", "features_modemap.csv"), encoding="utf-8-sig").set_index("file").loc[files]
 EX = pd.read_csv(os.path.join(_d, "outputs", "cache", "feat_ext.csv")); EXv = pd.read_csv(os.path.join(_d, "outputs", "cache", "feat_ext_val.csv"))
 assert list(EX.columns) == list(EXv.columns)
 E_all = np.nan_to_num(np.vstack([EX.values, EXv.values])); ecols = list(EX.columns)
@@ -49,7 +49,7 @@ F2 = pd.concat([pd.read_csv(os.path.join(_d, "outputs", "cache", "feat2_train.cs
 FINAL16 = json.load(open(os.path.join(_d, "단계", "4_피처", "4-7_1121_2차피처점검", "최종피처.json"), encoding="utf-8"))["final"]
 FINAL16 = [c for c in FINAL16 if c in F2.columns] + [c for c in ("L1_S",) if c not in FINAL16]   # H16-H17(PeakRef, 폴드 안 정상 기준)은 표에 없어 뺌 -> 14열
 NEW16 = np.nan_to_num(F2[FINAL16].values.astype(float))
-OLD = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "8kHz공진", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
+OLD = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "2-7_충격울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
 def oldfrac(lo, hi):
     return np.nan_to_num(OLD.assign(b=(OLD.f >= lo) & (OLD.f < hi)).groupby("file").b.mean().reindex(files).values.astype(float), nan=-1.0)
 AOLD = np.column_stack([oldfrac(2125, 4125), oldfrac(5500, 7750)])      # A의 울림 2열(예전 정의, 라벨 보고 고른 대역)

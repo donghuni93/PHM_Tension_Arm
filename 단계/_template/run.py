@@ -33,7 +33,7 @@ ex.record("기준 ext150", nested_cv(E.values, y, g, et), names, main=True)
 #   ① 배경 = 결합(로지스틱) 판단 색(정상 파랑 · 고장 주황) ② 경계선 = ET 단독 판단(세로선: 학습 OOF ET logit에서 F2 최대 문턱) ③ 점은 최종 판정으로 색(고장을 잡은 부품 구분)
 #   이상치 정상 3개(src.exp.OUTLIER_NORMALS)는 학습에서만 빼고(ExcludeTrain) 평가에는 포함, 그림에서 ◆로 표시
 #   ④ 결합이 3입력(ET · AE z · 박자 z)이면 점 위치 = 실제 판정 위치: 가로 = ET + (c[1]/c[0])·박자 z (c = 결합 계수), 이동 ≥ 0.3인 점은 원래 ET 위치에서 점선 꼬리 + 작은 원. val 그림도 같음 (11-22)
-#   예시 코드: 단계/5_모델비교/EXP-044_1122_AE추가/run.py
+#   예시 코드: 단계/5_모델비교/4_최종모델J/EXP-044_1122_AE추가/run.py
 # ex.save_fig(fig, "logistic_plane", "한 줄 설명", key=True)
 
 # %% 오류 분석 표 (md, 가로): 우리 판단(정답 라벨) · 모델 판단(seed 5번 중 고장/정상 횟수) · 결과 · 근거

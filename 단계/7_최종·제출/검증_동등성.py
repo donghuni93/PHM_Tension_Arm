@@ -31,7 +31,7 @@ R83, KN, LK = Rule83(0.75, 150), KnockRule(2.0, 0.7), LockRule(0.1)
 import pandas as pd
 from sklearn.base import BaseEstimator
 from src.exp import make_et, cached_table, feature_table_ext
-IM = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "8kHz공진", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
+IM = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "2-7_충격울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
 key = [os.path.splitext(os.path.basename(str(n)))[0] for n in names]
 cnt = IM.groupby("file").size().reindex(key).fillna(0).values
 frac = lambda lo, hi: np.nan_to_num(IM.assign(b=(IM.f >= lo) & (IM.f < hi)).groupby("file").b.mean().reindex(key).values.astype(float), nan=-1.0)

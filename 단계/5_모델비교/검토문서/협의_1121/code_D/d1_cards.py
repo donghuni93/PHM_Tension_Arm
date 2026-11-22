@@ -13,7 +13,7 @@ lr_oof = core.lr_.decision_function(oofz)
 F2tr, Ltr, fr = cached_feat2("train", X); F2va, Lva, _ = cached_feat2("val", Xv)
 pk = PeakRef(float(fr[1] - fr[0])).fit(Ltr[nor])
 ptr, pva = pk.transform(Ltr), pk.transform(Lva)
-MM = pd.read_csv(os.path.join(ROOT, "단계", "4_피처", "base", "4-8_1121_모드지도", "features_modemap.csv")).set_index("file")
+MM = pd.read_csv(os.path.join(ROOT, "단계", "4_피처", "아카이브", "4-8_1121_모드지도", "features_modemap.csv")).set_index("file")
 
 
 def frame(T, F2, pp, nm):
@@ -43,7 +43,7 @@ def group_of(c):
 
 
 G = {c: group_of(c) for c in U.columns}
-VW = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "2-4_EDA뷰어", "figs", "features_hp.csv"), encoding="utf-8-sig", index_col=0)
+VW = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "EDA뷰어", "figs", "features_hp.csv"), encoding="utf-8-sig", index_col=0)
 VCTX = ["load_hf", "lb_rlp", "lb_e0_20", "lb_e20_200", "lb_hit", "lb_S", "rms_hf", "fast_decay", "n_ring", "ring_o1", "ring_o2", "ring_o3", "ring_o4", "kurt_1k"]
 V = VW[VCTX].add_prefix("VW_")
 for c in V.columns:

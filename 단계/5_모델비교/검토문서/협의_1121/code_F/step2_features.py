@@ -21,11 +21,11 @@ IMP = pd.read_csv(os.path.join(HERE, "impacts_new.csv"), encoding="utf-8-sig")
 NI = pd.read_csv(os.path.join(HERE, "nimp.csv"), encoding="utf-8-sig")
 files = NI.file.tolist(); lab = NI.y.values; N = len(files); ntr = 150
 y = lab[:ntr].astype(int); isn = y == 0
-MM = pd.read_csv(os.path.join(_d, "단계", "4_피처", "base", "4-8_1121_모드지도", "features_modemap.csv"), encoding="utf-8-sig").set_index("file").loc[files]
+MM = pd.read_csv(os.path.join(_d, "단계", "4_피처", "아카이브", "4-8_1121_모드지도", "features_modemap.csv"), encoding="utf-8-sig").set_index("file").loc[files]
 EX = pd.read_csv(os.path.join(_d, "outputs", "cache", "feat_ext.csv")); EXv = pd.read_csv(os.path.join(_d, "outputs", "cache", "feat_ext_val.csv"))
 assert list(EX.columns) == list(EXv.columns) and len(EX) == 150 and len(EXv) == 40
 E_all = np.nan_to_num(np.vstack([EX.values, EXv.values]))
-OLD = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "8kHz공진", "2-16_1116_울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
+OLD = pd.read_csv(os.path.join(_d, "단계", "2_EDA", "2-7_충격울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
 def oldfrac(lo, hi):
     return OLD.assign(b=(OLD.f >= lo) & (OLD.f < hi)).groupby("file").b.mean().reindex(files).values.astype(float)
 R24_old = np.nan_to_num(oldfrac(2125, 4125), nan=-1.0); RBODY_old = np.nan_to_num(oldfrac(5500, 7750), nan=-1.0)

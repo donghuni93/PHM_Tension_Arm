@@ -27,7 +27,24 @@ os.makedirs(CACHE, exist_ok=True)
 
 __all__ = ["ROOT", "CACHE", "np", "pd", "viz", "nested_cv", "load_train", "cached_table",
            "feature_table", "feature_table_ext", "feature_table_phys",
-           "make_et", "ColModel", "RankAvg", "CollinearityFilter", "vif", "Experiment", "md_table", "error_md_table", "OUTLIER_NORMALS", "outlier_idx"]
+           "make_et", "ColModel", "RankAvg", "CollinearityFilter", "vif", "Experiment", "md_table", "error_md_table", "OUTLIER_NORMALS", "outlier_idx", "find_exp"]
+
+EXP_ROOT = os.path.join(ROOT, "단계", "5_모델비교")
+
+
+def find_exp(key):
+    """실험 폴더 찾기. key = 'EXP-043' · 'PHO-007' · 폴더 이름 · 'base/폴더 이름'(예전 경로) 모두 된다.
+    5_모델비교 아래 두 단계까지 찾는다: 바로 아래 · 단계 폴더(1_첫베이스모델 …) · 아카이브/ (11-22 정리).
+    폴더를 옮겨도 코드가 안 깨지게 경로를 직접 쓰지 않는다."""
+    name = os.path.basename(str(key).rstrip("/\\"))
+    eid = name.split("_")[0]
+    subs = [""] + [s for s in sorted(os.listdir(EXP_ROOT)) if os.path.isdir(os.path.join(EXP_ROOT, s)) and not s.startswith(("EXP-", "PHO-"))]
+    for sub in subs:
+        d = os.path.join(EXP_ROOT, sub)
+        for n in os.listdir(d):
+            if os.path.isdir(os.path.join(d, n)) and (n == name or n.split("_")[0] == eid):
+                return os.path.join(d, n)
+    raise FileNotFoundError(f"실험 폴더 없음: {key}")
 
 
 # ---------- 데이터 ----------

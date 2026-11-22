@@ -11,12 +11,12 @@ from sklearn.model_selection import StratifiedGroupKFold
 
 from src.data import load_folder
 from src.evaluate import best_f2_threshold
-from src.exp import ROOT, cached_table, feature_table_ext, load_train
+from src.exp import ROOT, cached_table, feature_table_ext, load_train, find_exp
 from src.features2 import PeakRef, H_FOLD, cached_feat2, robust_z
 from src.models2 import Two
 
 NOR, ABN, PUR = "#2a78d6", "#eb6834", "#7B1FA2"
-EXP040 = os.path.join(ROOT, "단계", "5_모델비교", "base", "EXP-040_1121_2차설계_1단계")
+EXP040 = find_exp("EXP-040")
 short = lambda s: s.replace("abn_", "A").replace("nor_", "N")
 
 

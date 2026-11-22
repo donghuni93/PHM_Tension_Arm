@@ -41,7 +41,7 @@ G = np.c_[xx.ravel(), yy_.ravel()]
 
 # %% 실험마다 그림
 for folder, title, kind, rules in EXPS:
-    d = os.path.join(HERE, "base", folder)
+    d = find_exp(folder)
     r = json.load(open(os.path.join(d, "result.json"), encoding="utf-8"))
     c = r["configs"][r.get("main") or next(iter(r["configs"]))]
     miss = [n for n, k in c["miss_counts"].items() if k >= 3]; fp = [n for n, k in c["fp_counts"].items() if k >= 3]
