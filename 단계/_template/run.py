@@ -24,7 +24,7 @@ X, y, names = load_train()
 E = cached_table("ext", feature_table_ext, X)
 g = np.arange(len(y))
 
-# %% 중첩 CV. 대표 구성만 main=True, 비교 · 절제 · 이전 값은 mid=True → README 맨 아래 '중간 단계 결과'로
+# %% 중첩 CV (기본 quick = seed 2 · J 계열 ET 100, 23초 안팎. 정식 수치는 QE_FULL=1 python run.py). 대표 구성만 main=True, 비교 · 절제 · 이전 값은 mid=True → README 맨 아래 '중간 단계 결과'로
 et = make_et()
 ex.record("기준 ext150", nested_cv(E.values, y, g, et), names, main=True)
 # ex.record("비교 구성", nested_cv(...), names, mid=True)

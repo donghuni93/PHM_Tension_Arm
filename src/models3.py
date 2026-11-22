@@ -13,7 +13,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 
-from src.evaluate import best_f2_threshold
+from src.evaluate import best_f2_threshold, ET_N
 from src.exp import make_et
 from src.features2 import PeakRef, robust_z
 from src.features3 import HF_GRID, I_HF, I_N1, I_RING, N_EX, RING_KEYS
@@ -73,9 +73,9 @@ class Models3(TwoAE):
         Het = self._et_in(H, EX)
         oof, ae = np.empty(len(y)), np.empty(len(y))
         for a, b in StratifiedKFold(4, shuffle=True, random_state=0).split(Het, y):
-            oof[b] = lg(make_et(seed=self.seed)().fit(Het[a], y[a]).predict_proba(Het[b])[:, 1])
+            oof[b] = lg(make_et(n=ET_N, seed=self.seed)().fit(Het[a], y[a]).predict_proba(Het[b])[:, 1])
             ae[b] = ae_mean(idx[a], idx[b])[:, 0]
-        self.m_ = make_et(seed=self.seed)().fit(Het, y)
+        self.m_ = make_et(n=ET_N, seed=self.seed)().fit(Het, y)
         self.aef_ = robust_z(ae[y == 0]); aez = self.aef_(ae)
         Z = [oof, z, aez]
         if self.ring:

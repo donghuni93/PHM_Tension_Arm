@@ -4,10 +4,18 @@
 - 안쪽 fold: 바깥 학습 파일 안에서 다시 CV → OOF 점수로 F₂ 최대 임계값 선택
 규칙 근거: 단계/1_기준·기록/기준_논의/1-2_평가설계.md · 결정.md "평가" (폴드 안에서 fit, 임계값, 평가·보고)
 """
+import os
+
 import numpy as np
 from joblib import Parallel, delayed, parallel_config
 from sklearn.metrics import fbeta_score, precision_score, recall_score
 from sklearn.model_selection import StratifiedGroupKFold
+
+# 실험 모드 (11-22 사용자): 기본 = quick(중첩 CV seed 2 · J 계열 ET 나무 100). 정식 수치는 QE_FULL=1 (seed 5 · 나무 300)
+FULL = os.environ.get("QE_FULL") == "1"
+N_SEEDS = 5 if FULL else 2
+ET_N = 300 if FULL else 100
+MODE = "full (seed 5 · ET 300)" if FULL else "quick (seed 2 · ET 100)"
 
 
 def _scores(model, F):
@@ -78,7 +86,7 @@ def _outer_fold(F, y, groups, make_model, n_inner, seed, tr, te):
     return te, (_scores(model, F[te]) >= t).astype(int), t
 
 
-def nested_cv(F, y, groups, make_model, n_outer=5, n_inner=4, seeds=range(5), n_jobs=1):
+def nested_cv(F, y, groups, make_model, n_outer=5, n_inner=4, seeds=None, n_jobs=1):
     """중첩 CV. make_model: 호출할 때마다 새 (학습 전) 모델을 돌려주는 함수
 
     n_jobs: (seed, 바깥 fold) 작업을 동시에 돌릴 프로세스 수. 1 = 순서대로, -1 = 모든 코어.
@@ -91,7 +99,7 @@ def nested_cv(F, y, groups, make_model, n_outer=5, n_inner=4, seeds=range(5), n_
     - thresholds: 바깥 fold마다 고른 임계값
     """
     F, y, groups = np.asarray(F, dtype=float), np.asarray(y), np.asarray(groups)
-    seeds = list(seeds)
+    seeds = list(range(N_SEEDS) if seeds is None else seeds)          # 기본 = 모드(quick 2 · full 5)
     jobs = [(F, y, groups, make_model, n_inner, seed, tr, te)
             for seed in seeds
             for tr, te in StratifiedGroupKFold(n_splits=n_outer, shuffle=True,

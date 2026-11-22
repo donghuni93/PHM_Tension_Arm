@@ -17,7 +17,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from src.evaluate import best_f2_threshold
+from src.evaluate import best_f2_threshold, ET_N
 from src.exp import make_et
 from src.features2 import PeakRef, H_FOLD, robust_z
 
@@ -51,8 +51,8 @@ class Two(BaseEstimator):
         self.zf_ = robust_z(S[y == 0]); z = self.zf_(S)
         oof = np.empty(len(y))
         for a, b in StratifiedKFold(4, shuffle=True, random_state=0).split(H, y):
-            oof[b] = lg(make_et(seed=self.seed)().fit(H[a], y[a]).predict_proba(H[b])[:, 1])
-        self.m_ = make_et(seed=self.seed)().fit(H, y)
+            oof[b] = lg(make_et(n=ET_N, seed=self.seed)().fit(H[a], y[a]).predict_proba(H[b])[:, 1])
+        self.m_ = make_et(n=ET_N, seed=self.seed)().fit(H, y)
         Z = np.column_stack([oof, z])
         if self.comb == "lin":
             self.c_ = LogisticRegression(C=1.0, class_weight="balanced").fit(Z, y)
@@ -122,9 +122,9 @@ class TwoAE(Two):
         self.zf_ = robust_z(S[y == 0]); z = self.zf_(S)
         oof, ae = np.empty(len(y)), np.empty(len(y))
         for a, b in StratifiedKFold(4, shuffle=True, random_state=0).split(H, y):
-            oof[b] = lg(make_et(seed=self.seed)().fit(H[a], y[a]).predict_proba(H[b])[:, 1])
+            oof[b] = lg(make_et(n=ET_N, seed=self.seed)().fit(H[a], y[a]).predict_proba(H[b])[:, 1])
             ae[b] = ae_mean(idx[a], idx[b])[:, 0]
-        self.m_ = make_et(seed=self.seed)().fit(H, y)
+        self.m_ = make_et(n=ET_N, seed=self.seed)().fit(H, y)
         self.aef_ = robust_z(ae[y == 0]); aez = self.aef_(ae)
         Z = np.column_stack([oof, z, aez]); self.Z_, self.y_ = Z, y        # 안쪽 OOF 결합 입력 (다른 결합 모델을 같은 입력으로 비교할 때 쓴다, EXP-045)
         self.c_ = LogisticRegression(C=1.0, class_weight="balanced").fit(Z, y)

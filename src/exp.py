@@ -16,7 +16,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 from src.data import load_dataset
 from src.features import feature_table, feature_table_ext, feature_table_phys
-from src.evaluate import nested_cv
+from src.evaluate import nested_cv, MODE, ET_N, N_SEEDS
 from src import viz
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import ExtraTreesClassifier
@@ -180,13 +180,14 @@ class Experiment:
 
     def record(self, name, r, names, main=False, mid=False):
         """nested_cv 결과 한 구성을 기록하고 한 줄 출력. main=True면 노션 카드의 F2 점수로 쓴다"""
-        miss = [names[i] for i in np.flatnonzero(r["miss_counts"] >= 3)]
+        ns_ = len(r["f2"]); k = ns_ // 2 + 1                                # 자주 = seed 과반 (5 → 3, 2 → 2)
+        miss = [names[i] for i in np.flatnonzero(r["miss_counts"] >= k)]
         row = dict(f2=round(float(r["f2"].mean()), 3), f2_sd=round(float(r["f2"].std()), 3),
                    recall=round(float(r["recall"].mean()), 3), precision=round(float(r["precision"].mean()), 3),
                    mid=bool(mid), fpr=round(float(r["fpr"].mean()), 3), fpr_sd=round(float(r["fpr"].std()), 3),
                    f2_p10=round(_f2_at(r["recall"].mean(), r["fpr"].mean(), 0.1), 3),
                    f2_p40=round(_f2_at(r["recall"].mean(), r["fpr"].mean(), 0.4), 3),
-                   missed=[m.replace("abn_", "") for m in miss], fp3=int((r["fp_counts"] >= 3).sum()),
+                   missed=[m.replace("abn_", "") for m in miss], fp3=int((r["fp_counts"] >= k).sum()), n_seeds=ns_, mode=f"seed {ns_} · ET {ET_N}",
                    miss_counts={names[i]: int(c) for i, c in enumerate(r["miss_counts"]) if c},
                    fp_counts={names[i]: int(c) for i, c in enumerate(r["fp_counts"]) if c})
         self.res["configs"][name] = row
@@ -194,7 +195,7 @@ class Experiment:
             self.res["main"] = name
         self._write()
         print(f"{name:40s} F2 {row['f2']:.3f} ± {row['f2_sd']:.3f} | R {row['recall']:.3f} FPR {row['fpr']:.3f} P {row['precision']:.3f}"
-              f" | 자주 놓침 {' '.join(row['missed'])} | 오경보(3회+) {row['fp3']}", flush=True)
+              f" | 자주 놓침 {' '.join(row['missed'])} | 오경보({k}회+) {row['fp3']} | {row['mode']}", flush=True)
         return row
 
     @staticmethod
@@ -247,7 +248,8 @@ class Experiment:
         s += [f"- 가설: {', '.join(r['hypotheses']) or '—'} ([물리가설]({notes}))",
              f"- 실행: {r['date']} · git `{r['git']}` · 코드 [run.py](run.py)"]
         if r["configs"]:
-            s += ["- 평가: 중첩 CV (바깥 5 × 안쪽 4, seed 5개). 자주 놓침 = seed 5번 중 3번 이상\n",
+            modes = sorted({v.get("mode", "seed 5 · ET 300") for v in r["configs"].values()})
+            s += [f"- 평가: 중첩 CV (바깥 5 × 안쪽 4) · 모드 {' / '.join(modes)}. 자주 놓침 · 오경보 n회+ = seed 과반. quick 수치는 선별용, 기록 수치는 QE_FULL=1\n",
                   "## 결과\n", "| 구성 | F2 | 재현율 | 오경보율 | 정밀도 | F2 (고장 10%·40%) | 자주 놓침 | 오경보 3회+ |", "|---|---|---|---|---|---|---|---|"]
         def _row(k, v):
             return (f"| {k.replace('|', chr(92) + '|')} | {v['f2']:.3f} ± {v['f2_sd']:.3f} | {v['recall']:.3f} | {v.get('fpr', float('nan')):.3f} | {v['precision']:.3f} "
@@ -281,14 +283,15 @@ def md_table(df):
     return chr(10).join(rows)
 
 
-def error_md_table(names, y, pos_counts, files, n_seeds=5, extra=None):
-    """오류 분석 표 (11-22 사용자 형식, 가로 배치): 열 = 파일, 행 = 우리 판단(정답 라벨) · 모델 판단(seed 5번 중 고장/정상 횟수) · 결과 · 모델 근거.
+def error_md_table(names, y, pos_counts, files, n_seeds=None, extra=None):
+    """오류 분석 표 (11-22 사용자 형식, 가로 배치): 열 = 파일, 행 = 우리 판단(정답 라벨) · 모델 판단(seed n번 중 고장/정상 횟수, n = 모드) · 결과 · 모델 근거.
     pos_counts[i] = 파일 i를 고장으로 판정한 횟수 (nested_cv의 miss_counts · fp_counts에서: 고장 = n − miss, 정상 = fp)
     extra = {행 이름: {파일: 값}} 모델 근거(ET · AE · 규칙 켜짐 등). 문자열 표를 돌려준다"""
+    n_seeds = N_SEEDS if n_seeds is None else n_seeds
     cols = {}
     for f in files:
         i = list(names).index(f); k = int(pos_counts[i]); fault = bool(y[i]); ok = (k > n_seeds / 2) == fault
-        c = {"우리 판단 (정답 라벨)": "고장" if fault else "정상", "모델 판단 (seed 5번 중)": f"고장 {k} · 정상 {n_seeds - k}",
+        c = {"우리 판단 (정답 라벨)": "고장" if fault else "정상", f"모델 판단 (seed {n_seeds}번 중)": f"고장 {k} · 정상 {n_seeds - k}",
              "결과": ("맞음" if ok else "틀림") + f" ({k if fault else n_seeds - k}/{n_seeds} 정답)"}
         for row, d in (extra or {}).items():
             c[row] = d.get(f, "—")
