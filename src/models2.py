@@ -241,3 +241,23 @@ class TwoStack(TwoAE):
         out = dict(main=(s >= self.tc_), a=a, z=z, ae=aez, ex=ex, score=s)
         if "E2" in self.experts: out["E2"] = (H[:, self.fixed.index("H18_hfl")] > self.t18_) & (H[:, self.i1_] >= np.log(2) - 1e-9)
         return out
+
+
+class RingShrink:
+    """EXP-050 J-축소 (11-22, EXP-050 run.py의 Shrink를 공용으로 옮김. 동작 같음).
+    ET 입력의 울림 비율 열(H7–H10)을 충격 수로 축소한 뒤 안쪽 모델(Add83 → TwoStack)에 넘긴다.
+    H_b' = (k_b + α·p0_b) / (n + α), n = round(expm1(H1_nimp)), k_b = H_b · n, p0_b = fit 학습 정상의 모든 충격에서 b 대역 비율. 충격 0개 파일은 그대로"""
+    def __init__(self, mk, ring_idx, i1, alpha=3.0): self.mk, self.ring_idx, self.i1, self.alpha = mk, list(ring_idx), i1, alpha
+    def _tf(self, F):
+        F = np.array(F, float); n = np.rint(np.expm1(F[:, self.i1])); has = n > 0
+        R = F[np.ix_(has, self.ring_idx)]; k = R * n[has, None]
+        F[np.ix_(has, self.ring_idx)] = (k + self.alpha * self.p0_) / (n[has, None] + self.alpha); return F
+    def fit(self, F, y):
+        F = np.asarray(F, float); y = np.asarray(y); n = np.rint(np.expm1(F[:, self.i1])); m = (y == 0) & (n > 0)
+        self.p0_ = (F[np.ix_(m, self.ring_idx)] * n[m, None]).sum(0) / n[m].sum()
+        self.m_ = self.mk().fit(self._tf(F), y); return self
+    def fires(self, F): return self.m_.fires(self._tf(F))
+    def decision_function(self, F): return self.m_.decision_function(self._tf(F))
+    def __getattr__(self, k):
+        if k in ("m_", "mk") or k.startswith("__"): raise AttributeError(k)
+        return getattr(self.m_, k)

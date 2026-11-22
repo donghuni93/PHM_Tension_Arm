@@ -400,3 +400,29 @@ def tsne_val_default(ns, val_fault, T=None, Tv=None, cols=None, title="", drop=T
     fig.tight_layout()
     tab.attrs.update(q95=float(q95), qmax=float(qmax))
     return fig, tab
+
+
+# ---- J-축소 (EXP-050 기준 구성) 공용 조립 (11-22, EXP-052부터) ----
+RING_COLS = ["H7_ring_1-2k", "H8_ring_2-4k", "H9_ring_4-8k", "H10_ring_8-12.5k"]
+
+
+def j_mats(ns, r83, fixed=None):
+    """J 계열 입력 행렬. train M = [H 고정 열 | L1_S | 봉우리 | 파일 번호 | 8.3k 켜짐], val Mv = [H 고정 열 | L1_S | 봉우리] (EXP-050 mats와 같음)"""
+    fixed = list(ns.FIXED if fixed is None else fixed)
+    M = np.column_stack([ns.T[fixed].values, ns.T[["L1_S"]].values, ns.L, np.arange(ns.n, dtype=float), np.asarray(r83, float)])
+    Mv = np.column_stack([ns.Tv[fixed].values, ns.Tv[["L1_S"]].values, ns.Lv])
+    return M, Mv
+
+
+def j_shrink(ns, fixed=None, alpha=3.0):
+    """J-축소 모델 팩토리: RingShrink(Add83(TwoStack lin + E2 + AE)). EXP-050 build(F0, True)와 같다"""
+    from src.models2 import TwoStack, RingShrink
+    fixed = list(ns.FIXED if fixed is None else fixed); nf = len(fixed)
+    base = lambda: Add83(lambda: TwoStack("lin", ("E2",), fixed=tuple(fixed), nf=nf, df=ns.df, peak=tuple(ns.PEAK), extra=(), use_ae=True))
+    ri = [fixed.index(c) for c in RING_COLS if c in fixed]; i1 = fixed.index("H1_nimp")
+    return lambda: RingShrink(base, ri, i1, alpha)
+
+
+def ts_of(top):
+    """학습된 J-축소 → (안쪽 TwoStack, 입력 변환). val은 ts.fires_raw(tf(Mv), raw)로"""
+    return top.m_.m_, top._tf
