@@ -1,6 +1,6 @@
 # val 40개의 경계 파일: J(EXP-044) · S(EXP-047)를 train 150 전체로 학습 → 결합 여유(점수 − 문턱), 규칙 켜짐, ET 단독 판정
 # 경계 = 규칙으로 켜지지 않았고 |결합 여유| < 1.5 (두 모델 중 하나라도). 1.5 ≈ ET logit 1 만큼 (ET 계수 J 1.53 · S 1.3대)
-# 실행: conda run -n qe-phm python "단계/5_모델비교/검토문서/비교_044vs047_1122/val_경계.py"
+# 실행: conda run -n qe-phm python "단계/5_모델비교/검토문서/아카이브/비교_044vs047_1122/val_경계.py"
 import os, sys, warnings
 _d = os.path.abspath(os.path.dirname(__file__))
 while not os.path.isdir(os.path.join(_d, "src")) and os.path.dirname(_d) != _d:

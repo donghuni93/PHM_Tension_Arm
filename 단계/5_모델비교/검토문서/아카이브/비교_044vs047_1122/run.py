@@ -5,7 +5,7 @@
 # 3) t-SNE seed 흔들림: 공간마다 seed 5개로 2차원 지도의 5-NN 숫자 → 두 공간 차이가 seed 차이보다 큰가
 # 4) 바뀐 피처: H10 · H15 vs 쪼갠 4열 (정상 / 고장 분포)
 # 5) 모델 판정 겹치기: OOF seed 0 결합 여유(점수 − 문턱) J vs S, 최종 판정이 갈린 파일
-# 실행: conda run -n qe-phm python "단계/5_모델비교/검토문서/비교_044vs047_1122/run.py"
+# 실행: conda run -n qe-phm python "단계/5_모델비교/검토문서/아카이브/비교_044vs047_1122/run.py"
 
 # %% 설정
 import os, sys, warnings

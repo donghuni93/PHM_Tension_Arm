@@ -3,7 +3,7 @@
 # - 새 피처·새 규칙을 만들지 않는다. 이미 있는 값을 모아 "어떤 유형이 왜 헷갈리는가"를 보기 위한 집계다 (실험 아님)
 # - 입력: 2-0 figs/types.csv · 2-15 figs/events.csv · EXP-030 result.json · 피처 캐시 · 전문가 캐시(5-fold seed 0)
 # - 출력: figs/table.csv (파일별) · figs/summary.txt (유형별 집계와 헷갈리는 파일 목록)
-# 실행: conda run -n qe-phm python "단계/6_오류분석/6-1_1116_유형별_정상고장_구분/run.py"
+# 실행: conda run -n qe-phm python "단계/6_오류분석/아카이브/6-1_1116_유형별_정상고장_구분/run.py"
 
 # %%
 import os, sys, json, warnings
