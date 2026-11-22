@@ -89,6 +89,24 @@ def ae_shape_mean(tr, te):
     return np.log10(ae_segerr(tr, te, shape=True).mean((1, 2)))[:, None]
 
 
+@mem.cache
+def ae_self_err(tr, te, seed=0):
+    """PHO-009 자기기준 AE: 구간 log PSD에서 그 파일의 구간 중앙값 스펙트럼을 뺀 '자기 평소 대비 차이'만 학습(정상만).
+    파일 전체에 깔린 바탕(측정 조건)은 대역별로 상쇄되고, 2초 안에서 시간에 따라 변하는 부분만 남는다 → (te, 8, 1025) 오차"""
+    tr, te = np.array(tr), np.array(te)
+    L = LP - np.median(LP, axis=1, keepdims=True)
+    S = L[tr[y[tr] == 0]].reshape(-1, L.shape[-1]); mu, sd = S.mean(0), S.std(0) + 1e-8
+    m = MLPRegressor(hidden_layer_sizes=(128, 16, 128), activation="relu", solver="adam", learning_rate_init=1e-3,
+                     max_iter=60, alpha=0.0, random_state=seed).fit((S - mu) / sd, (S - mu) / sd)
+    Z = (L[te] - mu) / sd; R = m.predict(Z.reshape(-1, Z.shape[-1])).reshape(Z.shape)
+    return ((R - Z) ** 2).astype(np.float32)
+
+
+def ae_self_mean(tr, te):
+    """자기기준 AE 점수: log10(구간 · bin 평균 오차) → (te, 1)"""
+    return np.log10(ae_self_err(tr, te).mean((1, 2)))[:, None]
+
+
 def ae_shape_max(tr, te):
     """A+C: 모양 AE, 구간 최댓값 → (te, 1)"""
     return np.log10(ae_segerr(tr, te, shape=True).mean(2).max(1))[:, None]
