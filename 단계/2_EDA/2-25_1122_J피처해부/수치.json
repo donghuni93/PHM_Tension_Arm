@@ -1,0 +1,118 @@
+{
+ "perm": {
+  "H1_nimp": 0.0088,
+  "H2_ratio21": 0.0023,
+  "H3_kurt_1-2k": 0.0125,
+  "H5_kurt_4-8k": 0.0074,
+  "H7_ring_1-2k": -0.0014,
+  "H8_ring_2-4k": 0.0065,
+  "H9_ring_4-8k": 0.0069,
+  "H10_ring_8-12.5k": 0.0009,
+  "H12_share_1-2k": -0.0014,
+  "H13_share_2-4k": -0.0005,
+  "H14_share_4-8k": 0.0009,
+  "H15_share_8-12.5k": -0.0009,
+  "H18_hfl": 0.0,
+  "H16_peak_h": -0.0005,
+  "H17_peak_w": 0.0023
+ },
+ "mdi": {
+  "H1_nimp": 0.0704,
+  "H2_ratio21": 0.0277,
+  "H3_kurt_1-2k": 0.1326,
+  "H5_kurt_4-8k": 0.0498,
+  "H7_ring_1-2k": 0.0347,
+  "H8_ring_2-4k": 0.0983,
+  "H9_ring_4-8k": 0.1335,
+  "H10_ring_8-12.5k": 0.0644,
+  "H12_share_1-2k": 0.0223,
+  "H13_share_2-4k": 0.0338,
+  "H14_share_4-8k": 0.0441,
+  "H15_share_8-12.5k": 0.0863,
+  "H18_hfl": 0.0281,
+  "H16_peak_h": 0.1049,
+  "H17_peak_w": 0.069
+ },
+ "stats": {
+  "H3_kurt_1-2k": {
+   "auc": 0.871,
+   "val_out": 0.1,
+   "val_med_pct": 0.74
+  },
+  "H1_nimp": {
+   "auc": 0.798,
+   "val_out": 0.025,
+   "val_med_pct": 0.34
+  },
+  "H5_kurt_4-8k": {
+   "auc": 0.727,
+   "val_out": 0.225,
+   "val_med_pct": 0.69
+  },
+  "H9_ring_4-8k": {
+   "auc": 0.267,
+   "val_out": 0.0,
+   "val_med_pct": 0.3
+  },
+  "H8_ring_2-4k": {
+   "auc": 0.874,
+   "val_out": 0.25,
+   "val_med_pct": 0.14
+  },
+  "H2_ratio21": {
+   "auc": 0.597,
+   "val_out": 0.075,
+   "val_med_pct": 0.42
+  },
+  "H17_peak_w": {
+   "auc": 0.846,
+   "val_out": 0.15,
+   "val_med_pct": 0.79
+  },
+  "H14_share_4-8k": {
+   "auc": 0.304,
+   "val_out": 0.05,
+   "val_med_pct": 0.37
+  },
+  "H10_ring_8-12.5k": {
+   "auc": 0.83,
+   "val_out": 0.05,
+   "val_med_pct": 0.14
+  },
+  "H18_hfl": {
+   "auc": 0.404,
+   "val_out": 0.0,
+   "val_med_pct": 0.5
+  },
+  "H16_peak_h": {
+   "auc": 0.843,
+   "val_out": 0.175,
+   "val_med_pct": 0.74
+  },
+  "H13_share_2-4k": {
+   "auc": 0.654,
+   "val_out": 0.4,
+   "val_med_pct": 0.72
+  },
+  "H15_share_8-12.5k": {
+   "auc": 0.81,
+   "val_out": 0.175,
+   "val_med_pct": 0.54
+  },
+  "H7_ring_1-2k": {
+   "auc": 0.643,
+   "val_out": 0.025,
+   "val_med_pct": 0.77
+  },
+  "H12_share_1-2k": {
+   "auc": 0.34,
+   "val_out": 0.025,
+   "val_med_pct": 0.39
+  },
+  "L1_S": {
+   "auc": 0.695,
+   "val_out": 0.025,
+   "val_med_pct": 0.01
+  }
+ }
+}
