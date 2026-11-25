@@ -1,0 +1,70 @@
+{
+ "final": [
+  "H1_nimp",
+  "H2_ratio21",
+  "H3_kurt_1-2k",
+  "H5_kurt_4-8k",
+  "H7_ring_1-2k",
+  "H8_ring_2-4k",
+  "H9_ring_4-8k",
+  "H10_ring_8-12.5k",
+  "H12_share_1-2k",
+  "H13_share_2-4k",
+  "H14_share_4-8k",
+  "H15_share_8-12.5k",
+  "H16_peak_h",
+  "H17_peak_w",
+  "H18_hfl",
+  "L1_S"
+ ],
+ "hfold": [
+  "H16_peak_h",
+  "H17_peak_w"
+ ],
+ "fixed": [
+  "H1_nimp",
+  "H2_ratio21",
+  "H3_kurt_1-2k",
+  "H5_kurt_4-8k",
+  "H7_ring_1-2k",
+  "H8_ring_2-4k",
+  "H9_ring_4-8k",
+  "H10_ring_8-12.5k",
+  "H12_share_1-2k",
+  "H13_share_2-4k",
+  "H14_share_4-8k",
+  "H15_share_8-12.5k",
+  "H18_hfl"
+ ],
+ "lock": [
+  "L1_S"
+ ],
+ "dropped": {
+  "H4_kurt_2-4k": "H3_kurt_1-2k",
+  "H6_kurt_8-12.5k": "H5_kurt_4-8k"
+ },
+ "groups": [
+  {
+   "members": [
+    "H3_kurt_1-2k",
+    "H4_kurt_2-4k"
+   ],
+   "mean_abs": {
+    "H3_kurt_1-2k": 0.848,
+    "H4_kurt_2-4k": 0.848
+   },
+   "kept": "H3_kurt_1-2k"
+  },
+  {
+   "members": [
+    "H5_kurt_4-8k",
+    "H6_kurt_8-12.5k"
+   ],
+   "mean_abs": {
+    "H5_kurt_4-8k": 0.862,
+    "H6_kurt_8-12.5k": 0.862
+   },
+   "kept": "H5_kurt_4-8k"
+  }
+ ]
+}
