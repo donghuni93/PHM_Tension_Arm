@@ -1,0 +1,5 @@
+﻿�썑蹂� 32媛� 쨌 train 150 쨌 val 40
+寃곗륫(異⑷꺽 0 쨌 3媛� 誘몃쭔 �뙆�씪) train: {'I_top5_ratio': np.int64(14), 'I_count_per_max': np.int64(14), 'I_interval_cv': np.int64(43), 'R_fpeak_med': np.int64(15), 'R_frac_2_5k': np.int64(15), 'R_ring_25_58': np.int64(15), 'R_ring_811_58': np.int64(15)} / val: {'I_top5_ratio': np.int64(3), 'I_count_per_max': np.int64(3), 'I_interval_cv': np.int64(7), 'R_fpeak_med': np.int64(3), 'R_frac_2_5k': np.int64(3), 'R_ring_25_58': np.int64(3), 'R_ring_811_58': np.int64(3)}
+150媛� �쟾泥� �꽑�깮 = ['b25_5_segk', 'D_segk', 'A_segk', 'R_frac_2_5k', 'R_ring_25_58', 'AR_resid', 'R_ring_811_58', 'SK_200_3k', 'b25_5_kurt', 'I_density']
+�냼由� F10      = ['b25_5_segk', 'D_segk', 'A_segk', 'R_frac_2_5k', 'R_ring_25_58', 'AR_resid', 'R_ring_811_58', 'SK_200_3k', 'b25_5_kurt', 'I_density']
+�씠由� 쨌 �닚�꽌 �씪移� = True / 吏묓빀 �씪移� = True

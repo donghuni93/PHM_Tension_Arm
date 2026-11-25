@@ -1,0 +1,21 @@
+1) DC mean per group: count with mean < -0.5 g, and distinct clusters (rounded 0.05)
+normal: n=120 min=-0.868 max=+0.063 median=+0.016 | mean<-0.5: {'nor_097': np.float64(-0.868), 'nor_101': np.float64(-0.867), 'nor_120': np.float64(-0.863)}
+   |mean|>0.1 (not in the -0.87 cluster): {}
+abnormal: n=30 min=-1.045 max=+0.029 median=+0.017 | mean<-0.5: {'abn_016': np.float64(-1.045)}
+   |mean|>0.1 (not in the -0.87 cluster): {}
+val: n=40 min=-0.017 max=+0.082 median=+0.016 | mean<-0.5: {}
+   |mean|>0.1 (not in the -0.87 cluster): {}
+
+2) band 8-10.5k (4th-order Butterworth, zero-phase): excess kurtosis / crest / max-over-median 0.1s RMS
+kurt: normal median=37.11 (p5 0.06, p95 409.16) | abnormal median=172.76 (p5 5.24, p95 1618.03) | AUC=0.70
+crest: normal median=19.83 (p5 4.51, p95 41.28) | abnormal median=28.02 (p5 10.86, p95 64.34) | AUC=0.66
+wr: normal median=2.98 (p5 1.09, p95 16.72) | abnormal median=8.88 (p5 1.43, p95 52.01) | AUC=0.73
+
+3) tone normals vs rest (rank percentile within normals, 100=highest)
+nor_055: kurt=292.42 (pct 92) | crest=28.79 (pct 77) | wr=12.37 (pct 92)
+nor_116: kurt=483.64 (pct 96) | crest=37.29 (pct 90) | wr=101.64 (pct 99)
+nor_097: kurt=0.45 (pct 12) | crest=5.22 (pct 9) | wr=1.13 (pct 10)
+nor_101: kurt=0.24 (pct 8) | crest=5.22 (pct 10) | wr=1.09 (pct 6)
+nor_120: kurt=0.52 (pct 13) | crest=5.69 (pct 13) | wr=1.27 (pct 16)
+
+normals with kurt below -0.5 (tone-like): 2 of 120; abnormals: 0 of 30

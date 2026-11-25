@@ -16,3 +16,4 @@ dependencies:
       - torch==2.11.0   # 1D/2D-CNN, 합성곱 AE, Deep SAD
       - aeon==1.6.0     # MiniRocket
       - catboost==1.2.10
+      - python-pptx==1.0.2  # 11-22 발표 PPTX 생성 (단계/7_최종·제출/발표/덱.py)

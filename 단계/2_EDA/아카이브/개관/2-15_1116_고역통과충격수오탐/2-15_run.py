@@ -24,7 +24,7 @@ FIG = os.path.join(HERE, "figs"); os.makedirs(FIG, exist_ok=True)
 
 FS = 25000
 X, y, names = load_train(); y = np.asarray(y); nor = y == 0; N = len(y)
-T0 = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "2-1_고장유형분류", "figs", "types.csv"), index_col=0, encoding="utf-8-sig").loc[names]
+T0 = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "2-1_고장유형분류", "자료", "figs", "types.csv"), index_col=0, encoding="utf-8-sig").loc[names]
 H = sosfiltfilt(butter(4, 200, btype="highpass", fs=FS, output="sos"), X - X.mean(1, keepdims=True), axis=-1)
 GAP, HW, WIN = int(0.010 * FS), int(0.002 * FS), int(0.100 * FS)
 

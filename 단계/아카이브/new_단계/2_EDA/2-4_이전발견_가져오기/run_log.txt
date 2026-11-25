@@ -1,0 +1,101 @@
+
+# >>>>>>>>>>>>>>>>>>>>>> ERROR REPORT <<<<<<<<<<<<<<<<<<<<<<
+
+    Traceback (most recent call last):
+      File "C:\Users\User\WorkSpace\Donghun\miniconda3\Lib\site-packages\conda\exception_handler.py", line 30, in __call__
+        return func(*args, **kwargs)
+      File "C:\Users\User\WorkSpace\Donghun\miniconda3\Lib\site-packages\conda\cli\main.py", line 53, in main_subshell
+        exit_code = do_call(args, parser)
+      File "C:\Users\User\WorkSpace\Donghun\miniconda3\Lib\site-packages\conda\cli\conda_argparse.py", line 207, in do_call
+        result = getattr(module, func_name)(args, parser)
+      File "C:\Users\User\WorkSpace\Donghun\miniconda3\Lib\site-packages\conda\cli\main_run.py", line 141, in execute
+        print(response.stdout, file=sys.stdout, end="")
+        ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    UnicodeEncodeError: 'cp949' codec can't encode character '\ufffd' in position 3: illegal multibyte sequence
+
+`$ C:\Users\User\WorkSpace\Donghun\miniconda3\Scripts\conda-script.py run -n qe-phm python run.py`
+
+  environment variables:
+                 CIO_TEST=<not set>
+     CLAUDE_CODE_EXECPATH=C:\Users\User\.vscode-server\extensions\anthropic.claude-
+                          code-2.1.325-win32-x64\resources\native-binary\claude.exe
+               CONDA_ROOT=C:\Users\User\WorkSpace\Donghun\miniconda3
+           CURL_CA_BUNDLE=<not set>
+                  EXEPATH=C:\Program Files\Git\bin
+                 HOMEPATH=\Users\User
+               LD_PRELOAD=<not set>
+NODEFAULTCURRENTDIRECTORYINEXEPATH=1
+                     PATH=C:\Users\User\bin;C:\Program Files\Git\mingw64\bin;C:\Program
+                          Files\Git\usr\local\bin;C:\Program Files\Git\usr\bin;C:\Program
+                          Files\Git\usr\bin;C:\Program Files\Git\mingw64\bin;C:\Program
+                          Files\Git\usr\bin;C:\Users\User\bin;C:\Users\User\.vscode-server\cli\s
+                          ervers\Stable-
+                          c4453f8ea430795f941c1b2ff6c9321135a74a02\server\bin\remote-cli;C:\Wind
+                          ows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\W
+                          indowsPowerShell\v1.0;C:\Windows\System32\OpenSSH;C:\Program Files\Git
+                          \cmd;C:\Users\User\AppData\Local\Programs\Python\Python310\Scripts;C:\
+                          Users\User\AppData\Local\Programs\Python\Python310;C:\Users\User\.loca
+                          l\bin;C:\Users\User\.local\bin;C:\Users\User\AppData\Local\Programs\Py
+                          thon\Python314\Scripts;C:\Users\User\AppData\Local\Programs\Python\Pyt
+                          hon314;C:\Users\User\anaconda3;C:\Users\User\anaconda3\Library\mingw-
+                          w64\bin;C:\Users\User\anaconda3\Library\usr\bin;C:\Users\User\anaconda
+                          3\Library\bin;C:\Users\User\anaconda3\Scripts;C:\Users\User\AppData\Lo
+                          cal\Programs\Python\Python310\Scripts;C:\Users\User\AppData\Local\Prog
+                          rams\Python\Python310;C:\Users\User\AppData\Local\Programs\Python\Laun
+                          cher;C:\Users\User\.local\bin;C:\Users\User\AppData\Local\Microsoft\Wi
+                          ndowsApps;C:\Users\User\AppData\Local\Microsoft\WinGet\Links;C:\Users\
+                          User\.local\bin;C:\Program Files\Git\usr\bin\vendor_perl;C:\Program
+                          Files\Git\usr\bin\core_perl
+             PSMODULEPATH=C:\Users\User\Documents\WindowsPowerShell\Modules;C:\Program Files\Win
+                          dowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modu
+                          les
+       REQUESTS_CA_BUNDLE=<not set>
+            SSL_CERT_FILE=<not set>
+
+     active environment : None
+       user config file : C:\Users\User\.condarc
+ populated config files : C:\Users\User\WorkSpace\Donghun\miniconda3\.condarc
+                          C:\Users\User\WorkSpace\Donghun\miniconda3\condarc.d\anaconda-auth.yml
+          conda version : 26.7.3
+    conda-build version : not installed
+         python version : 3.14.7.final.0
+                 solver : libmamba (default)
+       virtual packages : __archspec=1=x86_64_v4
+                          __conda=26.7.3=0
+                          __cuda=13.0=0
+                          __win=10.0.26200=0
+       base environment : C:\Users\User\WorkSpace\Donghun\miniconda3  (writable)
+      conda av data dir : C:\Users\User\WorkSpace\Donghun\miniconda3\etc\conda
+  conda av metadata url : None
+           channel URLs : https://repo.anaconda.com/pkgs/main/win-64
+                          https://repo.anaconda.com/pkgs/main/noarch
+                          https://repo.anaconda.com/pkgs/r/win-64
+                          https://repo.anaconda.com/pkgs/r/noarch
+                          https://repo.anaconda.com/pkgs/msys2/win-64
+                          https://repo.anaconda.com/pkgs/msys2/noarch
+          package cache : C:\Users\User\WorkSpace\Donghun\miniconda3\pkgs
+                          C:\Users\User\.conda\pkgs
+                          C:\Users\User\AppData\Local\conda\conda\pkgs
+          notices cache : C:\Users\User\AppData\Local\conda\conda\Cache\notices
+       envs directories : C:\Users\User\WorkSpace\Donghun\miniconda3\envs
+                          C:\Users\User\.conda\envs
+                          C:\Users\User\AppData\Local\conda\conda\envs
+    temporary directory : C:\Users\User\AppData\Local\Temp
+               platform : win-64
+             user-agent : conda/26.7.3 requests/2.34.2 CPython/3.14.7 Windows/11 Windows/10.0.26200 solver/libmamba conda-libmamba-solver/26.7.0 libmambapy/2.3.2 aau/0.8.1 c/. s/. e/.
+          administrator : True
+             netrc file : None
+           offline mode : False
+
+
+An unexpected error has occurred. Conda has prepared the above report.
+If you suspect this error is being caused by a malfunctioning plugin,
+consider using the --no-plugins option to turn off plugins.
+
+Example: conda --no-plugins install <package>
+
+Alternatively, you can set the CONDA_NO_PLUGINS environment variable on
+the command line to run the command without plugins enabled.
+
+Example: CONDA_NO_PLUGINS=true conda install <package>
+

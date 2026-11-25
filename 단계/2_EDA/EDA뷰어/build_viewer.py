@@ -13,7 +13,7 @@ import os, re, sys, json, base64
 HERE = os.path.dirname(os.path.abspath(__file__)) if "__file__" in dir() else os.getcwd()
 ROOT = next(_p for _p in (os.path.abspath(os.path.join(HERE, *[".."] * _k)) for _k in range(8)) if os.path.isdir(os.path.join(_p, "src")))
 sys.path.insert(0, ROOT)
-from src.exp import load_train, cached_table
+from src.exp import load_train, cached_table, exp_data
 import numpy as np
 from scipy.signal import butter, sosfiltfilt, welch, spectrogram, hilbert
 from scipy.ndimage import median_filter
@@ -168,12 +168,43 @@ for i in range(N):
         FAST_DECAY[i] = float((rg[:, 1] >= 0.04).mean())
     top = sorted(rows, key=lambda r: -r[3])[:30]
     IMP_TOP.append([[round(r[0], 4), round(r[1] / 1000, 3), round(float(r[2]), 2), round(float(r[3]), 3)] for r in top])
-_tab = pd.read_csv(os.path.join(ROOT, "단계", "4_피처", "4-6_1121_충격재정의", "사령탑_7b-7e", "충격표_전체.csv"), encoding="utf-8-sig")
+_tab = pd.read_csv(os.path.join(ROOT, "단계", "4_피처", "4-1_충격정의", "자료", "사령탑_7b-7e", "충격표_전체.csv"), encoding="utf-8-sig")
 _pre = [__import__("src.impacts", fromlist=["x"]).detect_impacts(X[i], edge_ms=0) for i in range(N)]
 _ok = all(len(_tab[_tab.file == nm]) == len(_pre[i]["t"]) and np.allclose(_tab[_tab.file == nm].t_s.values, _pre[i]["t"], atol=1e-5) for i, nm in enumerate(names) if nm.startswith(("nor_", "abn_", "val_")))
 assert _ok, "끝단 제외 전 충격이 사령탑 충격표와 다름"
 IMP_CHECK = f"새 충격 정의(11-21) 확인: 끝단 제외 전 충격 {sum(len(p['t']) for p in _pre)}개 = 사령탑 7b-7e 충격표와 같음 · 끝단 제외 후 {sum(IMP_NV)}개"
 del _pre
+
+# --- 11-22 충격 파형 일관성 (G2 그림 확인용, 라벨 안 씀): 같은 기전(같은 접촉점·같은 경로)이면 같은 임펄스 응답 → 충격 파형이 서로 닮는다
+#   충격마다 src.impacts의 1 kHz 고역 신호(hp)에서 봉우리 1 ms 앞 ~ 8 ms 뒤(225점)를 자르고, 쌍마다 ±0.5 ms 지연 안에서
+#   정규화 상호상관(내적 / 두 길이)의 최대를 구한다. C = 같은 부호 최대의 중앙값, |C| = 부호 무시(극성이 뒤집힌 타격도 닮음으로 셈)
+WF_PRE, WF_POST, WF_LAG, WF_SHOW = 25, 200, 12, 30
+WF_LEN = WF_PRE + WF_POST
+WF_C, WF_CA, H_R21 = np.full(N, np.nan), np.full(N, np.nan), np.full(N, np.nan)
+WF_SEG, WF_N = [], []
+for i in range(N):
+    im = _IMPS[i]; hp_ = im["hp"]; pk = np.asarray(im["idx"], int)
+    ok = (pk - WF_PRE - WF_LAG >= 0) & (pk + WF_POST + WF_LAG <= len(hp_))
+    pk, hx = pk[ok], np.asarray(im["height_x"], float)[ok]
+    o_ = np.argsort(-hx); pk, hx = pk[o_], hx[o_]                       # 큰 충격 먼저 (0번 = 기준)
+    if len(hx) >= 2: H_R21[i] = hx[1] / hx[0]
+    ext = np.stack([hp_[p - WF_PRE - WF_LAG: p + WF_POST + WF_LAG] for p in pk]) if len(pk) else np.zeros((0, WF_LEN + 2 * WF_LAG))
+    A_ = ext[:, WF_LAG:WF_LAG + WF_LEN]; nA = np.linalg.norm(A_, axis=1) + 1e-12
+    if len(pk) >= 2:
+        Rt = np.stack([(A_ @ ext[:, WF_LAG + d:WF_LAG + d + WF_LEN].T) / nA[:, None] / (np.linalg.norm(ext[:, WF_LAG + d:WF_LAG + d + WF_LEN], axis=1)[None, :] + 1e-12)
+                       for d in range(-WF_LAG, WF_LAG + 1)])                # (지연, a, b)
+        iu = np.triu_indices(len(pk), 1)
+        WF_C[i] = float(np.median(Rt.max(0)[iu])); WF_CA[i] = float(np.median(np.abs(Rt).max(0)[iu]))
+    seg = []                                                         # 그림용: 기준(가장 큰 충격)에 |상관| 최대 지연으로 맞춤, 부호는 그대로
+    for k in range(min(len(pk), WF_SHOW)):
+        d = 0
+        if k:
+            cs = [abs(A_[0] @ ext[k, WF_LAG + dd:WF_LAG + dd + WF_LEN]) / (nA[0] * (np.linalg.norm(ext[k, WF_LAG + dd:WF_LAG + dd + WF_LEN]) + 1e-12)) for dd in range(-WF_LAG, WF_LAG + 1)]
+            d = int(np.argmax(cs)) - WF_LAG
+        s_ = ext[k, WF_LAG + d:WF_LAG + d + WF_LEN]; seg.append(np.round(s_ / (np.abs(s_).max() + 1e-12) * 127).astype(np.int8))
+    WF_SEG.append(np.array(seg, np.int8).reshape(-1)); WF_N.append(len(seg))
+WF_OFF = np.concatenate([[0], np.cumsum([len(s) for s in WF_SEG])[:-1]]).astype(int)
+WF_ALL = np.concatenate(WF_SEG) if WF_SEG else np.zeros(0, np.int8)
 _nan1 = lambda a: np.where(a < 0, np.nan, a)
 
 # 포락선 스펙트럼 (1 kHz 고역 신호의 포락선): analyze()와 같은 절차 — 2.5 kHz로 줄여 0.5–300 Hz
@@ -211,7 +242,7 @@ _rms = lambda a: np.sqrt((a ** 2).mean(1))
 LOAD_RATIO = np.log10(_rms(H) / _rms(L20_full))                     # 200 Hz 이상 RMS / 20 Hz 저역 RMS
 KURT_1K = kurtosis(H1K, axis=1)
 EXTRA_V = dict(n_ring=np.array(IMP_NV, float), ring_o1=RING_O[:, 0], ring_o2=RING_O[:, 1], ring_o3=RING_O[:, 2], ring_o4=RING_O[:, 3], res83=RES_T.copy(),
-               fast_decay=FAST_DECAY, kurt_1k=KURT_1K,
+               fast_decay=FAST_DECAY, kurt_1k=KURT_1K, wf_C=WF_C, wf_Cabs=WF_CA, h_r21=H_R21,
                lb_S=LOCKC["S"], lb_rlp=LOCKC["rlp"], lb_hit=LOCKC["hit"], lb_e0_20=RES["raw"][0]["e0_20"], lb_e20_200=RES["raw"][0]["e20_200"],
                load_hf=LOAD_RATIO, rms_hf=_rms(H))
 EXTRA_FEAT = [
@@ -223,6 +254,9 @@ EXTRA_FEAT = [
     ("res83", "8.3 kHz 공진 fit", "", "ring", "새 정의(11-21) 충격 중 8.0–8.7 kHz · ζ ≤ 0.02로 울린 충격의 최대 fit (없으면 0)", "resonance-shift"),
     ("fast_decay", "빨리 꺼지는 충격 비율", "", "ring", "ζ ≥ 0.04인 충격 / 전체 충격 (새 정의 11-21, 참고용: H11은 2차 설계에서 제외). 충격 0개 = 없음", "impulse-count"),
     ("kurt_1k", "고주파 첨도 (1 kHz 고역)", "", "ring", "1 kHz 고역통과 신호의 첨도 (Fisher)", "kurtosis"),
+    ("wf_C", "파형 일관성 C", "", "ring", "11-22: 충격 쌍마다 1 kHz 고역 파형(봉우리 −1 ~ +8 ms)의 정규화 상호상관을 ±0.5 ms 지연 안에서 최대로 → 모든 쌍의 중앙값. 같은 부호만 닮음으로 셈. 1 = 모든 충격이 같은 파형. 충격 2개 미만 = 없음", "impulse-count"),
+    ("wf_Cabs", "파형 일관성 |C| (부호 무시)", "", "ring", "11-22: C와 같고 상관의 절댓값 최대를 씀 → 극성이 뒤집힌 타격(반대 면)도 닮음으로 셈. 충격 2개 미만 = 없음", "impulse-count"),
+    ("h_r21", "충격 크기 2위/1위 (새 정의)", "", "ring", "11-22: 새 정의 충격 높이(바탕 배수)의 2위 / 1위. K3(2-12, 8σ 사건)와 같은 뜻을 새 충격으로. 충격 2개 미만 = 없음", "impulse-count"),
     ("lb_S", "주기 잠금 S", "", "lowbeat", "S = r_LP × hit (2-13 정의, 충격 시점은 새 정의 11-21)", "acf"),
     ("lb_rlp", "r_LP (느린 파형 반복)", "", "lowbeat", "30 Hz 저역 신호를 T만큼 민 자기 자신과의 상관 최댓값 (2-13)", "acf"),
     ("lb_hit", "hit (충격 주기 잠금)", "", "lowbeat", "새 정의(11-21) 충격 중 T ± 3%에 짝이 있는 비율 (2-13 정의, 충격 시점만 새 정의)", "impulse-count"),
@@ -361,7 +395,7 @@ assert not missing, f"개념사전에 없는 키: {missing}"
 from src.experts import peak83_table, Rule83, KnockRule, LockRule, ETLogitX, HIT_COLS, EV_COLS, _hits
 from src.features import feature_table_knock
 from sklearn.model_selection import StratifiedGroupKFold
-_SIG = os.path.join(ROOT, "단계", "5_모델비교")                      # 11-22: 최신 실험은 base/가 아니라 바로 아래
+_SIG = os.path.join(ROOT, "단계", "5_모델실험")                      # 11-22: 최신 실험은 base/가 아니라 바로 아래
 _EXPDIR = {d: os.path.join(dp, d) for dp, _ds, _f in os.walk(_SIG) if dp.count(os.sep) - _SIG.count(os.sep) <= 1 for d in _ds if d.startswith("EXP-")}   # 바로 아래 · 단계 폴더 · 아카이브 (11-22)
 # 11-22: 뷰어 모델은 EXP-039 · EXP-044 · EXP-047 · EXP-050(J-축소)만 (나머지는 뷰어에서 뺌. 실험 폴더는 그대로)
 # result.json에 없는 정보: 짧은 이름 · 판정에 쓰는 규칙(RULES 키) · 메모 · cfg(대표 구성이 result.json의 main과 다를 때). 평면(점 좌표 · 경계 · 축)은 plane_models.py(050은 plane_050.py)가 figs/plane_models.json에 저장
@@ -377,7 +411,7 @@ EXP_SPEC = {
 }
 # %% 2-16 충격 울림 (EXP-034): 충격마다 울림 주파수 f · 감쇠비 ζ · 맞춤 fit → 파일별 울림 비율 · 공진 fit
 import pandas as pd
-_IM = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "2-7_충격울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
+_IM = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "2-3_충격울림주파수", "자료", "figs", "impacts.csv"), encoding="utf-8-sig")
 _key = [os.path.splitext(os.path.basename(str(n)))[0] for n in names_tr]
 _cnt = _IM.groupby("file").size().reindex(_key).fillna(0).values
 _frac = lambda lo, hi: np.nan_to_num(_IM.assign(b=(_IM.f >= lo) & (_IM.f < hi)).groupby("file").b.mean().reindex(_key).values.astype(float), nan=-1.0)
@@ -389,7 +423,7 @@ WARN = []
 
 def model_entry(folder):
     """그 실험의 대표 구성: EXP_SPEC의 cfg → result.json의 main → 첫 구성"""
-    r = json.load(open(os.path.join(_EXPDIR[folder], "result.json"), encoding="utf-8"))
+    r = json.load(open(os.path.join(exp_data(_EXPDIR[folder]), "result.json"), encoding="utf-8"))
     sp = EXP_SPEC.get(r["id"])
     if sp is None: WARN.append(f"EXP_SPEC에 {r['id']} 없음 → 규칙 없음 · 기본 평면으로 표시"); sp = {}
     cfg = sp.get("cfg") or r.get("main") or next(iter(r["configs"])); c = r["configs"][cfg]
@@ -401,7 +435,7 @@ def model_entry(folder):
 
 # 최신 번호 먼저 (폴더 이름이 EXP-nnn으로 시작). 기본 선택 = 맨 앞
 def _has_configs(d):
-    p = os.path.join(_EXPDIR[d], "result.json")
+    p = os.path.join(exp_data(_EXPDIR[d]), "result.json")
     if not os.path.isfile(p): return False
     if json.load(open(p, encoding="utf-8")).get("configs"): return True
     WARN.append(f"{d}: result.json에 configs 없음 → 뷰어에서 뺌"); return False
@@ -454,8 +488,8 @@ for _ru in RULES:                                                  # 규칙 켜�
 # %% 분석 조각 화면 (11-14): 2-12 유격 반복 지도 · 2-13 주기 잠금 점수. 각 조각 run.py가 남긴 파일별 값 표를 그대로 읽는다
 import pandas as pd
 _EDA = os.path.join(ROOT, "단계", "2_EDA")
-_F12 = pd.read_csv(os.path.join(_EDA, "2-4_하중대비고주파", "figs", "features.csv"), index_col=0, encoding="utf-8-sig").loc[list(names_tr)]
-_F13 = pd.read_csv(os.path.join(_EDA, "2-6_주기잠금_022", "figs", "lock_score.csv"), index_col=0, encoding="utf-8-sig").loc[list(names_tr)]
+_F12 = pd.read_csv(os.path.join(_EDA, "2-5_하중대비고주파", "자료", "figs", "features.csv"), index_col=0, encoding="utf-8-sig").loc[list(names_tr)]
+_F13 = pd.read_csv(os.path.join(_EDA, "2-4_주기잠금_022", "자료", "figs", "lock_score.csv"), index_col=0, encoding="utf-8-sig").loc[list(names_tr)]
 assert (_F12.y.values == y_tr).all() and (_F13.y.values == y_tr).all()
 # 2-12 값(D1·D6·R·사건 수·틱·σ·하중)을 run.py의 feats()와 같은 식으로 train·val 모두 계산하고, z1·z6은 train 정상(120)의 중앙값·MAD로 맞춘다.
 # train 150개 값이 2-12 csv와 같은지 assert (같으면 csv 대신 계산값을 쓴다 → val도 같은 정의)
@@ -480,7 +514,7 @@ _F12c["z1"], _F12c["z6"] = _rz(_F12c.D1.values), _rz(_F12c.D6.values)
 _F12c["r"] = np.sqrt((_F12c.z1 ** 2 + _F12c.z6 ** 2) / 2)
 for _c in ("n_events", "D1", "D6", "D2", "R", "z1", "z6", "r"):
     assert np.allclose(_F12c[_c].values[:NTR], _F12[_c].values, atol=2e-3), f"2-12 {_c}가 csv와 다름"
-_S0 = pd.read_csv(os.path.join(ROOT, "단계", "4_피처", "4-6_1121_충격재정의", "사령탑_7b-7e", "S_새충격.csv"), encoding="utf-8-sig", index_col=0)
+_S0 = pd.read_csv(os.path.join(ROOT, "단계", "4_피처", "4-1_충격정의", "자료", "사령탑_7b-7e", "S_새충격.csv"), encoding="utf-8-sig", index_col=0)
 assert np.allclose(LOCKC["rlp"][:NTR], _S0.loc[list(names)[:NTR], "r_LP"].values, atol=1e-6) and np.allclose(LOCKC["T"][:NTR], _S0.loc[list(names)[:NTR], "T"].values, atol=1e-6)   # r_LP·T는 충격과 무관 → 사령탑 값과 같아야 한다
 assert abs(LOCKC["S"][list(names).index("abn_022")] - 0.963) < 2e-3, "022 S가 기록 0.963과 다름"
 _r = lambda s, nd=3: [round(float(v), nd) for v in s]
@@ -489,9 +523,9 @@ KNOCK2 = dict(z1=_r(_F12c.z1), z6=_r(_F12c.z6), r=_r(_F12c.r), R=_r(_F12c.R), d1
 LOCK = dict(rlp=_r(LOCKC["rlp"]), T=_r(LOCKC["T"]), hit=_r(LOCKC["hit"]), nev=LOCKC["nev"].tolist(), S=_r(LOCKC["S"]))
 _png = lambda p: "data:image/png;base64," + base64.b64encode(open(os.path.join(_EDA, p), "rb").read()).decode()
 DOCFIGS = dict(
-    knock=[dict(src=_png("2-4_하중대비고주파/figs/2_left_waves.png"), cap="왼쪽 무리(하중은 작은데 타격 반복) 파형 — 색 = 200 Hz 고역통과, 검은 선 = 20 Hz 저역(하중)")],
-    lock=[dict(src=_png("2-6_주기잠금_022/figs/1_022_wave.png"), cap="abn_022 — 느린 파형이 0.94 s마다 같은 모양으로 반복되고 충격이 그 주기에 잠김"),
-          dict(src=_png("2-6_주기잠금_022/figs/5_022_014_001.png"), cap="같은 유형 비교 — 022 · 014(약함) · 001(부분)")])
+    knock=[dict(src=_png("2-5_하중대비고주파/자료/figs/2_left_waves.png"), cap="왼쪽 무리(하중은 작은데 타격 반복) 파형 — 색 = 200 Hz 고역통과, 검은 선 = 20 Hz 저역(하중)")],
+    lock=[dict(src=_png("2-4_주기잠금_022/자료/figs/1_022_wave.png"), cap="abn_022 — 느린 파형이 0.94 s마다 같은 모양으로 반복되고 충격이 그 주기에 잠김"),
+          dict(src=_png("2-4_주기잠금_022/자료/figs/5_022_014_001.png"), cap="같은 유형 비교 — 022 · 014(약함) · 001(부분)")])
 
 # %% 로지스틱 경계 (11-22): 모델마다 평면이 달라 plane_models.py(EXP-039 · EXP-044 run.py와 같은 정의, OOF seed 0)가 저장한 점 좌표 · 경계 w,b · 축 범위를 읽는다
 #   결정값 0 = 그 실험의 최종 임계값(039) · 결합 문턱(044). 점선 ±1 = 로지스틱 결정값 ±1
@@ -672,6 +706,7 @@ D = dict(
     rhy=dict(env_f0=float(fe1[0]), env_df=float(fe1[1] - fe1[0]), env_nf=int(len(fe1)), envs=b64(fix(LE1, 1000)), envref=band_ref(LE1),
              wave=b64(ENV_P), nwave=int(ENV_P.shape[1]), wave_max=clean(ENV_MAX, 6), wave_med=clean(ENV_MED, 6),
              imp_t=IMP_ALL, imp_top=IMP_TOP, imp_n=IMP_NV,
+             wf=b64(WF_ALL), wf_off=WF_OFF.tolist(), wf_n=WF_N, wf_len=WF_LEN, wf_pre=WF_PRE, wf_C=clean(WF_C, 3), wf_Cabs=clean(WF_CA, 3), wf_r21=clean(H_R21, 3),
              lock30=b64(q(L30, SC_30)), lock30_sc=clean(SC_30, 6), nlock=int(L30.shape[1]), lock_fs=FS / 50, ctx=RHY_CTX),
 )
 
@@ -730,6 +765,16 @@ for _lab, _kx, _ky in _PAIRS:
     for _nm_, _m in (("전체", trm), ("정상", nor), ("고장", abn)):
         _ok = _m & ~np.isnan(_Vx[_kx]) & ~np.isnan(_Vx[_ky]); _o.append(f"{_nm_} ρ {spearmanr(_Vx[_kx][_ok], _Vx[_ky][_ok])[0]:.2f}(n={_ok.sum()})")
     lines.append(f"추천 쌍 {_lab}: " + " · ".join(_o) + f" | AUC x({_kx}) {_auc(_Vx[_kx], trm):.2f} · y({_ky}) {_auc(_Vx[_ky], trm):.2f}")
+# --- 11-22 충격 파형 일관성 확인 (EDA용 숫자, train 라벨만)
+lines += ["", "=== 11-22 충격 파형 일관성 (G2) ==="]
+for _k in ("wf_C", "wf_Cabs", "h_r21"):
+    _v = _Vx[_k]; _okn, _oka = nor & ~np.isnan(_v), abn & ~np.isnan(_v)
+    lines.append(f"{_k}: 값 있음 정상 {_okn.sum()} · 고장 {_oka.sum()} · val {int(((y == 2) & ~np.isnan(_v)).sum())} | 중앙 정상 {np.median(_v[_okn]):.3f} · 고장 {np.median(_v[_oka]):.3f} | AUC {_auc(_v, trm):.3f}")
+_okp = trm & ~np.isnan(_Vx["wf_C"]) & ~np.isnan(_Vx["h_r21"])
+lines.append(f"스피어만 ρ(wf_C, h_r21) train {spearmanr(_Vx['wf_C'][_okp], _Vx['h_r21'][_okp])[0]:.2f} · ρ(wf_C, wf_Cabs) {spearmanr(_Vx['wf_C'][_okp], _Vx['wf_Cabs'][_okp])[0]:.2f} · ρ(wf_C, n_ring) {spearmanr(_Vx['wf_C'][_okp], _Vx['n_ring'][_okp])[0]:.2f}")
+for _n in ("abn_014", "abn_017", "abn_023", "nor_002", "nor_074", "nor_059", "nor_065", "nor_116", "val_025"):
+    if _n in _nm:
+        _j = _i(_n); lines.append(f"  {_n}: 충격 {IMP_NV[_j]} · C {WF_C[_j]:.3f} · |C| {WF_CA[_j]:.3f} · 2위/1위 {H_R21[_j]:.3f} · C 정상 백분위 {pct_of(WF_C)[_j]:.0f}")
 lines += ["", "=== 11-21 개편 확인 ===", IMP_CHECK, f"신호 {len(SIGS_PLOT)}개: " + " · ".join(SIG_NAMES.values()) + " (지표·태그는 raw·hp 두 벌만, 나머지는 가까운 벌을 씀)"]
 _a = _i("abn_015"); _pk = find_peaks(LOW_L[_a])[0]; _top = _pk[np.argsort(-LOW_L[_a][_pk])[:3]]
 lines.append(f"abn_015 0–200 Hz PSD: 최대 봉우리 {LOW_PEAK[_a]:.2f} Hz (기록 35–44 Hz) · 상위 봉우리 " + ", ".join(f"{fl[kl][k]:.1f} Hz" for k in _top)

@@ -1,0 +1,37 @@
+{
+ "keep": [
+  "D_K1",
+  "D_ring_peak_rms",
+  "E:P02_peak_050",
+  "E:P02_peak_075"
+ ],
+ "ok": [
+  "D_K1",
+  "D_ring_peak_rms",
+  "E:P02_peak_075"
+ ],
+ "hard": [
+  "nor_007",
+  "nor_030",
+  "nor_037",
+  "nor_054",
+  "nor_059",
+  "nor_065",
+  "nor_066",
+  "nor_095",
+  "nor_104",
+  "nor_106",
+  "nor_110",
+  "nor_116",
+  "abn_002",
+  "abn_009",
+  "abn_014",
+  "abn_015",
+  "abn_016",
+  "abn_017",
+  "abn_022",
+  "abn_023",
+  "abn_028",
+  "abn_029"
+ ]
+}

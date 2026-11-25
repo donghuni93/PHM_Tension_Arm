@@ -22,6 +22,11 @@ from src.exp import make_et
 from src.features2 import PeakRef, H_FOLD, robust_z
 
 
+def _i_hfl(fixed):
+    """L2_hfl(옛 H18_hfl) 열 위치. 11-25 이름 변경 전 목록도 받는다"""
+    return list(fixed).index("L2_hfl" if "L2_hfl" in fixed else "H18_hfl")
+
+
 def lg(p):
     p = np.clip(p, 1 / 600, 1 - 1 / 600)
     return np.log(p / (1 - p))
@@ -68,7 +73,7 @@ class Two(BaseEstimator):
         i1 = self.fixed.index("H1_nimp") if "H1_nimp" in self.fixed else None
         self.i1_ = i1
         self.t16_ = self._thr(pk[y == 0, 0])
-        self.t18_ = self._thr(H[y == 0, self.fixed.index("H18_hfl")])
+        self.t18_ = self._thr(H[y == 0, _i_hfl(self.fixed)])
         return self
 
     # ---- 점수
@@ -95,7 +100,7 @@ class Two(BaseEstimator):
         if "E1" in self.experts:
             out["E1"] = pk[:, 0] > self.t16_
         if "E2" in self.experts:
-            out["E2"] = (H[:, self.fixed.index("H18_hfl")] > self.t18_) & (H[:, self.i1_] >= np.log(2) - 1e-9)
+            out["E2"] = (H[:, _i_hfl(self.fixed)] > self.t18_) & (H[:, self.i1_] >= np.log(2) - 1e-9)
         return out
 
     def decision_function(self, F):
@@ -130,7 +135,7 @@ class TwoAE(Two):
         self.c_ = LogisticRegression(C=1.0, class_weight="balanced").fit(Z, y)
         self.tc_ = float(best_f2_threshold(y, self.c_.decision_function(Z)))
         self.i1_ = self.fixed.index("H1_nimp") if "H1_nimp" in self.fixed else None
-        self.t16_ = self._thr(pk[y == 0, 0]); self.t18_ = self._thr(H[y == 0, self.fixed.index("H18_hfl")])
+        self.t16_ = self._thr(pk[y == 0, 0]); self.t18_ = self._thr(H[y == 0, _i_hfl(self.fixed)])
         return self
 
     def _comb_score(self, a, z, aez=None):
@@ -146,7 +151,7 @@ class TwoAE(Two):
         s = self._comb_score(a, z, aez)
         out = dict(main=(s >= self.tc_), a=a, z=z, ae=aez, score=s)
         if "E1" in self.experts: out["E1"] = pk[:, 0] > self.t16_
-        if "E2" in self.experts: out["E2"] = (H[:, self.fixed.index("H18_hfl")] > self.t18_) & (H[:, self.i1_] >= np.log(2) - 1e-9)
+        if "E2" in self.experts: out["E2"] = (H[:, _i_hfl(self.fixed)] > self.t18_) & (H[:, self.i1_] >= np.log(2) - 1e-9)
         return out
 
     def decision_function(self, F):
@@ -210,7 +215,7 @@ class TwoStack(TwoAE):
         self.c_ = LogisticRegression(C=1.0, class_weight="balanced").fit(Z, y)
         self.tc_ = float(best_f2_threshold(y, self.c_.decision_function(Z)))
         self.i1_ = self.fixed.index("H1_nimp") if "H1_nimp" in self.fixed else None
-        self.t16_ = self._thr(pk[y == 0, 0]); self.t18_ = self._thr(H[y == 0, self.fixed.index("H18_hfl")])
+        self.t16_ = self._thr(pk[y == 0, 0]); self.t18_ = self._thr(H[y == 0, _i_hfl(self.fixed)])
         return self
 
     def _comb_score(self, a, z, aez=None, ex=None):
@@ -228,7 +233,7 @@ class TwoStack(TwoAE):
         s = self._comb_score(a, z, aez, ex)
         out = dict(main=(s >= self.tc_), a=a, z=z, ae=aez, ex=ex, score=s)
         if "E1" in self.experts: out["E1"] = pk[:, 0] > self.t16_
-        if "E2" in self.experts: out["E2"] = (H[:, self.fixed.index("H18_hfl")] > self.t18_) & (H[:, self.i1_] >= np.log(2) - 1e-9)
+        if "E2" in self.experts: out["E2"] = (H[:, _i_hfl(self.fixed)] > self.t18_) & (H[:, self.i1_] >= np.log(2) - 1e-9)
         return out
 
     def fires_raw(self, F, raw):
@@ -239,7 +244,7 @@ class TwoStack(TwoAE):
         ex = np.column_stack([f(c) for f, c in zip(self.exf_, cols)]) if self.extra else np.zeros((len(H), 0))
         s = self._comb_score(a, z, aez, ex)
         out = dict(main=(s >= self.tc_), a=a, z=z, ae=aez, ex=ex, score=s)
-        if "E2" in self.experts: out["E2"] = (H[:, self.fixed.index("H18_hfl")] > self.t18_) & (H[:, self.i1_] >= np.log(2) - 1e-9)
+        if "E2" in self.experts: out["E2"] = (H[:, _i_hfl(self.fixed)] > self.t18_) & (H[:, self.i1_] >= np.log(2) - 1e-9)
         return out
 
 

@@ -40,12 +40,23 @@ FS = 25000
 N_SAMPLES = 50000
 # 규칙 문턱 (모두 학습 라벨을 본 뒤 정한 '사후' 값. 단계/1_기준·기록/결정.md. val·test를 보고 고치지 않는다)
 P83_MIN, W83_MIN = 0.75, 150.0      # 8.3 kHz 모드 규칙: 돌출(dec), 반높이 폭(Hz)
+# 8.3 kHz 규칙의 세 번째 조건 (11-23, 2-16): 8.20–8.45 kHz 포락 첨도 K83 > K83_MIN → "충격으로 울린 것"만 인정(지속음 제외).
+# 이 문턱은 데이터에서 고르지 않았다: 가우스 잡음 K = 2.00 ± 0.08 (99 % 2.2, 시뮬레이션) 바로 위 + 여유 → 3. 순수 지속음 K = 1
+K83_MIN = 3.0
 R_MIN, RATIO_MIN = 2.0, 0.7         # 유격 반복 규칙: 정상 중심 거리, 2위/1위 타격 높이
 LOCK_MARGIN = 0.1                   # 주기 잠금(관찰용): 학습 정상 최대 + 여유
 RES_FIT_MIN = 0.7                   # 8.3 kHz 공진 규칙: 8.0–8.7 kHz · ζ ≤ 0.02 충격의 감쇠 사인파 맞춤 fit (2-16, EXP-034)
 BODY_MIN, BODY_NMIN = 0.9, 3        # 본체 모드 내림: 5.5–7.75 kHz로 울린 충격 비율, 최소 충격 수
 FIXED_THR = 1.0                     # 제출용 고정 임계값 (11-17 사용자 결정, EXP-035: 중첩 CV 바깥 점수의 고정 최적값 1.094에서 왼쪽으로 여유를 둔 값, F2 0.957). None이면 seed 중앙값
-KEYS = ("LP", "E", "K", "P83", "W83", "n20", "S", "RING", "RES", "NIMP")
+KEYS = ("LP", "E", "K", "P83", "W83", "K83", "n20", "S", "RING", "RES", "NIMP")
+_SOS83 = butter(4, [8200, 8450], btype="bandpass", fs=FS, output="sos")
+
+
+def kurt83(Xc):
+    """평균 제거 신호 (n, 50000) → 8.20–8.45 kHz 대역 포락 첨도 K83 = mean(p²)/mean(p)², p = 포락² (양 끝 0.05 s 제외).
+    순수 지속음 1 · 가우스 잡음 2 · 충격 울림 ≫ 2 (2-12 · 2-16). 규칙 대역은 P83·W83과 같다"""
+    p = np.abs(hilbert(sosfiltfilt(_SOS83, np.atleast_2d(Xc), axis=-1), axis=-1))[:, 1250:-1250] ** 2
+    return (p ** 2).mean(1) / p.mean(1) ** 2
 
 
 # ---------------------------------------------------------------------------
@@ -120,6 +131,7 @@ def signal_tables(X, cols=None):
     E   (n, 150)     ET 입력: 확장 피처 (src/features.py extract_features_ext)
     K   (n, 3)       유격 반복: K1 두 번째 타격/σ, K2 저주파 RMS/σ, K3 2위/1위
     P83·W83 (n,)     8.20–8.45 kHz 봉우리의 돌출(dec)과 반높이 폭(Hz)
+    K83 (n,)         8.20–8.45 kHz 대역 포락 첨도 (지속음 1 · 잡음 2 · 충격 ≫ 2). 8.3k 규칙의 세 번째 조건
     RING (n, 2)      ET 추가 입력: 충격 중 2.125–4.125 kHz · 5.5–7.75 kHz로 울린 비율 (충격 0개 = −1)
     RES·NIMP (n,)    8.3 kHz 공진 충격의 최대 fit · 충격 수 (ring_table)
     n20 (n,)         큰 타격(바탕의 20배 이상) 수   — 관찰용
@@ -171,7 +183,7 @@ def signal_tables(X, cols=None):
 
     RING, RES, NIMP = ring_table(X)
     T = dict(LP=LP, E=E.values.astype(float), K=K[["K1_second_snr", "K2_load_to_hf", "K3_top2_ratio"]].values,
-             P83=P83, W83=W83, n20=Hit["HIT_n20"].values.astype(int), S=Hit["LOCK_S"].values,
+             P83=P83, W83=W83, K83=kurt83(Xc), n20=Hit["HIT_n20"].values.astype(int), S=Hit["LOCK_S"].values,
              RING=RING, RES=RES, NIMP=NIMP)
     return T, list(E.columns)
 
@@ -269,7 +281,7 @@ class Core:
         Z = (raw - self.med_) / self.sc_
         lr = self.lr_.decision_function(Z)
         r = np.sqrt((((T["K"][:, :2] - self.kmed_) / self.kmad_) ** 2).mean(1))
-        spec83 = (T["P83"] >= P83_MIN) & (T["W83"] >= W83_MIN)
+        spec83 = (T["P83"] >= P83_MIN) & (T["W83"] >= W83_MIN) & (T["K83"] > K83_MIN)
         res83 = (T["RES"] >= RES_FIT_MIN) & self.ring
         rule83 = spec83 | res83
         knock = (r >= R_MIN) & (T["K"][:, 2] >= RATIO_MIN)
@@ -283,7 +295,7 @@ class Core:
         # 본체 모드 내림: 충격이 거의 모두 본체 모드(약 7 kHz)로 울리면 정상 OOF 중앙값 이하로. 규칙으로 켜진 파일(+100)은 그대로
         body_cap = body & (score < 50)
         score = np.where(body_cap, np.minimum(score, self.cap_), score)
-        return pd.DataFrame(dict(ae_z=Z[:, 0], et_z=Z[:, 1], lr=lr, P83=T["P83"], W83=T["W83"], spec83=spec83,
+        return pd.DataFrame(dict(ae_z=Z[:, 0], et_z=Z[:, 1], lr=lr, P83=T["P83"], W83=T["W83"], K83=T["K83"], spec83=spec83,
                                  RES=T["RES"], res83=res83, rule83=rule83, r=r, K3=T["K"][:, 2], knock=knock,
                                  n_imp=T["NIMP"], ring24=T["RING"][:, 0], ring_body=T["RING"][:, 1], body=body_cap,
                                  n20=T["n20"], S=T["S"], lock_obs=lock, score=score))
@@ -336,7 +348,7 @@ class FinalModel:
         D["borderline"] = (D["score"] >= lo) & (D["score"] < hi) if hi > lo else False
         D["single_hit_obs"] = D["n20"] == 1
         # 규칙 문턱까지의 거리: 두 조건 중 덜 채운 쪽의 비율 (1 이상 = 규칙 켜짐). 0.8–1.0이면 문턱 20% 이내 = 확인 대상
-        D["rule83_ratio"] = np.minimum(D["P83"] / P83_MIN, D["W83"] / W83_MIN)
+        D["rule83_ratio"] = np.minimum(np.minimum(D["P83"] / P83_MIN, D["W83"] / W83_MIN), D["K83"] / K83_MIN)
         if self.ring:                                   # 공진 규칙도 8.3 kHz 규칙의 한 갈래 → 둘 중 문턱에 가까운 쪽
             D["rule83_ratio"] = np.maximum(D["rule83_ratio"], D["RES"] / RES_FIT_MIN)
         D["knock_ratio"] = np.minimum(D["r"] / R_MIN, D["K3"] / RATIO_MIN)
@@ -350,7 +362,7 @@ class FinalModel:
     def _reason(self, r):
         why = []
         if r.spec83:
-            why.append(f"8.3 kHz 모드 규칙 (돌출 {r.P83:.2f} dec, 폭 {r.W83:.0f} Hz)")
+            why.append(f"8.3 kHz 모드 규칙 (돌출 {r.P83:.2f} dec, 폭 {r.W83:.0f} Hz, 충격성 K {r.K83:.1f})")
         if r.res83:
             why.append(f"8.3 kHz 공진 규칙 (8.0–8.7 kHz 깨끗한 공진 충격 fit {r.RES:.2f})")
         if r.body:
@@ -466,15 +478,20 @@ def _has_bom(path):
 # 다른 점은 AE 점수를 파일 번호(experts.ae_mean) 대신 신호에서 바로 계산하는 것뿐이다 (같은 식 · 같은 seed).
 # 같다는 것은 단계/7_최종·제출/검증_동등성.py 가 확인한다 (EXP-050 J-축소 전체 학습 모델과 결합 입력 · 계수 · 문턱 · val 판정 비교).
 #
-#   판정 = [ET 안쪽 OOF logit, 박자 z, AE z] → 로지스틱 ≥ 문턱  OR  E2(하중 대비 고주파)  OR  8.3k 규칙(스펙트럼 OR 공진)
+#   판정 = [ET 안쪽 OOF logit, 박자 z, AE z] → 로지스틱 ≥ 문턱  OR  L2 위 꼬리 규칙(E2, 하중 대비 고주파)  OR  8.3k 규칙(스펙트럼 OR 공진)
 #   ET 입력 = H 피처 13열(울림 비율 H7–H10은 충격 수로 축소) + 가장 솟은 좁은 봉우리 2열(학습 정상 기준)
+#   11-25 이름 변경(값 같음): H18_hfl → L2_hfl, L1_S → L1_lock (j_tables 배열 순서는 그대로라 옛 캐시 npz도 그대로 읽힌다)
 J_FIXED = ["H1_nimp", "H2_ratio21", "H3_kurt_1-2k", "H5_kurt_4-8k", "H7_ring_1-2k", "H8_ring_2-4k", "H9_ring_4-8k",
-           "H10_ring_8-12.5k", "H12_share_1-2k", "H13_share_2-4k", "H14_share_4-8k", "H15_share_8-12.5k", "H18_hfl"]   # 4-7 최종피처.json "fixed"
+           "H10_ring_8-12.5k", "H12_share_1-2k", "H13_share_2-4k", "H14_share_4-8k", "H15_share_8-12.5k", "L2_hfl"]   # 4-7 최종피처.json "fixed" (옛 H18_hfl)
 J_PEAK = ["H16_peak_h", "H17_peak_w"]                                    # 4-7 "hfold" (학습 정상 중앙 log PSD 기준)
 J_RING = ["H7_ring_1-2k", "H8_ring_2-4k", "H9_ring_4-8k", "H10_ring_8-12.5k"]
+J_EXTRA = {"D_K1": "DK1",                                                # J_FIXED 밖의 열 → j_tables 키 (11-25 EXP-064, JShrink cols로 고른다)
+           "max_2_4k": "MAX24", "max_8_11k": "MAX811"}                   # 대역별 최대 충격 배수 (11-25 4-19 · EXP-065)
+J_EXTRA.update({c: "B15_" + c for c in ["C1_kenv_1.6-4.5k", "C1_kc_1.6-4.5k", "C1_kc_2-4k", "H4_kurt_2-4k", "C2_tk_1.6-4.5k", "C2_tk_2-4k",
+                                         "C3_w1_all", "C3_w2_all", "C3_w1_imp", "C3_w2_imp", "C4_ib_1.6-4.5k", "C4_ib_2-4k"]})   # 1–5 kHz 후보 C1–C4 (11-25 4-20 · EXP-067, features2.band15_table)
 J_ALPHA = 3.0                                                            # 울림 비율 축소 세기 (EXP-050, 실행 전 고정)
 J_ET_N = 300                                                             # ET 나무 수 (full 모드와 같음)
-J_Q_E2 = 99.0                                                            # E2 문턱 = 학습 정상 H18의 99 % 분위
+J_Q_E2 = 99.0                                                            # E2 문턱 = 학습 정상 L2_hfl의 99 % 분위
 
 
 def _peak83(Xc):
@@ -499,22 +516,37 @@ def _peak83(Xc):
     return P83, W83
 
 
-def j_tables(X):
+def j_tables(X, fmax=None, events=False, atoms="250", res_new=False, lock_tol=0.03):
     """신호 (n, 50000) → J 입력 묶음 dict. 라벨을 쓰지 않고 파일마다 독립 (학습 · val · test에 똑같이)
-    H (n,13) 고정 H 피처 · S (n,) 박자(주기 잠금) · L (n,m) 1 kHz 위 log PSD(봉우리용) · df · LP (n,8,1025) AE 입력 · 8.3k 규칙 재료"""
-    from src.features2 import feat2_table
+    H (n,13) 고정 H 피처(J_FIXED 순서) · S (n,) 박자(L1_lock) · L (n,m) 1 kHz 위 log PSD(봉우리용) · df · LP (n,8,1025) AE 입력 · 8.3k 규칙 재료
+    DK1 (n,) D_K1 (features2.d_k1, 11-25 EXP-064. JShrink cols에 "D_K1"이 있을 때만 쓴다)
+    MAX24 · MAX811 (n,) 2–4k · 8–11k로 운 충격 중 최대 배수 log10(1 + x) (features2.max_ring_x, 11-25 EXP-065. cols에 "max_2_4k" · "max_8_11k"가 있을 때만)
+    B15_{열} (n,) 1–5 kHz 후보 C1–C4 (features2.band15_table, 11-25 4-20 · EXP-067. cols에 그 열 이름이 있을 때만 쓴다)
+    fmax: None = 기본. 숫자(11-25, 11000) = 상한 변형: H · S · L은 feat2_table(fmax), AE 입력은 fmax 이하 bin만. 8.3k 규칙 재료는 그대로
+    검출기 다듬기 (11-25, 2-36 · EXP-063, 기본값 = 예전과 같음)
+      events: True = H1 · H2 · H7–H10(축소 n 포함) · L1 hit를 25 ms 이벤트 단위로 (R1)
+      atoms: "250"(기본) | "50" = H7–H10 울림 주파수를 50 Hz 사전으로 (R2)
+      res_new: True = RES를 새 검출기(fmax 입력 · events 설정 그대로) + 50 Hz 사전으로 (R3). False = 예전 검출기 ring_table
+    lock_tol: L1_lock(S) hit 허용 비율 (기본 0.03 = ±3 %, 예전과 같음. 11-25 EXP-066 ±7 % 비교)"""
+    from src.features2 import feat2_table, d_k1, max_ring_x, band15_table
+    from src.impacts import all_impacts, res_new as _res_new
     X = np.asarray(X, dtype=float)
     if X.ndim != 2 or X.shape[1] != N_SAMPLES:
         raise ValueError(f"신호 길이는 {N_SAMPLES}점이어야 한다. 받은 모양 {X.shape}")
-    T, L, fr = feat2_table(X)
+    imps = all_impacts(X, fmax=fmax, events=events, atoms=atoms)
+    T, L, fr = feat2_table(X, imps=imps, fmax=fmax, lock_tol=lock_tol)
     Xc = X - X.mean(1, keepdims=True)
     Hp = sosfiltfilt(butter(4, 200, btype="highpass", fs=FS, output="sos"), Xc, axis=-1)        # AE 입력 (signal_tables의 LP와 같음)
     starts = np.linspace(0, X.shape[1] - FS, 8).astype(int)
-    _, P = welch(np.stack([Hp[:, s:s + FS] for s in starts], 1), fs=FS, nperseg=2048, axis=-1)
+    fa, P = welch(np.stack([Hp[:, s:s + FS] for s in starts], 1), fs=FS, nperseg=2048, axis=-1)
+    if fmax is not None:
+        P = P[..., fa <= fmax]
     P83, W83 = _peak83(Xc)
-    _, RES, _ = ring_table(X)
-    return dict(H=T[J_FIXED].values.astype(float), S=T["L1_S"].values.astype(float), L=np.asarray(L, float), df=float(fr[1] - fr[0]),
-                LP=np.log10(P + 1e-20), P83=P83, W83=W83, RES=RES)
+    RES = _res_new(imps) if res_new else ring_table(X)[1]
+    return dict(H=T[J_FIXED].values.astype(float), S=T["L1_lock"].values.astype(float), L=np.asarray(L, float), df=float(fr[1] - fr[0]),
+                LP=np.log10(P + 1e-20), P83=P83, W83=W83, K83=kurt83(Xc), RES=RES, DK1=d_k1(imps),
+                MAX24=max_ring_x(imps, 2000, 4000), MAX811=max_ring_x(imps, 8000, 11000),
+                **{"B15_" + c: v.values for c, v in band15_table(X, [im["idx"] for im in imps]).items()})
 
 
 def _lg(p):
@@ -565,12 +597,23 @@ def _j_et(seed=0):
 
 
 class JShrink:
-    """J-축소 본체. fit(Tb, y) · parts(Tb) — Tb = j_tables(X)"""
+    """J-축소 본체. fit(Tb, y) · parts(Tb) — Tb = j_tables(X)
+    cols: ET에 넣을 H 열 (기본 J_FIXED). J_FIXED의 일부 + J_EXTRA(예 "D_K1"). H1_nimp · L2_hfl은 축소 · E2에 쓰므로 꼭 넣는다.
+          울림 비율 축소는 cols에 남은 J_RING 열에만. peak: 봉우리 열 (기본 J_PEAK, [] = 봉우리 안 씀). 11-25 EXP-064, 기본 = 예전과 같음"""
 
-    def __init__(self, alpha=J_ALPHA, seed=0):
+    def __init__(self, alpha=J_ALPHA, seed=0, cols=None, peak=None):
         self.alpha, self.seed = alpha, seed
-        self.ri_ = [J_FIXED.index(c) for c in J_RING]
-        self.i1_, self.i18_ = J_FIXED.index("H1_nimp"), J_FIXED.index("H18_hfl")
+        self.cols = list(J_FIXED if cols is None else cols)
+        self.peak = list(J_PEAK if peak is None else peak)
+        self.ri_ = [self.cols.index(c) for c in J_RING if c in self.cols]
+        self.i1_, self.i18_ = self.cols.index("H1_nimp"), self.cols.index("L2_hfl")
+
+    def _H(self, Tb):
+        """Tb → cols 순서의 H 행렬 (getattr: 옵션 추가 전에 저장한 모델도 읽힘)"""
+        cols = getattr(self, "cols", J_FIXED); H = np.asarray(Tb["H"], float)
+        if list(cols) == J_FIXED:
+            return H
+        return np.column_stack([H[:, J_FIXED.index(c)] if c in J_FIXED else np.asarray(Tb[J_EXTRA[c]], float) for c in cols])
 
     def _shrink(self, H):
         """울림 비율 H7–H10 → (k + α·p0) / (n + α). n = 충격 수, k = 그 대역으로 울린 충격 수. 충격 0개 파일은 그대로(−1)"""
@@ -580,16 +623,19 @@ class JShrink:
         return H
 
     def _et_input(self, Tb):
-        Hs = self._shrink(Tb["H"])
+        Hs = self._shrink(self._H(Tb))
+        peak = getattr(self, "peak", J_PEAK)
+        if not peak:
+            return Hs, Hs
         pk = self.pr_.transform(Tb["L"])
-        return np.hstack([Hs, pk[:, [["H16_peak_h", "H17_peak_w"].index(p) for p in J_PEAK]]]), Hs
+        return np.hstack([Hs, pk[:, [["H16_peak_h", "H17_peak_w"].index(p) for p in peak]]]), Hs
 
     def fit(self, Tb, y):
-        y = np.asarray(y); H = np.asarray(Tb["H"], float); nn = np.rint(np.expm1(H[:, self.i1_])); m = (y == 0) & (nn > 0)
+        y = np.asarray(y); H = self._H(Tb); nn = np.rint(np.expm1(H[:, self.i1_])); m = (y == 0) & (nn > 0)
         # (1) 울림 비율 축소의 정상 기준 p0: 학습 정상의 모든 충격에서 대역별 비율
         self.p0_ = (H[np.ix_(m, self.ri_)] * nn[m, None]).sum(0) / nn[m].sum()
         # (2) 봉우리 기준(학습 정상 중앙 log PSD) → ET 입력
-        self.pr_ = _PeakRef(Tb["df"]).fit(Tb["L"][y == 0])
+        self.pr_ = _PeakRef(Tb["df"]).fit(Tb["L"][y == 0]) if self.peak else None
         Xe, Hs = self._et_input(Tb)
         # (3) 박자 z
         self.zf_ = _RZ(Tb["S"][y == 0]); z = self.zf_(Tb["S"])
@@ -603,7 +649,7 @@ class JShrink:
         # (5) 결합: 로지스틱 + 문턱(학습 점수에서 F2 최대)
         self.c_ = LogisticRegression(C=1.0, class_weight="balanced").fit(self.Z_, y)
         self.tc_ = float(best_f2_threshold(y, self.c_.decision_function(self.Z_)))
-        # (6) E2 문턱: 학습 정상 H18의 99 % 분위
+        # (6) E2 문턱: 학습 정상 L2_hfl의 99 % 분위
         v = Hs[y == 0, self.i18_]; q, med = np.percentile(v, J_Q_E2), np.median(v)
         self.t18_ = float(med + (q - med))
         # (7) 새 파일 채점용: ET · AE를 학습 전체(AE는 정상 전체)로 다시
@@ -616,29 +662,36 @@ class JShrink:
         a = _lg(self.et_.predict_proba(Xe)[:, 1]); z = self.zf_(Tb["S"]); aez = self.aef_(_ae_score(self.ae_, Tb["LP"]))
         s = self.c_.decision_function(np.column_stack([a, z, aez]))
         e2 = (Hs[:, self.i18_] > self.t18_) & (Hs[:, self.i1_] >= np.log(2) - 1e-9)
-        spec83 = (Tb["P83"] >= P83_MIN) & (Tb["W83"] >= W83_MIN); res83 = Tb["RES"] >= RES_FIT_MIN
+        spec83 = (Tb["P83"] >= P83_MIN) & (Tb["W83"] >= W83_MIN) & (Tb["K83"] > K83_MIN); res83 = Tb["RES"] >= RES_FIT_MIN
         main = s >= self.tc_
-        return pd.DataFrame(dict(et_logit=a, beat_z=z, ae_z=aez, score=s, margin=s - self.tc_, comb=main, H18=Hs[:, self.i18_],
-                                 n_imp=np.rint(np.expm1(Hs[:, self.i1_])).astype(int), E2=e2, P83=Tb["P83"], W83=Tb["W83"],
+        return pd.DataFrame(dict(et_logit=a, beat_z=z, ae_z=aez, score=s, margin=s - self.tc_, comb=main, L2_hfl=Hs[:, self.i18_],
+                                 n_imp=np.rint(np.expm1(Hs[:, self.i1_])).astype(int), E2=e2, P83=Tb["P83"], W83=Tb["W83"], K83=Tb["K83"],
                                  RES=Tb["RES"], spec83=spec83, res83=res83, rule83=spec83 | res83, pred=(main | e2 | spec83 | res83).astype(int)))
 
 
 class FinalJ:
     """제출용 J-축소: fit(X, y, names) → predict_table(X, names) (pred = 0/1 + 근거). 임계값 = 결합 문턱 tc_(학습 점수에서 F2 최대, J와 같음)"""
 
-    def __init__(self, alpha=J_ALPHA, seed=0):
-        self.alpha, self.seed = alpha, seed
+    def __init__(self, alpha=J_ALPHA, seed=0, fmax=None, events=False, atoms="250", res_new=False, cols=None, peak=None, lock_tol=0.03):
+        self.alpha, self.seed, self.fmax = alpha, seed, fmax                 # fmax: j_tables 상한 변형 (None = 기본)
+        self.events, self.atoms, self.res_new = events, atoms, res_new       # 검출기 다듬기 R1–R3 (11-25, 기본 = 예전)
+        self.cols, self.peak = cols, peak                                    # JShrink 열 구성 (11-25 EXP-064, None = 기본)
+        self.lock_tol = lock_tol                                             # L1_lock hit 허용 비율 (11-25 EXP-066, 기본 0.03 = 예전)
+
+    def _tables(self, X):
+        g = lambda k, d: getattr(self, k, d)                                 # getattr: 옵션 추가 전에 저장한 모델도 읽힘
+        return j_tables(X, g("fmax", None), g("events", False), g("atoms", "250"), g("res_new", False), g("lock_tol", 0.03))
 
     def fit(self, X, y, names=None):
         y = np.asarray(y)
         self.names_ = list(names) if names is not None else [f"train_{i:03d}" for i in range(len(y))]
-        self.core_ = JShrink(self.alpha, self.seed).fit(j_tables(X), y)
+        self.core_ = JShrink(self.alpha, self.seed, getattr(self, "cols", None), getattr(self, "peak", None)).fit(self._tables(X), y)
         self.y_ = y
         self.thr_ = self.core_.tc_
         return self
 
     def predict_table(self, X, names):
-        D = self.core_.parts(j_tables(X))
+        D = self.core_.parts(self._tables(X))
         D.insert(0, "file", list(names))
         D["reason"] = [self._reason(r) for r in D.itertuples()]
         return D
@@ -646,11 +699,11 @@ class FinalJ:
     def _reason(self, r):
         why = []
         if r.spec83:
-            why.append(f"8.3 kHz 모드 규칙 (돌출 {r.P83:.2f} dec, 폭 {r.W83:.0f} Hz)")
+            why.append(f"8.3 kHz 모드 규칙 (돌출 {r.P83:.2f} dec, 폭 {r.W83:.0f} Hz, 충격성 K {r.K83:.1f})")
         if r.res83:
             why.append(f"8.3 kHz 공진 규칙 (깨끗한 공진 충격 fit {r.RES:.2f})")
         if r.E2:
-            why.append(f"E2 하중 대비 고주파 (H18 {r.H18:.2f} > 정상 99 % {self.core_.t18_:.2f}, 충격 {r.n_imp}개)")
+            why.append(f"L2 위 꼬리 규칙(E2) (하중 대비 고주파 L2_hfl {r.L2_hfl:.2f} > 정상 99 % {self.core_.t18_:.2f}, 충격 {r.n_imp}개)")
         side = "≥" if r.comb else "<"
         why.append(f"결합 {r.score:+.2f} {side} 문턱 {self.core_.tc_:.2f} (여유 {r.margin:+.2f}; ET logit {r.et_logit:+.1f} · 박자 z {r.beat_z:+.1f} · AE z {r.ae_z:+.1f})")
         return " · ".join(why)

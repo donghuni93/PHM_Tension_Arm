@@ -1,0 +1,39 @@
+후보 32개 · train 150 · val 40
+결측(충격 0 · 3개 미만 파일) train: {'I_top5_ratio': np.int64(14), 'I_count_per_max': np.int64(14), 'I_interval_cv': np.int64(43), 'R_fpeak_med': np.int64(15), 'R_frac_2_5k': np.int64(15), 'R_ring_25_58': np.int64(15), 'R_ring_811_58': np.int64(15)} / val: {'I_top5_ratio': np.int64(3), 'I_count_per_max': np.int64(3), 'I_interval_cv': np.int64(7), 'R_fpeak_med': np.int64(3), 'R_frac_2_5k': np.int64(3), 'R_ring_25_58': np.int64(3), 'R_ring_811_58': np.int64(3)}
+150개 전체 선택 = ['b25_5_segk', 'D_segk', 'A_segk', 'R_frac_2_5k', 'R_ring_25_58', 'AR_resid', 'R_ring_811_58', 'SK_200_3k', 'b25_5_kurt', 'I_density']
+소린 F10      = ['b25_5_segk', 'D_segk', 'A_segk', 'R_frac_2_5k', 'R_ring_25_58', 'AR_resid', 'R_ring_811_58', 'SK_200_3k', 'b25_5_kurt', 'I_density']
+이름 · 순서 일치 = True / 집합 일치 = True
+
+피처 | 단독 AUC(고장 높음 > 0.5) | 선택 순위 | val 중앙값의 train 정상 백분위 | val 중 정상 95% 초과 비율
+b25_5_segk | 0.932 | 1 | 67% | 20%
+D_segk | 0.923 | 2 | 79% | 28%
+A_segk | 0.911 | 3 | 69% | 25%
+R_frac_2_5k | 0.858 | 4 | 94% | 30%
+R_ring_25_58 | 0.856 | 5 | 88% | 25%
+AR_resid | 0.852 | 6 | 75% | 15%
+R_ring_811_58 | 0.851 | 7 | 83% | 5%
+SK_200_3k | 0.831 | 8 | 69% | 5%
+b25_5_kurt | 0.829 | 9 | 57% | 18%
+R_811_over_58 | 0.826 | - | 80% | 5%
+A_kurt | 0.822 | - | 55% | 18%
+I_density | 0.810 | 10 | 55% | 2%
+D_nimp | 0.808 | - | 65% | 5%
+b25_5_rms | 0.806 | - | 84% | 20%
+b25_5_crest | 0.804 | - | 68% | 15%
+A_crest | 0.798 | - | 58% | 18%
+A_er_8_12k | 0.793 | - | 55% | 12%
+D_crest | 0.775 | - | 72% | 25%
+D_kurt | 0.772 | - | 72% | 18%
+A_er_2_5k | 0.770 | - | 78% | 15%
+A_er_0_1k | 0.268 | - | 29% | 2%
+R_811_over_25 | 0.730 | - | 39% | 10%
+A_hj_mob | 0.729 | - | 66% | 2%
+A_centroid | 0.726 | - | 72% | 8%
+I_top5_ratio | 0.297 | - | 30% | 0%
+A_hj_cpx | 0.299 | - | 28% | 0%
+R_fpeak_med | 0.301 | - | 20% | 2%
+A_rms | 0.663 | - | 62% | 18%
+A_er_1_2k | 0.630 | - | 72% | 10%
+I_interval_cv | 0.588 | - | 33% | 10%
+I_count_per_max | 0.468 | - | 37% | 2%
+A_er_5_8k | 0.468 | - | 55% | 5%

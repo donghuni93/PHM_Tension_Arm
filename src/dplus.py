@@ -21,7 +21,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import QuantileTransformer, StandardScaler
 
 from src.features import feature_table_ext
-from src.final import (P83_MIN, R_MIN, RATIO_MIN, W83_MIN, signal_tables)
+from src.final import (K83_MIN, P83_MIN, R_MIN, RATIO_MIN, W83_MIN, signal_tables)
 
 FS = 25000
 _SOS200 = butter(4, 200, btype="highpass", fs=FS, output="sos")
@@ -121,7 +121,7 @@ def rule_flags(T_new, T_tr, y):
     med = np.median(Kn, 0)
     mad = 1.4826 * np.median(np.abs(Kn - med), 0) + 1e-12
     r = np.sqrt((((T_new["K"][:, :2] - med) / mad) ** 2).mean(1))
-    return (T_new["P83"] >= P83_MIN) & (T_new["W83"] >= W83_MIN), (r >= R_MIN) & (T_new["K"][:, 2] >= RATIO_MIN)
+    return (T_new["P83"] >= P83_MIN) & (T_new["W83"] >= W83_MIN) & (T_new["K83"] > K83_MIN), (r >= R_MIN) & (T_new["K"][:, 2] >= RATIO_MIN)
 
 
 def _logit(p):

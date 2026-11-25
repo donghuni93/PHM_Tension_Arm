@@ -1,6 +1,6 @@
 """실험 공용: 데이터·피처 캐시, 모델, 실험 기록(Experiment)
 
-실험 폴더(단계/N_이름/EXP-nnn_이름/run.py)에서:
+실험 폴더(단계/5_모델실험/…/EXP-nnn_이름/자료/run.py, README.md는 자료/ 바로 위)에서:
     from src.exp import *
     ex = Experiment(__file__, "EXP-007", "제목", ["H2", "H3"],
                     member="이동훈", model="ExtraTrees", changes="이전 대비 바꾼 것 한 줄")
@@ -27,15 +27,29 @@ os.makedirs(CACHE, exist_ok=True)
 
 __all__ = ["ROOT", "CACHE", "np", "pd", "viz", "nested_cv", "load_train", "cached_table",
            "feature_table", "feature_table_ext", "feature_table_phys",
-           "make_et", "ColModel", "RankAvg", "CollinearityFilter", "vif", "Experiment", "md_table", "error_md_table", "OUTLIER_NORMALS", "outlier_idx", "find_exp"]
+           "make_et", "ColModel", "RankAvg", "CollinearityFilter", "vif", "Experiment", "md_table", "error_md_table", "OUTLIER_NORMALS", "outlier_idx", "find_exp", "find_exp_home", "exp_data"]
 
-EXP_ROOT = os.path.join(ROOT, "단계", "5_모델비교")
+EXP_ROOT = os.path.join(ROOT, "단계", "5_모델실험")
+
+
+DATA_SUB = "자료"   # 11-25 정리: 실험 · EDA 조각 폴더 = README.md + 자료/(run.py · result.json · figs/ · 표)
+
+
+def exp_data(d):
+    """실험 폴더 → run.py · result.json · figs/가 있는 곳 (자료/가 있으면 거기, 예전 형식 아카이브는 폴더 자체)"""
+    s = os.path.join(d, DATA_SUB)
+    return s if os.path.isdir(s) else d
 
 
 def find_exp(key):
-    """실험 폴더 찾기. key = 'EXP-043' · 'PHO-007' · 폴더 이름 · 'base/폴더 이름'(예전 경로) 모두 된다.
-    5_모델비교 아래 두 단계까지 찾는다: 바로 아래 · 단계 폴더(1_첫베이스모델 …) · 아카이브/ (11-22 정리).
-    폴더를 옮겨도 코드가 안 깨지게 경로를 직접 쓰지 않는다."""
+    """실험의 자료 폴더 찾기 (result.json · figs/ · 표가 있는 곳 = exp_data). key = 'EXP-043' · 'PHO-007' · 폴더 이름 모두 된다.
+    5_모델실험 아래 두 단계까지 찾는다: 바로 아래 · 단계 폴더(1_첫베이스 … 6_최종모델 · 후보) · 아카이브/ (11-25 정리).
+    폴더를 옮겨도 코드가 안 깨지게 경로를 직접 쓰지 않는다. README가 있는 실험 폴더는 os.path.dirname이 아니라 find_exp_home"""
+    return exp_data(find_exp_home(key))
+
+
+def find_exp_home(key):
+    """README.md가 있는 실험 폴더"""
     name = os.path.basename(str(key).rstrip("/\\"))
     eid = name.split("_")[0]
     subs = [""] + [s for s in sorted(os.listdir(EXP_ROOT)) if os.path.isdir(os.path.join(EXP_ROOT, s)) and not s.startswith(("EXP-", "PHO-"))]
@@ -161,7 +175,9 @@ class Experiment:
 
     def __init__(self, run_file, exp_id, title, hypotheses=(), member="", model="", changes="",
                  focus=("abn_002", "abn_022", "abn_029"), key_changes=()):
-        self.dir = os.path.dirname(os.path.abspath(run_file))
+        self.dir = os.path.dirname(os.path.abspath(run_file))                  # run.py · result.json · figs/ · 표
+        self.home = os.path.dirname(self.dir) if os.path.basename(self.dir) == DATA_SUB else self.dir   # README.md (11-25: 자료/ 바로 위)
+        self.pre = "" if self.home == self.dir else DATA_SUB + "/"           # README에서 자료로 가는 링크 앞부분
         self.figs = os.path.join(self.dir, "figs"); os.makedirs(self.figs, exist_ok=True)
         self.id, self.title, self.hyp, self.focus = exp_id, title, list(hypotheses), list(focus)
         self.json = os.path.join(self.dir, "result.json")
@@ -248,10 +264,10 @@ class Experiment:
         """README = 노션 카드 → 결과 표 → 해석 첫 문단 → 핵심 그림(key=True) → 손으로 쓴 설명 → 그림(나머지, psd가 맨 끝).
         note()로 남긴 수치 메모는 result.json에만 두고 README에는 쓰지 않는다 (11-14 사용자 결정)"""
         json.dump(self.res, open(self.json, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-        readme = os.path.join(self.dir, "README.md")
+        readme = os.path.join(self.home, "README.md"); pre = self.pre
         interp = self._read_interp(open(readme, encoding="utf-8").read()) if os.path.exists(readme) else ""
         r = self.res
-        notes = os.path.relpath(os.path.join(ROOT, "단계", "1_기준·기록", "물리가설.md"), self.dir).replace("\\", "/")
+        notes = os.path.relpath(os.path.join(ROOT, "단계", "1_기준·기록", "물리가설.md"), self.home).replace("\\", "/")
         first = next((l.strip() for l in interp.splitlines() if l.strip() and not l.startswith(("#", "|", "-", "!"))), "")
         m = r["configs"].get(r.get("main"), {})
         f2 = f"{m['f2']:.3f} ± {m['f2_sd']:.3f}" if m else ""
@@ -263,7 +279,7 @@ class Experiment:
         if r.get("key_changes"):
             s += ["## 주요 변경점 (기준 실험 대비)\n"] + [f"- {c}" for c in r["key_changes"]] + [""]
         s += [f"- 가설: {', '.join(r['hypotheses']) or '—'} ([물리가설]({notes}))",
-             f"- 실행: {r['date']} · git `{r['git']}` · 코드 [run.py](run.py)"]
+             f"- 실행: {r['date']} · git `{r['git']}` · 코드 [run.py]({pre}run.py)"]
         if r["configs"]:
             modes = sorted({v.get("mode", "seed 5 · ET 300") for v in r["configs"].values()})
             s += [f"- 평가: 중첩 CV (바깥 5 × 안쪽 4) · 모드 {' / '.join(modes)}. 자주 놓침 · 오경보 n회+ = seed 과반. quick 수치는 선별용, 기록 수치는 QE_FULL=1\n",
@@ -277,14 +293,14 @@ class Experiment:
             if not v.get("mid"):
                 s.append(_row(k, v))
         keys = [k for k in r.get("key_figs", []) if k in r["figs"]]
-        block = "\n".join([KEY_OPEN] + [f"![{k}](figs/{k}.png)\n\n*{k}* — {r['figs'][k]}\n" for k in keys] + [KEY_CLOSE]) if keys else ""
+        block = "\n".join([KEY_OPEN] + [f"![{k}]({pre}figs/{k}.png)\n\n*{k}* — {r['figs'][k]}\n" for k in keys] + [KEY_CLOSE]) if keys else ""
         body = self._with_key_figs(interp, block)
         if body:
             s.append("\n## 해석\n\n" + body + "\n")
         figs = sorted([kv for kv in r["figs"].items() if kv[0] not in keys], key=lambda kv: kv[0].startswith("psd"))   # psd 그림은 맨 끝
         s.append("\n## 그림\n")
         for k, cap in figs:
-            s.append(f"### {k}\n{cap}\n\n![{k}](figs/{k}.png)\n")
+            s.append(f"### {k}\n{cap}\n\n![{k}]({pre}figs/{k}.png)\n")
         if mid:
             s += ["\n## 중간 단계 결과 (비교 · 절제 · 이전 실험 값)\n", "| 구성 | F2 | 재현율 | 오경보율 | 정밀도 | F2 (고장 10%·40%) | 자주 놓침 | 오경보 3회+ |", "|---|---|---|---|---|---|---|---|"]
             s += [_row(k, v) for k, v in mid]

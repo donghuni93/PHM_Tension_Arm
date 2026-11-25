@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 X, y, names = load_train(); names = [str(n) for n in names]
 g = np.arange(len(y)); F = g[:, None]
-T = pd.read_csv(os.path.join(_d, "단계/2_EDA/2-1_고장유형분류/figs/types.csv"), index_col=0).loc[names]
+T = pd.read_csv(os.path.join(_d, "단계/2_EDA/2-1_고장유형분류/자료/figs/types.csv"), index_col=0).loc[names]
 D = pd.DataFrame({"y": y, "type": T["type"].fillna("U").values, "peak_g": T["max_hp"].values, "n_imp": T["n_imp_hp"].values,
                   "s20": T["s20"].values, "kurt_hp": T["kurt_hp"].values, "e200": T["e200"].values, "hi_ratio": T["hi_ratio"].values}, index=names)
 Z = np.empty((len(y), 2))
@@ -37,7 +37,7 @@ ev_cols = list(EV.columns)
 for c in EV.columns:
     if c.lower() in ("fc", "fc_khz", "decay", "decay_ms", "arm"):
         D["ev_" + c] = EV[c].reindex(names).values
-res = json.load(open(os.path.join(_d, "단계/5_모델비교/아카이브/EXP-030_1116_최종후보고정_규칙감사/result.json"), encoding="utf-8"))["configs"]
+res = json.load(open(os.path.join(_d, "단계/5_모델실험/아카이브/EXP-030_1116_최종후보고정_규칙감사/result.json"), encoding="utf-8"))["configs"]
 for tag, key in (("AE", "중첩: L0 AE 단독"), ("ET", "중첩: L1 ET 단독"), ("결합", "중첩: L2 AE+ET 로지스틱 (EXP-014)"), ("최종", "중첩: A + 유격 반복 규칙 (EXP-025)")):
     c = res[key]; err = {**c["miss_counts"], **c["fp_counts"]}
     D["err_" + tag] = [err.get(n, 0) for n in names]

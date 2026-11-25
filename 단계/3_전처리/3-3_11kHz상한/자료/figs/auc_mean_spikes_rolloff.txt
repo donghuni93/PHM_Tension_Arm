@@ -1,0 +1,39 @@
+A) per 500Hz bin: AUC(abn>nor) | abn p25 vs nor p75 (dB) | overlap?
+ 0.00- 0.50 AUC=0.59 abn_p25= -64.2 nor_p75= -59.4 OVERLAP
+ 0.50- 1.00 AUC=0.69 abn_p25= -76.1 nor_p75= -72.1 OVERLAP
+ 1.00- 1.50 AUC=0.64 abn_p25= -77.8 nor_p75= -73.1 OVERLAP
+ 1.50- 2.00 AUC=0.70 abn_p25= -77.6 nor_p75= -74.4 OVERLAP
+ 2.00- 2.50 AUC=0.75 abn_p25= -78.7 nor_p75= -76.6 OVERLAP
+ 2.50- 3.00 AUC=0.75 abn_p25= -79.3 nor_p75= -77.8 OVERLAP
+ 3.00- 3.50 AUC=0.79 abn_p25= -82.9 nor_p75= -83.8 sep
+ 3.50- 4.00 AUC=0.81 abn_p25= -82.9 nor_p75= -83.6 sep
+ 4.00- 4.50 AUC=0.80 abn_p25= -84.4 nor_p75= -86.7 sep
+ 4.50- 5.00 AUC=0.77 abn_p25= -84.1 nor_p75= -82.3 OVERLAP
+ 5.00- 5.50 AUC=0.73 abn_p25= -86.2 nor_p75= -82.4 OVERLAP
+ 5.50- 6.00 AUC=0.65 abn_p25= -86.7 nor_p75= -76.7 OVERLAP
+ 6.00- 6.50 AUC=0.60 abn_p25= -86.7 nor_p75= -76.3 OVERLAP
+ 6.50- 7.00 AUC=0.62 abn_p25= -84.4 nor_p75= -75.4 OVERLAP
+ 7.00- 7.50 AUC=0.62 abn_p25= -85.9 nor_p75= -75.5 OVERLAP
+ 7.50- 8.00 AUC=0.70 abn_p25= -84.8 nor_p75= -81.2 OVERLAP
+ 8.00- 8.50 AUC=0.83 abn_p25= -86.9 nor_p75= -88.0 sep
+ 8.50- 9.00 AUC=0.81 abn_p25= -89.9 nor_p75= -91.4 sep
+ 9.00- 9.50 AUC=0.80 abn_p25= -96.7 nor_p75= -96.0 OVERLAP
+ 9.50-10.00 AUC=0.81 abn_p25= -94.2 nor_p75= -95.1 sep
+10.00-10.50 AUC=0.79 abn_p25= -94.7 nor_p75= -94.6 OVERLAP
+10.50-11.00 AUC=0.66 abn_p25=-101.4 nor_p75= -91.9 OVERLAP
+11.00-11.50 AUC=0.58 abn_p25=-101.6 nor_p75= -91.3 OVERLAP
+11.50-12.00 AUC=0.67 abn_p25=-102.0 nor_p75= -94.3 OVERLAP
+12.00-12.50 AUC=0.75 abn_p25=-103.8 nor_p75=-100.0 OVERLAP
+
+B) normal files driving mean spikes (share of linear mean in band)
+9.20-9.60 kHz: top normals nor_116 57%, nor_055 41%, nor_120 0%, nor_101 0%  | median-file share would be 0.8%
+12.20-12.45 kHz: top normals nor_120 34%, nor_097 33%, nor_101 32%, nor_025 0%  | median-file share would be 0.8%
+8.00-10.50 kHz: top normals nor_116 47%, nor_055 34%, nor_120 2%, nor_097 2%  | median-file share would be 0.8%
+
+C) near-Nyquist rolloff: L(12.25-12.5k) - L(10.5-11k) in dB, files with L(10.5-11k) >= floor+15 dB (floor=-107)
+normal: n_sel=30 median diff=-10.3 dB (p10 -17.5, p90 0.1); L(11.5-12)-L(10.5-11) median=-4.6
+abnormal: n_sel=16 median diff=-9.4 dB (p10 -16.0, p90 4.0); L(11.5-12)-L(10.5-11) median=-5.2
+
+D) all train: fraction of files whose last 250Hz (12.25-12.5k) is LOWER than 11.5-12k by >6 dB, among files >= floor+10 dB at 11.5-12k
+normal: n_sel=42 frac drop>6dB = 0.55
+abnormal: n_sel=17 frac drop>6dB = 0.41

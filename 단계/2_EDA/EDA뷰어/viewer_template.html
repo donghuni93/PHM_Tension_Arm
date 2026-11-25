@@ -635,6 +635,22 @@ function drawLock(c, i) {
   g.fillStyle = css("--text"); g.textAlign = "center"; g.textBaseline = "bottom"; g.fillText(`T = ${T} s`, X(t0 + T / 2), yb - 3);
   hover(c, mx => { const t = (mx - P.l) / (w - P.l - P.r) * 2; if (t < 0 || t > 2) return null; return `${t.toFixed(3)} s · 30 Hz 저역 ${fmt(val(t))} g`; });
 }
+// 11-22 충격 파형 겹치기 (G2): 가장 큰 충격(굵은 선)에 |상관| 최대 지연(±0.5 ms)으로 맞춘 충격들, 각자 최대 |진폭|으로 정규화, 부호 그대로
+let WFD = null;
+function drawWF(c, i) {
+  if (!WFD) WFD = new Int8Array(bytes(D.rhy.wf).buffer);
+  const Q = D.rhy, n = Q.wf_n[i], L = Q.wf_len, off = Q.wf_off[i], [g, w, h] = ctx2d(c), P = { l: 40, r: 10, t: 8, b: 18 };
+  const tms = k => (k - Q.wf_pre) / D.fs * 1000, t0 = tms(0), t1 = tms(L - 1);
+  const X = t => P.l + (t - t0) / (t1 - t0) * (w - P.l - P.r), Y = v => P.t + (1 - (v + 1.05) / 2.1) * (h - P.t - P.b);
+  frame(g, w, h, P, [-1, 0, 2, 4, 6, 8].map(t => [t, X(t), t + "ms"]), [-1, 0, 1].map(v => [v, Y(v), v]), "", "정규화");
+  if (!n) { g.fillStyle = css("--text-3"); g.textAlign = "center"; g.fillText("충격 없음", w / 2, h / 2); return; }
+  for (let s = n - 1; s >= 0; s--) {
+    g.globalAlpha = s ? Math.max(.15, Math.min(.5, 4 / n)) : 1; g.strokeStyle = s ? col(i) : css("--text"); g.lineWidth = s ? 1 : 1.8; g.beginPath();
+    for (let k = 0; k < L; k++) { const x = X(tms(k)), y = Y(WFD[off + s * L + k] / 127); k ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke();
+  }
+  g.globalAlpha = 1;
+  hover(c, mx => { const t = t0 + (mx - P.l) / (w - P.l - P.r) * (t1 - t0); if (t < t0 || t > t1) return null; return `${t.toFixed(2)} ms (봉우리 기준)`; });
+}
 function impTable(i) {
   const Q = D.rhy, rows = Q.imp_top[i], n = Q.imp_n[i], all = Q.imp_t[i].length;
   if (!n) return `<p class="help">충격 없음 (새 정의 11-21: 바탕의 4.5배를 넘는 봉우리 없음)${all ? ` · 검출 ${all}개는 끝에 가까워 제외` : ""}</p>`;
@@ -656,8 +672,12 @@ function oneImp(i) {
     <span class="help">정의 = 2-13 + 충격 시점은 새 정의(11-21): T = 30 Hz 저역을 τ만큼 민 자기 자신과의 상관이 최대인 τ (0.3–1.2 s), 충격 = 새 정의 충격(1 kHz 고역, 이동 바탕 4.5배). 보라 점선 = 파형을 T만큼 민 것, 노란 호 = T ± 3% 떨어진 충격 짝, 채운 점 = 짝 있는 충격, 속 빈 점 = 짝 없음</span></h4><div id="clk"></div>
     <div style="margin-top:8px">${ctxTable(i, Q.ctx)}</div>
     <div class="help" style="margin-top:4px">위 표 = 이 탭의 숫자를 정상 120개와 비교 (띠 = 정상 5–95%, 선 = 중앙값). ${cLink("acf", "자기상관")} · ${cLink("impulse-count", "충격 수")}</div></div>
+  <div class="card"><h4>충격 파형 겹치기 <span class="chip">1 kHz 고역통과</span>
+    <span class="chip warn">C ${fmt(Q.wf_C[i], "wf_C")}</span><span class="chip">|C| ${fmt(Q.wf_Cabs[i], "wf_Cabs")}</span><span class="chip">크기 2위/1위 ${fmt(Q.wf_r21[i], "h_r21")}</span><span class="chip">그린 충격 ${Q.wf_n[i]} / ${Q.imp_n[i]}</span>
+    <span class="help">11-22 (G2 "같은 기전이면 충격 파형이 닮는다" 확인용). 봉우리 1 ms 앞 ~ 8 ms 뒤, 충격마다 최대 |진폭|으로 정규화. 굵은 선 = 가장 큰 충격(기준), 나머지는 기준과 |상관|이 최대인 지연(±0.5 ms)으로 맞춤, 부호는 그대로(뒤집혀 보이면 반대 극성). 큰 순 최대 30개. C = 모든 충격 쌍의 같은 부호 상관 최대의 중앙값, |C| = 부호 무시</span></h4><div id="cwf"></div>
+    <div style="margin-top:8px">${ctxTable(i, ["wf_C", "wf_Cabs", "h_r21"].map(k => ({ key: k, label: FEAT[k].label, concept: FEAT[k].concept, unit: "", desc: FEAT[k].desc, val: D.val[k], pct: D.pct[k], ref: D.ref[k] && { p5: D.ref[k].p5, p50: D.ref[k].p50, p95: D.ref[k].p95, f50: D.ref[k].f50 } })))}</div></div>
   <div class="card"><h4>충격 목록 <span class="chip">1 kHz 고역통과</span> <span class="help">충격마다 울림 주파수 · 감쇠비 ζ · 맞춤 fit</span></h4>${impTable(i)}</div>`;
-  drawImpEnv(put("cie", 170), i); drawEnvSpec(put("cev", 170), i); drawLock(put("clk", 220), i);
+  drawImpEnv(put("cie", 170), i); drawEnvSpec(put("cev", 170), i); drawLock(put("clk", 220), i); drawWF(put("cwf", 220), i);
 }
 // 5개씩 보기 (11-21 2차): 지표 6개(입력/구조/맥락 축) + 그림은 한 개씩 보기의 현재 탭(S.tab)을 따른다. 카드는 auto-fill 그리드라 좁으면 줄바꿈
 const FIVE_KEYS = ["n_ring", "kurt_1k", "ring_o3", "ring_o2", "fast_decay", "lb_S"];
@@ -708,7 +728,8 @@ function pairStats(kx, ky) {
 }
 const SC_PAIRS = [["입력 × 구조", "kurt_1k", "ring_o3", 1, 0, "고주파 첨도 × 4–8 kHz 울림 몫 (새 정의)"], ["연결부 음 × 8.3 kHz", "ring_o2", "res83", 0, 0, "2–4 kHz 울림 몫 × 8.3 kHz 공진 fit (새 정의)"],
   ["울림 길이 × 충격 수", "fast_decay", "n_ring", 0, 1, "빨리 꺼지는 충격 비율 × 충격 수(로그)"], ["저주파 박자 × 맥락", "lb_S", "load_hf", 0, 0, "주기 잠금 S × 하중 대비 고주파"],
-  ["길 상태 끌림 확인", "lb_e0_20", "rms_hf", 0, 1, "0–20 Hz 에너지 × 고주파 RMS(200 Hz 고역, 로그)"]];
+  ["길 상태 끌림 확인", "lb_e0_20", "rms_hf", 0, 1, "0–20 Hz 에너지 × 고주파 RMS(200 Hz 고역, 로그)"],
+  ["크기 반복 × 파형 반복", "h_r21", "wf_C", 0, 0, "11-22 G2: 충격 크기 2위/1위 × 충격 파형 일관성 C (같은 기전이 반복되면 둘 다 높다)"]];
 function renderTable() {
   const ks = D.feat.filter(f => f.group !== "band").map(f => f.key);
   const grpName = k => (GRP[FEAT[k].group] || { label: "요약" }).label;

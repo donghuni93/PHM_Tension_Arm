@@ -1,0 +1,5 @@
+저장: figs/1_kpi.png
+RMS 관리도: CL 0.059 UCL 0.460 · 정상 초과 3 · 고장 초과 2 · F2 0.080
+저장: figs/2_rms_chart.png
+저장: figs/3_structure.png
+저장: figs/4_ladder.png

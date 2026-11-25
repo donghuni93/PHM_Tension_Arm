@@ -17,7 +17,7 @@ class A:
         self.y, self.names, self.n = np.asarray(y), list(names), len(y)
         self.nor = self.y == 0
         self.E = cached_table("ext", feature_table_ext, X).values
-        IM = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "2-7_충격울림주파수", "figs", "impacts.csv"), encoding="utf-8-sig")
+        IM = pd.read_csv(os.path.join(ROOT, "단계", "2_EDA", "2-3_충격울림주파수", "자료", "figs", "impacts.csv"), encoding="utf-8-sig")
         key = [os.path.splitext(os.path.basename(s))[0] for s in names]
         frac = lambda lo, hi: IM.assign(b=(IM.f >= lo) & (IM.f < hi)).groupby("file").b.mean().reindex(key).values.astype(float)
         self.R24 = np.nan_to_num(frac(2125, 4125), nan=-1.0); self.RBODY = np.nan_to_num(frac(5500, 7750), nan=-1.0)

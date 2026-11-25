@@ -1,0 +1,24 @@
+narrowband peak/neighbor >= 10 dB in 9.3-9.6k:
+  normal: 2/120  [('nor_055', np.float64(12.2), 9390), ('nor_116', np.float64(11.7), 9410)]
+  abnormal: 4/30  [('abn_007', np.float64(12.2), 9530), ('abn_013', np.float64(10.6), 9480), ('abn_016', np.float64(10.1), 9590), ('abn_026', np.float64(13.7), 9510)]
+  val: 3/40  [('val_013', np.float64(11.8), 9490), ('val_016', np.float64(11.1), 9405), ('val_039', np.float64(11.7), 9485)]
+narrowband peak/neighbor >= 10 dB in 6.0-6.3k:
+  normal: 11/120  [('nor_009', np.float64(25.5), 6000), ('nor_014', np.float64(36.5), 6000), ('nor_022', np.float64(29.3), 6000), ('nor_030', np.float64(17.8), 6000), ('nor_045', np.float64(23.1), 6000), ('nor_053', np.float64(35.5), 6000), ('nor_062', np.float64(18.0), 6000), ('nor_086', np.float64(12.1), 6030), ('nor_090', np.float64(26.6), 6000), ('nor_092', np.float64(11.7), 6000), ('nor_119', np.float64(15.4), 6000)]
+  abnormal: 1/30  [('abn_015', np.float64(14.4), 6000)]
+  val: 2/40  [('val_015', np.float64(11.7), 6040), ('val_017', np.float64(11.7), 6170)]
+
+low band: 0.005-0.7k mean dB minus 0.7-1.5k mean dB (more negative = low-frequency cut)
+  lowest: normal nor_097 -7.1 dB
+  lowest: normal nor_120 -6.8 dB
+  lowest: normal nor_101 -6.3 dB
+  lowest: normal nor_089 -5.4 dB
+  lowest: normal nor_038 -5.0 dB
+  lowest: val val_031 -4.6 dB
+  lowest: abnormal abn_017 -4.1 dB
+  lowest: abnormal abn_004 -3.4 dB
+  nor_055: -3.3 dB
+  nor_116: 2.4 dB
+  nor_001: 13.7 dB
+  normal: median 11.0, p5 -3.3, p95 16.5
+  abnormal: median 8.7, p5 -3.3, p95 16.2
+  val: median 7.7, p5 -2.1, p95 22.3

@@ -12,7 +12,7 @@ from sklearn.model_selection import StratifiedGroupKFold
 from src.data import load_folder
 from src.evaluate import best_f2_threshold
 from src.exp import ROOT, cached_table, feature_table_ext, load_train, find_exp
-from src.features2 import PeakRef, H_FOLD, cached_feat2, robust_z
+from src.features2 import PeakRef, H_FOLD, cached_feat2, robust_z, new_name, RENAMED
 from src.models2 import Two
 
 NOR, ABN, PUR = "#2a78d6", "#eb6834", "#7B1FA2"
@@ -26,14 +26,16 @@ class NS:
         self.X, self.y, names = load_train(); self.names = [str(n) for n in names]
         vd = os.path.join(ROOT, "data", "TeamProject_val", "val"); vd = vd if os.path.isdir(vd) else os.path.dirname(vd)   # PC = val/ 하위 폴더, 클라우드 = 바로 아래
         self.Xv, nv = load_folder(vd); self.nv = [str(n) for n in nv]
-        FJ = json.load(open(os.path.join(ROOT, "단계", "4_피처", "4-7_1121_2차피처점검", "최종피처.json"), encoding="utf-8"))
-        self.FIXED, self.PEAK = list(FJ["fixed"]), list(FJ["hfold"]); assert FJ["lock"] == ["L1_S"]
+        FJ = json.load(open(os.path.join(ROOT, "단계", "4_피처", "4-2_H피처목록", "자료", "최종피처.json"), encoding="utf-8"))
+        self.FIXED, self.PEAK = [new_name(c) for c in FJ["fixed"]], list(FJ["hfold"]); assert [new_name(c) for c in FJ["lock"]] == ["L1_lock"]   # json은 옛 이름 (H18_hfl · L1_S)
         self.T, self.L, fr = cached_feat2("train", self.X); self.Tv, self.Lv, _ = cached_feat2("val", self.Xv)
         self.df = float(fr[1] - fr[0]); self.nf = len(self.FIXED)
-        self.M = np.hstack([self.T[self.FIXED].values, self.T[["L1_S"]].values, self.L])
-        self.Mv = np.hstack([self.Tv[self.FIXED].values, self.Tv[["L1_S"]].values, self.Lv])
+        self.M = np.hstack([self.T[self.FIXED].values, self.T[["L1_lock"]].values, self.L])
+        self.Mv = np.hstack([self.Tv[self.FIXED].values, self.Tv[["L1_lock"]].values, self.Lv])
         self.n = len(self.y); self.g = np.arange(self.n); self.nor = self.y == 0
-        self.cols = self.FIXED + self.PEAK + ["L1_S"]
+        self.cols = self.FIXED + self.PEAK + ["L1_lock"]
+        for o, nw in RENAMED.items():                                      # 옛 이름 별칭 (11-25 이름 변경 전 스크립트가 ns.T["L1_S"] 등으로 읽음)
+            self.T[o], self.Tv[o] = self.T[nw], self.Tv[nw]
 
     def mk(self, comb, experts=(), scale_thr=1.0):
         return lambda: Two(comb, experts, fixed=tuple(self.FIXED), nf=self.nf, df=self.df, peak=tuple(self.PEAK), scale_thr=scale_thr)
@@ -56,7 +58,7 @@ def wrong_of(ns, row, k=2):
 def expert_counts(ns, which, scales=(1.0,), seeds=range(5)):
     """전문가 E1/E2 단독 켜짐을 중첩 CV와 같은 분할(seed 5 × 바깥 5겹)에서: 학습 폴드 정상 99 % 문턱을 테스트 폴드에 적용.
     반환 {scale: 파일별 켜진 횟수(seed 5번 중)} — scale = 문턱 거리(분위수 − 정상 중앙값)의 배수 (C3: 0.8·1.2)"""
-    h18 = ns.T["H18_hfl"].values; h1 = ns.T["H1_nimp"].values
+    h18 = ns.T["L2_hfl"].values; h1 = ns.T["H1_nimp"].values
     out = {s: np.zeros(ns.n, int) for s in scales}
     for seed in seeds:
         for tr, te in StratifiedGroupKFold(5, shuffle=True, random_state=seed).split(ns.g, ns.y, ns.g):
@@ -165,7 +167,7 @@ def tsne_fig(ns, score_all, mark, title_score):
 def error_table(ns, files, imp, topk=6):
     """파일별: 피처 학습 정상 백분위(train 정상 120 기준, H16·H17은 정상 전체 참고 ref), 95 %를 넘은 피처, ET 중요도 상위 겹침"""
     pk = PeakRef(ns.df).fit(ns.L[ns.nor]); p = pk.transform(ns.L)
-    V = ns.T[ns.cols[:ns.nf]].copy(); V["H16_peak_h"], V["H17_peak_w"] = p[:, 0], p[:, 1]; V["L1_S"] = ns.T["L1_S"].values
+    V = ns.T[ns.cols[:ns.nf]].copy(); V["H16_peak_h"], V["H17_peak_w"] = p[:, 0], p[:, 1]; V["L1_lock"] = ns.T["L1_lock"].values
     V = V[ns.cols]
     order = np.argsort(imp)[::-1]
     top = [ns.cols[i] for i in order[:topk]]
@@ -191,11 +193,12 @@ def val_table(ns, model, extra=None):
 # ---------------------------------------------------------------------------
 # EXP-043: 8.3 kHz 규칙(src/final.py와 같은 정의, 학습 없음)을 Two 위에 OR로 붙임
 # ---------------------------------------------------------------------------
-def rule83_flags(X):
-    """신호 배열 → (스펙트럼 규칙, 공진 규칙) bool. 돌출·폭 계산은 final.signal_tables의 P83·W83 부분과 같은 식, 공진은 final.ring_table"""
+def rule83_flags(X, k_gate=False):
+    """신호 배열 → (스펙트럼 규칙, 공진 규칙) bool. 돌출·폭 계산은 final.signal_tables의 P83·W83 부분과 같은 식, 공진은 final.ring_table
+    k_gate=True면 스펙트럼 규칙에 K83 > K83_MIN(충격성, 11-23)을 AND. 기본 False = EXP-050까지 기록된 실험을 그대로 재현. 새 실험(EXP-054~)은 True"""
     from scipy.ndimage import median_filter, uniform_filter1d
     from scipy.signal import welch
-    from src.final import FS, P83_MIN, RES_FIT_MIN, W83_MIN, ring_table
+    from src.final import FS, K83_MIN, P83_MIN, RES_FIT_MIN, W83_MIN, kurt83, ring_table
     X = np.asarray(X, float); Xc = X - X.mean(1, keepdims=True)
     f, P8 = welch(Xc, fs=FS, nperseg=8192); L = np.log10(P8); df = f[1] - f[0]
     Sm = uniform_filter1d(L, max(1, int(round(55 / df))), axis=1)
@@ -208,7 +211,10 @@ def rule83_flags(X):
         while r < PR.shape[1] - 1 and PR[i, r + 1] >= h: r += 1
         W83[i] = f[r] - f[l]
     _, RES, _ = ring_table(X)
-    return (P83 >= P83_MIN) & (W83 >= W83_MIN), RES >= RES_FIT_MIN
+    spec = (P83 >= P83_MIN) & (W83 >= W83_MIN)
+    if k_gate:
+        spec = spec & (kurt83(Xc) > K83_MIN)
+    return spec, RES >= RES_FIT_MIN
 
 
 class Add83:
@@ -407,17 +413,17 @@ RING_COLS = ["H7_ring_1-2k", "H8_ring_2-4k", "H9_ring_4-8k", "H10_ring_8-12.5k"]
 
 
 def j_mats(ns, r83, fixed=None):
-    """J 계열 입력 행렬. train M = [H 고정 열 | L1_S | 봉우리 | 파일 번호 | 8.3k 켜짐], val Mv = [H 고정 열 | L1_S | 봉우리] (EXP-050 mats와 같음)"""
-    fixed = list(ns.FIXED if fixed is None else fixed)
-    M = np.column_stack([ns.T[fixed].values, ns.T[["L1_S"]].values, ns.L, np.arange(ns.n, dtype=float), np.asarray(r83, float)])
-    Mv = np.column_stack([ns.Tv[fixed].values, ns.Tv[["L1_S"]].values, ns.Lv])
+    """J 계열 입력 행렬. train M = [H 고정 열 | L1_lock | 봉우리 | 파일 번호 | 8.3k 켜짐], val Mv = [H 고정 열 | L1_lock | 봉우리] (EXP-050 mats와 같음)"""
+    fixed = [new_name(c) for c in (ns.FIXED if fixed is None else fixed)]
+    M = np.column_stack([ns.T[fixed].values, ns.T[["L1_lock"]].values, ns.L, np.arange(ns.n, dtype=float), np.asarray(r83, float)])
+    Mv = np.column_stack([ns.Tv[fixed].values, ns.Tv[["L1_lock"]].values, ns.Lv])
     return M, Mv
 
 
 def j_shrink(ns, fixed=None, alpha=3.0):
     """J-축소 모델 팩토리: RingShrink(Add83(TwoStack lin + E2 + AE)). EXP-050 build(F0, True)와 같다"""
     from src.models2 import TwoStack, RingShrink
-    fixed = list(ns.FIXED if fixed is None else fixed); nf = len(fixed)
+    fixed = [new_name(c) for c in (ns.FIXED if fixed is None else fixed)]; nf = len(fixed)
     base = lambda: Add83(lambda: TwoStack("lin", ("E2",), fixed=tuple(fixed), nf=nf, df=ns.df, peak=tuple(ns.PEAK), extra=(), use_ae=True))
     ri = [fixed.index(c) for c in RING_COLS if c in fixed]; i1 = fixed.index("H1_nimp")
     return lambda: RingShrink(base, ri, i1, alpha)

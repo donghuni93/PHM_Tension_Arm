@@ -35,7 +35,7 @@ def log(*a):
 X, y, names = load_train(); names = [str(n) for n in names]; y = np.asarray(y)
 Xv, nv = load_folder(os.path.join(ROOT, "data", "TeamProject_val", "val")); nv = [str(n) for n in nv]
 n, nvl = len(y), len(nv); nor = y == 0
-FJ = json.load(open(os.path.join(ROOT, "단계", "4_피처", "4-7_1121_2차피처점검", "최종피처.json"), encoding="utf-8"))
+FJ = json.load(open(os.path.join(ROOT, "단계", "4_피처", "4-2_H피처목록", "자료", "최종피처.json"), encoding="utf-8"))
 FIXED = list(FJ["fixed"])
 T, L, fr = cached_feat2("train", X); Tv, Lv, _ = cached_feat2("val", Xv)
 FP_J = ["nor_116", "nor_065", "nor_059", "nor_037", "nor_025", "nor_095", "nor_106"]
@@ -183,7 +183,7 @@ log(ST.to_string())
 # %% C-3. 기존 열과의 중복 (스피어만, train 150)
 EXIST = FIXED + ["L1_S"]
 EM = pd.concat([T[EXIST].reset_index(drop=True), pd.DataFrame(dict(n_ev=R.n_ev.values[:n], dom=R.dom.values[:n]))], axis=1)
-Dr = pd.read_csv(os.path.join(ROOT, "단계", "5_모델비교", "검토문서", "협의_1121", "code_D", "D_repeat_feats.csv"), index_col=0)
+Dr = pd.read_csv(os.path.join(ROOT, "단계", "5_모델실험", "검토문서", "협의_1121", "code_D", "D_repeat_feats.csv"), index_col=0)
 log("D_repeat dom 일치 확인 (max |차|):", float(np.abs(Dr.loc[names, "dom"].values - R.dom.values[:n]).max()))
 EM["rattle"] = Dr.loc[names, "rattle"].values; EM["r21"] = Dr.loc[names, "r21"].values
 red = []
