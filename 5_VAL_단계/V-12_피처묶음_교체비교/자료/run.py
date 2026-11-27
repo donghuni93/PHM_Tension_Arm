@@ -1,5 +1,5 @@
 # %% [markdown]
-# V-11 피처 묶음 교체 비교: 우리 H 15열 vs 효섭 13개 (11-27)
+# V-12 피처 묶음 교체 비교: 우리 H 15열 vs 효섭 13개 (11-27)
 # - 질문: 우리 ET 피처가 val 고장을 못 잡는 것은 피처 묶음 탓인가? 피처를 근본적으로 바꾸면 "train에 없던 유형"을 잡나?
 # - 방법: 모델은 고정(ET · RF, 300그루), 입력 피처 묶음만 바꾼다(우리 H15 · 효섭13 · 합집합 28) + 지도 없는 정상 기준 점수
 #   A. train 그룹 CV OOF (AUC · PR-AUC)
@@ -8,7 +8,7 @@
 #   D. val 순위: train 전체로 학습 → val 40 점수. 그룹(추론)은 진단에만, 모델 · 문턱에 쓰지 않는다
 # - 입력 캐시: val_eda_tabs.joblib(제출 모델 j_tables) · val_eda_hy.joblib(효섭 피처). 제출 모델 EXP-062 구성 3의 ET 입력을 그대로 씀
 #   (울림 축소 p0 · 봉우리 기준은 제출 모델이 train 전체 정상으로 잡은 값 → CV에 약간 새어 들어감, 두 묶음 비교에는 영향 작음)
-#   conda run -n qe-phm python 5_VAL_단계/V-11_피처묶음_교체비교/자료/run.py
+#   conda run -n qe-phm python 5_VAL_단계/V-12_피처묶음_교체비교/자료/run.py
 
 # %% 설정
 import os, sys, json, importlib.util

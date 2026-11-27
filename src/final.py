@@ -490,6 +490,7 @@ J_EXTRA = {"D_K1": "DK1",                                                # J_FIX
 J_EXTRA.update({c: "B15_" + c for c in ["C1_kenv_1.6-4.5k", "C1_kc_1.6-4.5k", "C1_kc_2-4k", "H4_kurt_2-4k", "C2_tk_1.6-4.5k", "C2_tk_2-4k",
                                          "C3_w1_all", "C3_w2_all", "C3_w1_imp", "C3_w2_imp", "C4_ib_1.6-4.5k", "C4_ib_2-4k"]})   # 1–5 kHz 후보 C1–C4 (11-25 4-20 · EXP-067, features2.band15_table)
 J_EXTRA["w_segk_mean"] = "WSEGK"                                         # 백색화 구간 첨도 (11-27 5_VAL_단계 V-3 · EXP-068, featV.w_segk_mean)
+J_EXTRA["wk200_max"] = "WK200"                                           # 200 ms 창 첨도 최대 (11-27 5_VAL_단계 V-11 · EXP-070)
 J_ALPHA = 3.0                                                            # 울림 비율 축소 세기 (EXP-050, 실행 전 고정)
 J_ET_N = 300                                                             # ET 나무 수 (full 모드와 같음)
 J_Q_E2 = 99.0                                                            # E2 문턱 = 학습 정상 L2_hfl의 99 % 분위
@@ -604,9 +605,10 @@ class JShrink:
     cols: ET에 넣을 H 열 (기본 J_FIXED). J_FIXED의 일부 + J_EXTRA(예 "D_K1"). H1_nimp · L2_hfl은 축소 · E2에 쓰므로 꼭 넣는다.
           울림 비율 축소는 cols에 남은 J_RING 열에만. peak: 봉우리 열 (기본 J_PEAK, [] = 봉우리 안 씀). 11-25 EXP-064, 기본 = 예전과 같음"""
 
-    def __init__(self, alpha=J_ALPHA, seed=0, cols=None, peak=None, use_ae=True):
+    def __init__(self, alpha=J_ALPHA, seed=0, cols=None, peak=None, use_ae=True, zcomb=None):
         self.alpha, self.seed = alpha, seed
-        self.use_ae = use_ae                                             # False = AE 없이 (11-27 EXP-069): AE z = 0 → 결합 계수 0, AE 학습 안 함
+        self.zcomb = list(zcomb or [])                                   # 결합(로지스틱) 입력 추가: Tb 키 목록 → 학습 정상 기준 강건 z (11-27 EXP-070, 기본 = 없음)
+        self.use_ae = use_ae                                            # False = AE 없이 (11-27 EXP-069): AE z = 0 → 결합 계수 0, AE 학습 안 함
         self.cols = list(J_FIXED if cols is None else cols)
         self.peak = list(J_PEAK if peak is None else peak)
         self.ri_ = [self.cols.index(c) for c in J_RING if c in self.cols]
@@ -650,6 +652,9 @@ class JShrink:
             ae[b] = _ae_score(_fit_ae(LP[a][y[a] == 0], self.seed), LP[b]) if self.use_ae else 0.0
         self.aef_ = _RZ(ae[y == 0]) if self.use_ae else None
         self.Z_ = np.column_stack([oof, z, self.aef_(ae) if self.use_ae else np.zeros(n)]); self.y_ = y
+        self.zcf_ = [_RZ(np.asarray(Tb[k], float)[y == 0]) for k in getattr(self, "zcomb", [])]
+        if self.zcf_:
+            self.Z_ = np.column_stack([self.Z_] + [f(Tb[k]) for f, k in zip(self.zcf_, self.zcomb)])
         # (5) 결합: 로지스틱 + 문턱(학습 점수에서 F2 최대)
         self.c_ = LogisticRegression(C=1.0, class_weight="balanced").fit(self.Z_, y)
         self.tc_ = float(best_f2_threshold(y, self.c_.decision_function(self.Z_)))
@@ -664,7 +669,8 @@ class JShrink:
     def parts(self, Tb):
         Xe, Hs = self._et_input(Tb)
         a = _lg(self.et_.predict_proba(Xe)[:, 1]); z = self.zf_(Tb["S"]); aez = self.aef_(_ae_score(self.ae_, Tb["LP"])) if getattr(self, "use_ae", True) else np.zeros(len(a))
-        s = self.c_.decision_function(np.column_stack([a, z, aez]))
+        zc = [f(Tb[k]) for f, k in zip(getattr(self, "zcf_", []), getattr(self, "zcomb", []))]
+        s = self.c_.decision_function(np.column_stack([a, z, aez] + zc))
         e2 = (Hs[:, self.i18_] > self.t18_) & (Hs[:, self.i1_] >= np.log(2) - 1e-9)
         spec83 = (Tb["P83"] >= P83_MIN) & (Tb["W83"] >= W83_MIN) & (Tb["K83"] > K83_MIN); res83 = Tb["RES"] >= RES_FIT_MIN
         main = s >= self.tc_
