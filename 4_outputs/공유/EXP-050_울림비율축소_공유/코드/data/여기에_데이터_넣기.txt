@@ -1,0 +1,5 @@
+이 폴더에 과제 데이터를 아래 구조로 넣는다 (폴더 이름 그대로).
+
+data/TeamProject_train_변경/normal/   (정상 120개 csv)
+data/TeamProject_train_변경/abnormal/ (고장 30개 csv)
+data/TeamProject_val/val/             (val 40개 csv)

@@ -4,7 +4,7 @@
 - src/experts.py는 실험용이다. 학습 150개를 모듈 안에 들고 파일 번호로 주고받는다(분할마다 캐시를 나눠 쓰려고).
   그래서 번호가 없는 새 파일(val·test)은 채점할 수 없다.
 - 이 파일은 제출용이다. 신호 배열만 받으면 동작한다. 계산식은 experts.py와 같고,
-  같다는 것은 단계/7_최종·제출/검증_동등성.py 가 확인한다 (같은 분할에서 점수 차이 0).
+  같다는 것은 3_단계/7_최종·제출/검증_동등성.py 가 확인한다 (같은 분할에서 점수 차이 0).
 
 흐름 (위에서 아래로 읽으면 파이프라인 순서다)
   1. signal_tables : 신호 → 숫자 표 (라벨을 쓰지 않는다. 파일 하나씩 따로 계산한다)
@@ -12,7 +12,7 @@
   3. Core.parts    : 파일별 점수와 규칙 판정
   4. FinalModel    : 임계값(판정 기준선)까지 정해서 0/1과 근거를 낸다
 
-** 지금 제출 구성 = J-축소 (EXP-050, 11-22) → 파일 맨 아래 FinalJ · JShrink · j_tables. 단계/7_최종·제출 스크립트는 FinalJ를 쓴다. **
+** 지금 제출 구성 = J-축소 (EXP-050, 11-22) → 파일 맨 아래 FinalJ · JShrink · j_tables. 3_단계/7_최종·제출 스크립트는 FinalJ를 쓴다. **
 아래 Core · FinalModel은 예전 최종(EXP-034 c)이다. 비교 · 기록용으로 남긴다.
 
 예전 최종 구성 = EXP-034 c (11-17 사용자 결정으로 EXP-025에서 교체):
@@ -38,7 +38,7 @@ from src.features import extract_features_ext, extract_features_hits, extract_fe
 
 FS = 25000
 N_SAMPLES = 50000
-# 규칙 문턱 (모두 학습 라벨을 본 뒤 정한 '사후' 값. 단계/1_기준·기록/결정.md. val·test를 보고 고치지 않는다)
+# 규칙 문턱 (모두 학습 라벨을 본 뒤 정한 '사후' 값. 3_단계/1_기준·기록/결정.md. val·test를 보고 고치지 않는다)
 P83_MIN, W83_MIN = 0.75, 150.0      # 8.3 kHz 모드 규칙: 돌출(dec), 반높이 폭(Hz)
 # 8.3 kHz 규칙의 세 번째 조건 (11-23, 2-16): 8.20–8.45 kHz 포락 첨도 K83 > K83_MIN → "충격으로 울린 것"만 인정(지속음 제외).
 # 이 문턱은 데이터에서 고르지 않았다: 가우스 잡음 K = 2.00 ± 0.08 (99 % 2.2, 시뮬레이션) 바로 위 + 여유 → 3. 순수 지속음 K = 1
@@ -476,7 +476,7 @@ def _has_bom(path):
 # ===========================================================================
 # 계산식은 실험 코드(src.models2 TwoStack + RingShrink, src.exp2util.j_shrink)와 한 줄씩 같다.
 # 다른 점은 AE 점수를 파일 번호(experts.ae_mean) 대신 신호에서 바로 계산하는 것뿐이다 (같은 식 · 같은 seed).
-# 같다는 것은 단계/7_최종·제출/검증_동등성.py 가 확인한다 (EXP-050 J-축소 전체 학습 모델과 결합 입력 · 계수 · 문턱 · val 판정 비교).
+# 같다는 것은 3_단계/7_최종·제출/검증_동등성.py 가 확인한다 (EXP-050 J-축소 전체 학습 모델과 결합 입력 · 계수 · 문턱 · val 판정 비교).
 #
 #   판정 = [ET 안쪽 OOF logit, 박자 z, AE z] → 로지스틱 ≥ 문턱  OR  L2 위 꼬리 규칙(E2, 하중 대비 고주파)  OR  8.3k 규칙(스펙트럼 OR 공진)
 #   ET 입력 = H 피처 13열(울림 비율 H7–H10은 충격 수로 축소) + 가장 솟은 좁은 봉우리 2열(학습 정상 기준)
@@ -489,6 +489,7 @@ J_EXTRA = {"D_K1": "DK1",                                                # J_FIX
            "max_2_4k": "MAX24", "max_8_11k": "MAX811"}                   # 대역별 최대 충격 배수 (11-25 4-19 · EXP-065)
 J_EXTRA.update({c: "B15_" + c for c in ["C1_kenv_1.6-4.5k", "C1_kc_1.6-4.5k", "C1_kc_2-4k", "H4_kurt_2-4k", "C2_tk_1.6-4.5k", "C2_tk_2-4k",
                                          "C3_w1_all", "C3_w2_all", "C3_w1_imp", "C3_w2_imp", "C4_ib_1.6-4.5k", "C4_ib_2-4k"]})   # 1–5 kHz 후보 C1–C4 (11-25 4-20 · EXP-067, features2.band15_table)
+J_EXTRA["w_segk_mean"] = "WSEGK"                                         # 백색화 구간 첨도 (11-27 5_VAL_단계 V-3 · EXP-068, featV.w_segk_mean)
 J_ALPHA = 3.0                                                            # 울림 비율 축소 세기 (EXP-050, 실행 전 고정)
 J_ET_N = 300                                                             # ET 나무 수 (full 모드와 같음)
 J_Q_E2 = 99.0                                                            # E2 문턱 = 학습 정상 L2_hfl의 99 % 분위
@@ -522,6 +523,7 @@ def j_tables(X, fmax=None, events=False, atoms="250", res_new=False, lock_tol=0.
     DK1 (n,) D_K1 (features2.d_k1, 11-25 EXP-064. JShrink cols에 "D_K1"이 있을 때만 쓴다)
     MAX24 · MAX811 (n,) 2–4k · 8–11k로 운 충격 중 최대 배수 log10(1 + x) (features2.max_ring_x, 11-25 EXP-065. cols에 "max_2_4k" · "max_8_11k"가 있을 때만)
     B15_{열} (n,) 1–5 kHz 후보 C1–C4 (features2.band15_table, 11-25 4-20 · EXP-067. cols에 그 열 이름이 있을 때만 쓴다)
+    WSEGK (n,) 백색화 구간 첨도 log10 (featV.w_segk_mean, 11-27 5_VAL_단계 V-3 · EXP-068. cols에 "w_segk_mean"이 있을 때만 쓴다. fmax와 상관없이 1–11 kHz)
     fmax: None = 기본. 숫자(11-25, 11000) = 상한 변형: H · S · L은 feat2_table(fmax), AE 입력은 fmax 이하 bin만. 8.3k 규칙 재료는 그대로
     검출기 다듬기 (11-25, 2-36 · EXP-063, 기본값 = 예전과 같음)
       events: True = H1 · H2 · H7–H10(축소 n 포함) · L1 hit를 25 ms 이벤트 단위로 (R1)
@@ -529,6 +531,7 @@ def j_tables(X, fmax=None, events=False, atoms="250", res_new=False, lock_tol=0.
       res_new: True = RES를 새 검출기(fmax 입력 · events 설정 그대로) + 50 Hz 사전으로 (R3). False = 예전 검출기 ring_table
     lock_tol: L1_lock(S) hit 허용 비율 (기본 0.03 = ±3 %, 예전과 같음. 11-25 EXP-066 ±7 % 비교)"""
     from src.features2 import feat2_table, d_k1, max_ring_x, band15_table
+    from src.featV import w_segk_mean
     from src.impacts import all_impacts, res_new as _res_new
     X = np.asarray(X, dtype=float)
     if X.ndim != 2 or X.shape[1] != N_SAMPLES:
@@ -545,7 +548,7 @@ def j_tables(X, fmax=None, events=False, atoms="250", res_new=False, lock_tol=0.
     RES = _res_new(imps) if res_new else ring_table(X)[1]
     return dict(H=T[J_FIXED].values.astype(float), S=T["L1_lock"].values.astype(float), L=np.asarray(L, float), df=float(fr[1] - fr[0]),
                 LP=np.log10(P + 1e-20), P83=P83, W83=W83, K83=kurt83(Xc), RES=RES, DK1=d_k1(imps),
-                MAX24=max_ring_x(imps, 2000, 4000), MAX811=max_ring_x(imps, 8000, 11000),
+                MAX24=max_ring_x(imps, 2000, 4000), MAX811=max_ring_x(imps, 8000, 11000), WSEGK=w_segk_mean(X),
                 **{"B15_" + c: v.values for c, v in band15_table(X, [im["idx"] for im in imps]).items()})
 
 
@@ -601,8 +604,9 @@ class JShrink:
     cols: ET에 넣을 H 열 (기본 J_FIXED). J_FIXED의 일부 + J_EXTRA(예 "D_K1"). H1_nimp · L2_hfl은 축소 · E2에 쓰므로 꼭 넣는다.
           울림 비율 축소는 cols에 남은 J_RING 열에만. peak: 봉우리 열 (기본 J_PEAK, [] = 봉우리 안 씀). 11-25 EXP-064, 기본 = 예전과 같음"""
 
-    def __init__(self, alpha=J_ALPHA, seed=0, cols=None, peak=None):
+    def __init__(self, alpha=J_ALPHA, seed=0, cols=None, peak=None, use_ae=True):
         self.alpha, self.seed = alpha, seed
+        self.use_ae = use_ae                                             # False = AE 없이 (11-27 EXP-069): AE z = 0 → 결합 계수 0, AE 학습 안 함
         self.cols = list(J_FIXED if cols is None else cols)
         self.peak = list(J_PEAK if peak is None else peak)
         self.ri_ = [self.cols.index(c) for c in J_RING if c in self.cols]
@@ -643,9 +647,9 @@ class JShrink:
         n = len(y); oof, ae = np.empty(n), np.empty(n); LP = Tb["LP"]
         for a, b in StratifiedKFold(4, shuffle=True, random_state=0).split(Xe, y):
             oof[b] = _lg(_j_et(self.seed).fit(Xe[a], y[a]).predict_proba(Xe[b])[:, 1])
-            ae[b] = _ae_score(_fit_ae(LP[a][y[a] == 0], self.seed), LP[b])
-        self.aef_ = _RZ(ae[y == 0])
-        self.Z_ = np.column_stack([oof, z, self.aef_(ae)]); self.y_ = y
+            ae[b] = _ae_score(_fit_ae(LP[a][y[a] == 0], self.seed), LP[b]) if self.use_ae else 0.0
+        self.aef_ = _RZ(ae[y == 0]) if self.use_ae else None
+        self.Z_ = np.column_stack([oof, z, self.aef_(ae) if self.use_ae else np.zeros(n)]); self.y_ = y
         # (5) 결합: 로지스틱 + 문턱(학습 점수에서 F2 최대)
         self.c_ = LogisticRegression(C=1.0, class_weight="balanced").fit(self.Z_, y)
         self.tc_ = float(best_f2_threshold(y, self.c_.decision_function(self.Z_)))
@@ -654,12 +658,12 @@ class JShrink:
         self.t18_ = float(med + (q - med))
         # (7) 새 파일 채점용: ET · AE를 학습 전체(AE는 정상 전체)로 다시
         self.et_ = _j_et(self.seed).fit(Xe, y)
-        self.ae_ = _fit_ae(LP[y == 0], self.seed)
+        self.ae_ = _fit_ae(LP[y == 0], self.seed) if self.use_ae else None
         return self
 
     def parts(self, Tb):
         Xe, Hs = self._et_input(Tb)
-        a = _lg(self.et_.predict_proba(Xe)[:, 1]); z = self.zf_(Tb["S"]); aez = self.aef_(_ae_score(self.ae_, Tb["LP"]))
+        a = _lg(self.et_.predict_proba(Xe)[:, 1]); z = self.zf_(Tb["S"]); aez = self.aef_(_ae_score(self.ae_, Tb["LP"])) if getattr(self, "use_ae", True) else np.zeros(len(a))
         s = self.c_.decision_function(np.column_stack([a, z, aez]))
         e2 = (Hs[:, self.i18_] > self.t18_) & (Hs[:, self.i1_] >= np.log(2) - 1e-9)
         spec83 = (Tb["P83"] >= P83_MIN) & (Tb["W83"] >= W83_MIN) & (Tb["K83"] > K83_MIN); res83 = Tb["RES"] >= RES_FIT_MIN
@@ -672,7 +676,8 @@ class JShrink:
 class FinalJ:
     """제출용 J-축소: fit(X, y, names) → predict_table(X, names) (pred = 0/1 + 근거). 임계값 = 결합 문턱 tc_(학습 점수에서 F2 최대, J와 같음)"""
 
-    def __init__(self, alpha=J_ALPHA, seed=0, fmax=None, events=False, atoms="250", res_new=False, cols=None, peak=None, lock_tol=0.03):
+    def __init__(self, alpha=J_ALPHA, seed=0, fmax=None, events=False, atoms="250", res_new=False, cols=None, peak=None, lock_tol=0.03, use_ae=True):
+        self.use_ae = use_ae                                                 # False = AE 없이 (11-27 EXP-070 test): JShrink use_ae로 전달
         self.alpha, self.seed, self.fmax = alpha, seed, fmax                 # fmax: j_tables 상한 변형 (None = 기본)
         self.events, self.atoms, self.res_new = events, atoms, res_new       # 검출기 다듬기 R1–R3 (11-25, 기본 = 예전)
         self.cols, self.peak = cols, peak                                    # JShrink 열 구성 (11-25 EXP-064, None = 기본)
@@ -685,7 +690,7 @@ class FinalJ:
     def fit(self, X, y, names=None):
         y = np.asarray(y)
         self.names_ = list(names) if names is not None else [f"train_{i:03d}" for i in range(len(y))]
-        self.core_ = JShrink(self.alpha, self.seed, getattr(self, "cols", None), getattr(self, "peak", None)).fit(self._tables(X), y)
+        self.core_ = JShrink(self.alpha, self.seed, getattr(self, "cols", None), getattr(self, "peak", None), getattr(self, "use_ae", True)).fit(self._tables(X), y)
         self.y_ = y
         self.thr_ = self.core_.tc_
         return self

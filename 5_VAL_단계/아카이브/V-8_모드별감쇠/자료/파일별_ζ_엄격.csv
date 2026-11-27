@@ -1,0 +1,191 @@
+﻿file,그룹,연결부 1.6–4.5k,전이 4.5–5.5k,본체 5.5–8k,고주파 8–11k,OR_주요
+nor_001,train 정상,,,,,False
+nor_002,train 정상,,,,,False
+nor_003,train 정상,,,,,False
+nor_004,train 정상,,,,,False
+nor_005,train 정상,,,0.01382495392867621,,False
+nor_006,train 정상,,,,,False
+nor_007,train 정상,0.053465850662874854,,,,False
+nor_008,train 정상,,,,,False
+nor_009,train 정상,,,,,False
+nor_010,train 정상,,,,,False
+nor_011,train 정상,,,,,False
+nor_012,train 정상,,,,,False
+nor_013,train 정상,,,,,False
+nor_014,train 정상,,,,,False
+nor_015,train 정상,,,,,False
+nor_016,train 정상,,,,,False
+nor_017,train 정상,,,,,False
+nor_018,train 정상,,,,,False
+nor_019,train 정상,,,,,False
+nor_020,train 정상,,,,,False
+nor_021,train 정상,,,,,False
+nor_022,train 정상,,,,,False
+nor_023,train 정상,,,0.02342194812377631,,False
+nor_024,train 정상,,,,,False
+nor_025,train 정상,,,0.013129239664897199,,False
+nor_026,train 정상,,,,,False
+nor_027,train 정상,,0.005084365799973301,,,False
+nor_028,train 정상,,,,,False
+nor_029,train 정상,,,,,False
+nor_030,train 정상,,,,,False
+nor_031,train 정상,,,,,False
+nor_032,train 정상,,,,,False
+nor_033,train 정상,,,0.01429996781236461,,False
+nor_034,train 정상,,,0.010187757084362845,,False
+nor_035,train 정상,,,,,False
+nor_036,train 정상,,,,,False
+nor_037,train 정상,,,,,False
+nor_038,train 정상,,,,,False
+nor_039,train 정상,,,,,False
+nor_040,train 정상,,,,,False
+nor_041,train 정상,,,,,False
+nor_042,train 정상,,,,,False
+nor_043,train 정상,,,,,False
+nor_044,train 정상,,,,,False
+nor_045,train 정상,,,,,False
+nor_046,train 정상,,,,,False
+nor_047,train 정상,,,,,False
+nor_048,train 정상,,,,,False
+nor_049,train 정상,,,,,False
+nor_050,train 정상,,,0.014643688962368085,,False
+nor_051,train 정상,,,,,False
+nor_052,train 정상,,,,,False
+nor_053,train 정상,,,,,False
+nor_054,train 정상,0.04376888681403602,,,,False
+nor_055,train 정상,,,,,False
+nor_056,train 정상,,,,,False
+nor_057,train 정상,,0.032657849618294016,,,False
+nor_058,train 정상,,,,,False
+nor_059,train 정상,,,,,False
+nor_060,train 정상,,,,,False
+nor_061,train 정상,,,,,False
+nor_062,train 정상,,,,,False
+nor_063,train 정상,,,,,False
+nor_064,train 정상,,,,,False
+nor_065,train 정상,,,,,False
+nor_066,train 정상,,,,,False
+nor_067,train 정상,,,,,False
+nor_068,train 정상,,,,,False
+nor_069,train 정상,,,,,False
+nor_070,train 정상,,,,,False
+nor_071,train 정상,,,,,False
+nor_072,train 정상,,,,,False
+nor_073,train 정상,,,,,False
+nor_074,train 정상,,,,,False
+nor_075,train 정상,,,,,False
+nor_076,train 정상,,,,,False
+nor_077,train 정상,,,,,False
+nor_078,train 정상,,,0.005419440056791779,,False
+nor_079,train 정상,,,,,False
+nor_080,train 정상,,,,,False
+nor_081,train 정상,,,,,False
+nor_082,train 정상,,,,,False
+nor_083,train 정상,,,,,False
+nor_084,train 정상,,,,,False
+nor_085,train 정상,,,,,False
+nor_086,train 정상,,,0.005557888864036633,,False
+nor_087,train 정상,,,0.00959166460999197,,False
+nor_088,train 정상,,0.03844239575557291,,,False
+nor_089,train 정상,,,,,False
+nor_090,train 정상,,,,,False
+nor_091,train 정상,,,,,False
+nor_092,train 정상,,,0.026199607545801144,,False
+nor_093,train 정상,,,0.042292006490747346,,True
+nor_094,train 정상,,,,,False
+nor_095,train 정상,,,0.004479153996564827,,False
+nor_096,train 정상,,,,,False
+nor_097,train 정상,,,,,False
+nor_098,train 정상,,,,,False
+nor_099,train 정상,,,,,False
+nor_100,train 정상,,,0.00824020475468206,,False
+nor_101,train 정상,,,,,False
+nor_102,train 정상,,,,,False
+nor_103,train 정상,,,0.012030153238793261,,False
+nor_104,train 정상,,,,,False
+nor_105,train 정상,,,,,False
+nor_106,train 정상,,,,,False
+nor_107,train 정상,,,,,False
+nor_108,train 정상,,,,,False
+nor_109,train 정상,,,,,False
+nor_110,train 정상,0.10649974634294325,,0.005917896389155988,,True
+nor_111,train 정상,,,,,False
+nor_112,train 정상,,,,,False
+nor_113,train 정상,,,0.0054122579645858844,,False
+nor_114,train 정상,,,,,False
+nor_115,train 정상,,,,,False
+nor_116,train 정상,,,,0.005226262845348119,False
+nor_117,train 정상,,,,,False
+nor_118,train 정상,,,0.033916227207741026,,False
+nor_119,train 정상,,,0.025478420207188428,,False
+nor_120,train 정상,,,,,False
+abn_001,train 고장,,,,,False
+abn_002,train 고장,,,,,False
+abn_003,train 고장,,,,0.003547651520623347,False
+abn_004,train 고장,,,,,False
+abn_005,train 고장,0.0941436118491006,,,,False
+abn_006,train 고장,,,,0.01012027140623661,False
+abn_007,train 고장,,,,,False
+abn_008,train 고장,0.12570300044282312,,,,True
+abn_009,train 고장,,,,,False
+abn_010,train 고장,,,,,False
+abn_011,train 고장,,,,,False
+abn_012,train 고장,0.14142713670596985,,,,True
+abn_013,train 고장,,,,,False
+abn_014,train 고장,0.0068032481998481845,,,,False
+abn_015,train 고장,0.24813093548976867,,,,True
+abn_016,train 고장,,,,,False
+abn_017,train 고장,0.046539019752950626,,,,False
+abn_018,train 고장,,,0.0625432998807253,,True
+abn_019,train 고장,,,,,False
+abn_020,train 고장,,,,,False
+abn_021,train 고장,,,,,False
+abn_022,train 고장,0.0995709997158817,,0.021045064250878924,,False
+abn_023,train 고장,,,,,False
+abn_024,train 고장,,,,,False
+abn_025,train 고장,0.047898137884405556,,,,False
+abn_026,train 고장,,,,,False
+abn_027,train 고장,,,,,False
+abn_028,train 고장,,,,,False
+abn_029,train 고장,,,,0.00931980090468211,False
+abn_030,train 고장,,,,,False
+val_001,val,,,,,False
+val_002,val,,,0.032880017100936125,,False
+val_003,val,,,,,False
+val_004,val,0.023854642423412724,,0.03948860117583903,,True
+val_005,val,,,,,False
+val_006,val,,,,,False
+val_007,val,,,,,False
+val_008,val,,,0.0341662401126185,,False
+val_009,val,,,0.028890449787138808,,False
+val_010,val,,,,,False
+val_011,val,,,,,False
+val_012,val,,,0.019985306157461264,,False
+val_013,val,0.08473009407300947,,,,False
+val_014,val,,,,,False
+val_015,val,,,,,False
+val_016,val,0.09293814026948281,,,,False
+val_017,val,,,,,False
+val_018,val,,,,,False
+val_019,val,,,,,False
+val_020,val,,,,,False
+val_021,val,,,,,False
+val_022,val,,,,,False
+val_023,val,,,,,False
+val_024,val,,,,,False
+val_025,val,,,,,False
+val_026,val,,0.0105962844176264,,,False
+val_027,val,,,,,False
+val_028,val,,,,,False
+val_029,val,,,0.03518661782793183,,True
+val_030,val,,,,,False
+val_031,val,0.06281605067491401,,0.026044565558813425,,False
+val_032,val,,,0.024748558073127626,,False
+val_033,val,,,,,False
+val_034,val,,,0.030943028190388633,,False
+val_035,val,0.10785695369128809,,0.024307781962262673,,True
+val_036,val,,,,,False
+val_037,val,,,,,False
+val_038,val,0.013057419532549798,,,,False
+val_039,val,0.09375097285336419,,,,False
+val_040,val,,,,,False

@@ -1,6 +1,6 @@
 """실험 공용: 데이터·피처 캐시, 모델, 실험 기록(Experiment)
 
-실험 폴더(단계/5_모델실험/…/EXP-nnn_이름/자료/run.py, README.md는 자료/ 바로 위)에서:
+실험 폴더(3_단계/5_모델실험/…/EXP-nnn_이름/자료/run.py, README.md는 자료/ 바로 위)에서:
     from src.exp import *
     ex = Experiment(__file__, "EXP-007", "제목", ["H2", "H3"],
                     member="이동훈", model="ExtraTrees", changes="이전 대비 바꾼 것 한 줄")
@@ -21,15 +21,17 @@ from src import viz
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import ExtraTreesClassifier
 
-CACHE = os.path.join(ROOT, "outputs", "cache")
-DATA = os.path.join(ROOT, "data", "TeamProject_train_변경")
+CACHE = os.path.join(ROOT, "4_outputs", "cache")
+DATA = os.path.join(ROOT, "2_data", "TeamProject_train_변경")
 os.makedirs(CACHE, exist_ok=True)
 
 __all__ = ["ROOT", "CACHE", "np", "pd", "viz", "nested_cv", "load_train", "cached_table",
            "feature_table", "feature_table_ext", "feature_table_phys",
            "make_et", "ColModel", "RankAvg", "CollinearityFilter", "vif", "Experiment", "md_table", "error_md_table", "OUTLIER_NORMALS", "outlier_idx", "find_exp", "find_exp_home", "exp_data"]
 
-EXP_ROOT = os.path.join(ROOT, "단계", "5_모델실험")
+EXP_ROOT = os.path.join(ROOT, "3_단계", "5_모델실험")
+VAL_ROOT = os.path.join(ROOT, "5_VAL_단계")                   # 11-27 사용자: val 이후 EDA · 실험 작업 공간(맨 위). 실험 = 5_VAL_단계/실험/
+EXP_ROOTS = [EXP_ROOT, os.path.join(VAL_ROOT, "실험")]
 
 
 DATA_SUB = "자료"   # 11-25 정리: 실험 · EDA 조각 폴더 = README.md + 자료/(run.py · result.json · figs/ · 표)
@@ -44,6 +46,7 @@ def exp_data(d):
 def find_exp(key):
     """실험의 자료 폴더 찾기 (result.json · figs/ · 표가 있는 곳 = exp_data). key = 'EXP-043' · 'PHO-007' · 폴더 이름 모두 된다.
     5_모델실험 아래 두 단계까지 찾는다: 바로 아래 · 단계 폴더(1_첫베이스 … 6_최종모델 · 후보) · 아카이브/ (11-25 정리).
+    11-27부터는 5_VAL_단계/실험/ 아래도 같은 방식으로 찾는다 (EXP-068부터).
     폴더를 옮겨도 코드가 안 깨지게 경로를 직접 쓰지 않는다. README가 있는 실험 폴더는 os.path.dirname이 아니라 find_exp_home"""
     return exp_data(find_exp_home(key))
 
@@ -52,18 +55,21 @@ def find_exp_home(key):
     """README.md가 있는 실험 폴더"""
     name = os.path.basename(str(key).rstrip("/\\"))
     eid = name.split("_")[0]
-    subs = [""] + [s for s in sorted(os.listdir(EXP_ROOT)) if os.path.isdir(os.path.join(EXP_ROOT, s)) and not s.startswith(("EXP-", "PHO-"))]
-    for sub in subs:
-        d = os.path.join(EXP_ROOT, sub)
-        for n in os.listdir(d):
-            if os.path.isdir(os.path.join(d, n)) and (n == name or n.split("_")[0] == eid):
-                return os.path.join(d, n)
+    for root in EXP_ROOTS:
+        if not os.path.isdir(root):
+            continue
+        subs = [""] + [s for s in sorted(os.listdir(root)) if os.path.isdir(os.path.join(root, s)) and not s.startswith(("EXP-", "PHO-"))]
+        for sub in subs:
+            d = os.path.join(root, sub)
+            for n in os.listdir(d):
+                if os.path.isdir(os.path.join(d, n)) and (n == name or n.split("_")[0] == eid):
+                    return os.path.join(d, n)
     raise FileNotFoundError(f"실험 폴더 없음: {key}")
 
 
 # ---------- 데이터 ----------
 def load_train():
-    """X, y, names (캐시: outputs/cache/train_X.npz)"""
+    """X, y, names (캐시: 4_outputs/cache/train_X.npz)"""
     p = os.path.join(CACHE, "train_X.npz")
     if os.path.exists(p):
         z = np.load(p, allow_pickle=True)
@@ -74,7 +80,7 @@ def load_train():
 
 
 def cached_table(name, fn, X):
-    """피처 표 캐시 (outputs/cache/feat_{name}.csv). inf·NaN은 0.
+    """피처 표 캐시 (4_outputs/cache/feat_{name}.csv). inf·NaN은 0.
     피처 함수를 고쳤으면 해당 csv를 지우고 다시 돌린다"""
     p = os.path.join(CACHE, f"feat_{name}.csv")
     if os.path.exists(p):
@@ -267,7 +273,7 @@ class Experiment:
         readme = os.path.join(self.home, "README.md"); pre = self.pre
         interp = self._read_interp(open(readme, encoding="utf-8").read()) if os.path.exists(readme) else ""
         r = self.res
-        notes = os.path.relpath(os.path.join(ROOT, "단계", "1_기준·기록", "물리가설.md"), self.home).replace("\\", "/")
+        notes = os.path.relpath(os.path.join(ROOT, "3_단계", "1_기준·기록", "물리가설.md"), self.home).replace("\\", "/")
         first = next((l.strip() for l in interp.splitlines() if l.strip() and not l.startswith(("#", "|", "-", "!"))), "")
         m = r["configs"].get(r.get("main"), {})
         f2 = f"{m['f2']:.3f} ± {m['f2_sd']:.3f}" if m else ""

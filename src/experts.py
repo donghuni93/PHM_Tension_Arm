@@ -1,7 +1,7 @@
 """전문가 점수 + 폴드 안 결합 (EXP-014에서 시작, EXP-015부터 공용)
 
 전문가 = (학습 파일 tr, 채점 파일 te) → te 파일별 점수 행렬을 돌려주는 모듈 함수.
-같은 분할은 디스크 캐시(outputs/cache/joblib_experts)로 재사용한다 → 구성끼리, 실험끼리 공유.
+같은 분할은 디스크 캐시(4_outputs/cache/joblib_experts)로 재사용한다 → 구성끼리, 실험끼리 공유.
 결합 모델 ScoreStack은 F 1열 = 파일 번호를 받는다 (nested_cv·quick_cv에 g[:, None]으로 넘김).
 
     from src.experts import ScoreStack, ae_mean, et_logit, warm_cache
@@ -10,7 +10,7 @@
 
 - AE: EXP-012 구조(200 Hz 고역통과 → 1초 구간 8개 → log Welch PSD 1025 bin → 1025-128-16-128-1025, 정상만 학습)
 - ET: ext150 ExtraTrees (make_et 기본)
-피처 함수나 AE 설정을 바꾸면 outputs/cache/joblib_experts 를 지운다
+피처 함수나 AE 설정을 바꾸면 4_outputs/cache/joblib_experts 를 지운다
 """
 import os
 import copy

@@ -24,9 +24,9 @@ class NS:
     """데이터 · 피처 행렬 묶음 (EXP-040 run.py와 같은 M·Mv)"""
     def __init__(self):
         self.X, self.y, names = load_train(); self.names = [str(n) for n in names]
-        vd = os.path.join(ROOT, "data", "TeamProject_val", "val"); vd = vd if os.path.isdir(vd) else os.path.dirname(vd)   # PC = val/ 하위 폴더, 클라우드 = 바로 아래
+        vd = os.path.join(ROOT, "2_data", "TeamProject_val", "val"); vd = vd if os.path.isdir(vd) else os.path.dirname(vd)   # PC = val/ 하위 폴더, 클라우드 = 바로 아래
         self.Xv, nv = load_folder(vd); self.nv = [str(n) for n in nv]
-        FJ = json.load(open(os.path.join(ROOT, "단계", "4_피처", "4-2_H피처목록", "자료", "최종피처.json"), encoding="utf-8"))
+        FJ = json.load(open(os.path.join(ROOT, "3_단계", "4_피처", "4-2_H피처목록", "자료", "최종피처.json"), encoding="utf-8"))
         self.FIXED, self.PEAK = [new_name(c) for c in FJ["fixed"]], list(FJ["hfold"]); assert [new_name(c) for c in FJ["lock"]] == ["L1_lock"]   # json은 옛 이름 (H18_hfl · L1_S)
         self.T, self.L, fr = cached_feat2("train", self.X); self.Tv, self.Lv, _ = cached_feat2("val", self.Xv)
         self.df = float(fr[1] - fr[0]); self.nf = len(self.FIXED)

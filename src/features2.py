@@ -1,4 +1,4 @@
-"""2차 설계 피처 (11-21): H 블록(1 kHz 고역·새 충격 정의) + L1 주기 잠금. 근거 = 단계/5_모델비교/검토문서/모델구성_계획_1121.md 4절
+"""2차 설계 피처 (11-21): H 블록(1 kHz 고역·새 충격 정의) + L1 주기 잠금. 근거 = 3_단계/5_모델비교/검토문서/모델구성_계획_1121.md 4절
 
 입력은 신호 배열 (n, 50000), 라벨을 쓰지 않고 파일마다 독립이다 (제출 파이프라인에서도 같은 함수).
 학습 정상에 의존하는 것(H16–H17 봉우리, 박자 z)은 여기서 계산하지 않는다. 파일별 log PSD 배열만 돌려주고
@@ -27,7 +27,7 @@ from src.impacts import K_MIN, _sos, all_impacts
 FS = 25000
 OCT = ((1000, 2000), (2000, 4000), (4000, 8000), (8000, 12500))
 OCT_TAG = ("1-2k", "2-4k", "4-8k", "8-12.5k")
-_CACHE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs", "cache")
+_CACHE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "4_outputs", "cache")
 
 H_FIXED = (["H1_nimp", "H2_ratio21"] + [f"H{3 + i}_kurt_{t}" for i, t in enumerate(OCT_TAG)]
            + [f"H{7 + i}_ring_{t}" for i, t in enumerate(OCT_TAG)]
@@ -221,7 +221,7 @@ def band15_table(X, idx_list, fs=FS):
 
 
 def cached_feat2(tag, X, names=None, fmax=None):
-    """캐시 outputs/cache/feat2_{tag}.csv + feat2_psd_{tag}.npz. 피처 함수를 고치면 지우고 다시. fmax를 쓰면 tag도 따로 (예: train_11k)"""
+    """캐시 4_outputs/cache/feat2_{tag}.csv + feat2_psd_{tag}.npz. 피처 함수를 고치면 지우고 다시. fmax를 쓰면 tag도 따로 (예: train_11k)"""
     p, q = os.path.join(_CACHE, f"feat2_{tag}.csv"), os.path.join(_CACHE, f"feat2_psd_{tag}.npz")
     if os.path.exists(p) and os.path.exists(q):
         z = np.load(q)
@@ -298,7 +298,7 @@ def hi_split_table(X, imps=None):
 
 
 def cached_hi_split(tag, X):
-    """캐시 outputs/cache/feat2split_{tag}.csv. hi_split_table을 고치면 지우고 다시"""
+    """캐시 4_outputs/cache/feat2split_{tag}.csv. hi_split_table을 고치면 지우고 다시"""
     p = os.path.join(_CACHE, f"feat2split_{tag}.csv")
     if os.path.exists(p):
         return pd.read_csv(p)
